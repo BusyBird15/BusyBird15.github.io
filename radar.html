@@ -135,7 +135,7 @@ background: black;">
         <h2 style="padding-left: 5px; text-align: center; color: white; padding-top: 10px;">Legend</h2>
         <p style="padding-left: 5px; color: red; margin: 4px;"><b>RED: </b>Tornado Warning</p>
         <p style="padding-left: 5px; color: rgb(236, 193, 0); margin: 4px;"><b>YELLLOW: </b>Severe Thunderstorm Warning</p>
-        <p style="padding-left: 5px; color: #FF0284; margin: 4px;"><b>MAGENTA: </b>Flood Warning</p>
+        <p style="padding-left: 5px; color: magenta; margin: 4px;"><b>MAGENTA: </b>Flood Warning</p>
         <p style="padding-left: 5px; color: green; margin: 4px;"><b>GREEN: </b>Flash Flood Warning</p>
         <p style="padding-left: 5px; color: blue; margin: 4px;"><b>BLUE: </b>Special Weather Statement</p>
         <p style="padding-left: 5px; color: orange; margin: 4px;"><b>ORANGE: </b>Other</p>
@@ -256,7 +256,7 @@ background: black;">
                 } else if (alertInfo.properties.event.includes("Flash Flood")){
                     alertTitle.style.color = "green";
                 } else if (alertInfo.properties.event.includes("Flood")){
-                    alertTitle.style.color = "#FF0284";
+                    alertTitle.style.color = "magenta";
                 } else if (alertInfo.properties.event.includes("Special Weather")){
                     alertTitle.style.color = "blue";
                 } else {
@@ -377,7 +377,7 @@ background: black;">
                                 getAlert(e.target.getLatLngs());
                             });
                         } else if (alert.properties.event.includes("Flood")){
-                            var polygon = L.polygon(reverseSubarrays(thisItem), {color: '#FF0284'}).addTo(map);
+                            var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'magenta'}).addTo(map);
                             polygon.setStyle({fillOpacity: 0.4});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
@@ -386,7 +386,7 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: '#FF0284', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: 'magenta', fillOpacity: 0.4 });
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
