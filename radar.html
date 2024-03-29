@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Weather Radar</title>
+    <title>The Weather Team - Radar</title>
 
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
 
     <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet"/>
+    <link rel="icon" type="image/png" href="https://i.ibb.co/pxrchSs/twt.png">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <style type="text/css">
@@ -91,14 +92,18 @@
     <li class="sli"><button onclick="settings();" id="modalBtn">Settings</button></li>
 </ul>
 
-<div id="timestamp" style="margin-right: 10px; margin-bottom: 5px; text-align:right; position: absolute;top: 50px; left: 50%; right: 0; height: 20px;"></div>
+<div id="githubHeader" style="margin: 9px; justify-content: center;">
+    <a href="https://busybird15.github.io/theweatherteam">
+        <img src="https://i.ibb.co/pxrchSs/twt.png" style="height: 55px; width: 55px; border-radius: 10px">
+    </a>
+</div>
 
-<h3>BusyBird15's National Weather Radar v1.1</h3>
+<div id="timestamp" style="margin-right: 10px; margin-bottom: 5px; text-align:right; position: absolute;top: 50px; left: 50%; right: 0; height: 20px;"></div>
 
 <div id="settingsModal" style="display: none;
 border-left: 0px;
 width: 300px;
-height: 300px;
+height: 480px;
 border-radius: 20px;
 padding: 10px;
 position: absolute;
@@ -111,12 +116,21 @@ background: black;">
         close
         </span></button>
     <br><br>
-    <input type="radio" name="kind" checked="checked" onchange="setKind('radar')">Radar <input type="radio" name="kind" onchange="setKind('satellite')">Infrared Satellite<br><br>
-<input type="radio" name="duration" checked="checked" onchange="setKind('past')">Past <input type="radio" name="duration" onchange="setKind('future')">Past + Future<br><br>
+    <p style="margin-bottom: 1px; margin-top: 1px;">Radar Type</p>
+    <input type="radio" name="kind" checked="checked" onchange="setKind('radar')">Radar <input type="radio" name="kind" onchange="setKind('satellite')">Infrared Satellite<br>
+    <p style="margin-bottom: 1px;">Radar Time</p>
+    <input type="radio" name="duration" checked="checked" onchange="setKind('past')">Past <input type="radio" name="duration" onchange="setKind('future')">Past + Future<br>
 
+    <p style="margin-bottom: 1px;">Radar Opacity</p>
+    <input width="250px" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity"><br>
+    <p style="margin-bottom: 1px;">Alert Fill Opacity</p>
+    <input width="250px" type="range" min="1" max="100" value="40" class="slider" id="alop" onchange="alertOpacityChange()" title="Alert Opacity"><br>
+
+
+    <p style="margin-bottom: 1px;">Radar Color Scheme</p>
     <select id="colors" onchange="setColors(); return;">
         <option value="0">Black and White Values</option>
-        <option value="1">Original</option>
+       <option value="1">Original</option>
         <option value="2">Universal Blue</option>
         <option value="3">TITAN</option>
         <option value="4">The Weather Channel</option>
@@ -130,7 +144,7 @@ background: black;">
 
 <div class="alertlist" style="border-left: 0px; scroll-behavior: auto; position: absolute; height: 40vh; width: 25%;">
     <div style="    border: 5px solid white;
-    border-radius: 25px;
+    border-radius: 15px;
     -moz-border-radius: 10px;">
         <h2 style="padding-left: 5px; text-align: center; color: white; padding-top: 10px;">Legend</h2>
         <p style="padding-left: 5px; color: red; margin: 4px;"><b>RED: </b>Tornado Warning</p>
@@ -183,6 +197,9 @@ background: black;">
     var optionColorScheme = 6; // from 0 to 8. Check the https://rainviewer.com/api/color-schemes.html for additional information
     var optionSmoothData = 1; // 0 - not smooth, 1 - smooth
     var optionSnowColors = 1; // 0 - do not show snow colors, 1 - show snow colors
+
+    var radarOpacity = 0.75
+    var alertOpacity = 0.4
 
     var animationPosition = 0;
     var animationTimer = false;
@@ -238,6 +255,18 @@ background: black;">
         return arr.map(obj => Object.values(obj));
     }
 
+    function radarOpacityChange() {
+        var sliderValue = document.getElementById('radop').value;
+        radarOpacity = sliderValue / 100;
+        refresh()
+    }
+
+    function alertOpacityChange() {
+        var sliderValue = document.getElementById('alop').value;
+        alertOpacity = sliderValue / 100;
+        refresh()
+    }
+
     function getAlert(polycoords){
         thisID = findPair(allalerts, polycoords.join());
         console.log(thisID);
@@ -255,7 +284,7 @@ background: black;">
                     alertTitle.style.color = "red";
                 } else if (alertInfo.properties.event.includes("Flash Flood")){
                     alertTitle.style.color = "green";
-                } else if (alertInfo.properties.event.includes("Flood")){
+                } else if (alertInfo.properties.event.includes("Flood Warning")){
                     alertTitle.style.color = "magenta";
                 } else if (alertInfo.properties.event.includes("Special Weather")){
                     alertTitle.style.color = "blue";
@@ -318,7 +347,7 @@ background: black;">
                         console.log(thisItem);
                         if (alert.properties.event.includes("Severe Thunderstorm")){
                             var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'yellow'}).addTo(map);
-                            polygon.setStyle({fillOpacity: 0.4});
+                            polygon.setStyle({fillOpacity: alertOpacity});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
@@ -326,14 +355,14 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: 'yellow', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: 'yellow', fillOpacity: alertOpacity });
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
                             });
                         } else if (alert.properties.event.includes("Tornado")){
                             var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red'}).addTo(map);
-                            polygon.setStyle({fillOpacity: 0.4});
+                            polygon.setStyle({fillOpacity: alertOpacity});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
@@ -341,14 +370,14 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: 'red', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: 'red', fillOpacity: alertOpacity});
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
                             });
                         } else if (alert.properties.event.includes("Special Weather")){
                             var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'blue'}).addTo(map);
-                            polygon.setStyle({fillOpacity: 0.4});
+                            polygon.setStyle({fillOpacity: alertOpacity});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
@@ -356,14 +385,14 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: 'blue', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: 'blue', fillOpacity: alertOpacity});
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
                             });
                         } else if (alert.properties.event.includes("Flash Flood")){
                             var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green'}).addTo(map);
-                            polygon.setStyle({fillOpacity: 0.4});
+                            polygon.setStyle({fillOpacity: alertOpacity});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
@@ -371,14 +400,14 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: 'green', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: 'green', fillOpacity: alertOpacity});
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
                             });
-                        } else if (alert.properties.event.includes("Flood")){
+                        } else if (alert.properties.event.includes("Flood Warning")){
                             var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'magenta'}).addTo(map);
-                            polygon.setStyle({fillOpacity: 0.4});
+                            polygon.setStyle({fillOpacity: alertOpacity});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
@@ -386,14 +415,14 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: 'magenta', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: 'magenta', fillOpacity: alertOpacity });
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
                             });
                         } else {
                             var polygon = L.polygon(reverseSubarrays(thisItem), {color: '#FF8E02'}).addTo(map);
-                            polygon.setStyle({fillOpacity: 0.4});
+                            polygon.setStyle({fillOpacity: alertOpacity});
                             var thisAlert = [];
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
@@ -401,7 +430,7 @@ background: black;">
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
-                                polygon.setStyle({ color: '#FF8E02', fillOpacity: 0.4 });
+                                polygon.setStyle({ color: '#FF8E02', fillOpacity: alertOpacity });
                             }); polygon.on('click', function (e) {
                                 document.getElementById("alertDeets").style.visibility = "hidden";
                                 getAlert(e.target.getLatLngs());
@@ -418,10 +447,10 @@ background: black;">
     }
 
     function startLoadingTile() {
-        loadingTilesCount++;    
+        loadingTilesCount++;
     }
     function finishLoadingTile() {
-        // Delayed increase loaded count to prevent changing the layer before 
+        // Delayed increase loaded count to prevent changing the layer before
         // it will be replaced by next
         setTimeout(function() { loadedTilesCount++; }, 250);
     }
@@ -492,10 +521,10 @@ background: black;">
                 zIndex: frame.time
             });
 
-            // Track layer loading state to not display the overlay 
+            // Track layer loading state to not display the overlay
             // before it will completelly loads
             source.on('loading', startLoadingTile);
-            source.on('load', finishLoadingTile); 
+            source.on('load', finishLoadingTile);
             source.on('remove', finishLoadingTile);
 
             radarLayers[frame.path] = source;
@@ -536,7 +565,7 @@ background: black;">
         if (radarLayers[currentFrame.path]) {
             radarLayers[currentFrame.path].setOpacity(0);
         }
-        radarLayers[nextFrame.path].setOpacity(0.5);
+        radarLayers[nextFrame.path].setOpacity(radarOpacity);
 
 
         var pastOrForecast = nextFrame.time > Date.now() / 1000 ? 'FORECAST' : 'PAST';
