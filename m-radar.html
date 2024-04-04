@@ -73,6 +73,13 @@
 </head>
 <body>
 
+<div id="setup" style="width: 200px; height: 200px; border-radius: 20px; padding: 10px; position: absolute; left: 10%; top: 20%; border: white 5px solid; z-index: 999; background: black;">
+    <button onclick="closeSettings();" class="close"><span class="material-symbols-outlined" style="font-size: 16px;">close</span></button>
+    <p style="font-size: 20px;">Quick Calibration</p>
+    <p>Drag the slider until you see the bottom edge of the settings box.</p>
+    <input width="250px" type="range" min="20" max="90" value="50" class="slider" id="sizer" oninput="changeSize()" title="Alert Opacity"><br>
+</div>
+
 <ul style="padding: 5px; text-align: center;">
     <li class="sli"><button onclick="stop(); showFrame(animationPosition - 1); return;">&lt;</button></li>
     <li class="sli"><button onclick="playStop();">Play / Stop</button></li>
@@ -84,7 +91,7 @@
 
 <div id="timestamp" style="margin-bottom: 5px; text-align:center; font-size: 11px;"></div>
 
-    <div id="mapid" style="border-radius: 10px; width: 100%; height: 83vh;"></div>
+    <div id="mapid" style="border-radius: 10px; width: 100%; height: 90vh;"></div>
 
     <div style="padding: 10px; font-size: 11px; display: none; overflow-y: auto; margin-top: 10px; height: 30vh; border: 5px solid white; border-radius: 15px;  -moz-border-radius: 10px; scrollbar-width: thin;" id="alertDeets">
         <button onclick="closeSettings();" class="close"><span class="material-symbols-outlined" style="font-size: 16px;">
@@ -106,7 +113,7 @@
     </div>
 </div>
 
-<div id="settingsModal" style="padding: 10px; font-size: 11px; display: none; overflow-y: auto; margin-top: 10px; height: 30vh; border: 5px solid white; border-radius: 15px;  -moz-border-radius: 10px; scrollbar-width: thin;">
+<div id="settingsModal" style="padding: 10px; font-size: 11px; display: block; overflow-y: auto; margin-top: 10px; height: 30vh; border: 5px solid white; border-radius: 15px;  -moz-border-radius: 10px; scrollbar-width: thin;">
     <button onclick="closeSettings();" class="close"><span class="material-symbols-outlined" style="font-size: 16px;">
         close
         </span></button>
@@ -179,6 +186,18 @@
     var displayTorWarnings = true;
     var displaySvrWarnings = true;
 
+    var highHeightOfMap = "85vh";
+    var lowHeightOfMap = "50vh";
+
+    function changeSize(){
+        var heightOfMap = document.getElementById('sizer').value;
+        highHeightOfMap = heightOfMap + 'vh';
+        heightOfMap = Number(heightOfMap) + 35;
+        lowHeightOfMap = heightOfMap + 'vh';
+        document.getElementById('mapid').style.height = highHeightOfMap;
+
+    }
+
     function floodChange(){
         displayFloodWarnings = !displayFloodWarnings;
         loadAlerts();
@@ -207,13 +226,14 @@
     function settings(){
         document.getElementById("settingsModal").style.display = "block";
         document.getElementById("alertDeets").style.display = "none";
-        document.getElementById('mapid').style.height = "50vh";
+        document.getElementById('mapid').style.height = highHeightOfMap;
     }
 
     function closeSettings(){
         document.getElementById("settingsModal").style.display = "none";
         document.getElementById("alertDeets").style.display = "none";
-        document.getElementById('mapid').style.height = "83vh";
+        document.getElementById("setup").style.display = "none";
+        document.getElementById('mapid').style.height = lowHeightOfMap;
     }
 
     function formatTimestamp(isoTimestamp) {
@@ -275,7 +295,7 @@
             if (xhr.readyState === 4 && xhr.status === 200) {
                 document.getElementById("settingsModal").style.display = "none";
                 document.getElementById("alertDeets").style.display = "block";
-                document.getElementById('mapid').style.height = "50vh";
+                document.getElementById('mapid').style.height = highHeightOfMap;
                 var alertInfo = JSON.parse(xhr.responseText);
                 var alertTitle = document.getElementById('alert_title');
                 if (alertInfo.properties.event.includes("Severe Thunderstorm")){
