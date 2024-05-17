@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/png" href="https://i.ibb.co/pxrchSs/twt.png">
+    <title>The Weather Team</title>
+    <script>
+        function openInvite(){
+            window.open("https://discord.com/invite/CTyybFMQrM","_blank");
+        }
+    </script>
+    <style>
+        body{
+            font-family: "Poppins", Bahnschrift, Verdana, sans-serif;
+            font-weight: 400;
+            font-style: normal;
+            margin: 0px;
+        }
+        button{
+            background-color: rgb(255, 75, 75);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: large;
+            border: none;
+            transition-duration: 0.25s;
+            cursor: pointer;
+        }
+        button:hover{
+            background-color: rgb(255, 0, 0);
+            color: white;
+            cursor: pointer;
+        }
+        .link{
+            color: blue;
+            text-decoration: none;
+            transition-duration: 0.25s;
+        }
+        .link:hover{
+            color: red
+        }
+        .infodiv {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(0deg, rgba(0,200,255,0.4), rgb(0, 97, 124));
+            border-radius: 20px;
+            width: calc(100% - 30px);
+            margin-left: 15px;
+        }
+        .infodivchild {
+            flex: 1;
+            padding-left: 7%;
+            padding-right: 3%;
+        }  
+        .infoimg {
+            display: block;
+            width: auto;
+            height: auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+        }
+        .footer {
+            border-radius: 10px 10px 0px 0px;
+            position: absolute;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: black;
+            color: white;
+            width: calc(100% - 60px);
+            height: fit-content;
+            flex-direction: column;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="background: rgba(255, 255, 255, 0.8); padding: 10px; width: 100%; display: flex; justify-content: center; align-items: center; position: fixed;">
+        <br>
+        <a href="https://busybird15.github.io/theweatherteam"><img src="https://i.ibb.co/pxrchSs/twt.png" width="50px" height="50px" style="border-radius: 10px;"></a>
+        <a class="link" href="https://busybird15.github.io/radar" style="padding-left: 50%;">Weather Radar</a>
+        <br>
+    </div>
+    <br><br><br><br><br>
+    <div style="border-top: 30%; background-image: url(https://i.ibb.co/mJ5wj10/image.png); display: flex; justify-content: center; align-items: center;">
+        <h2 style="text-shadow: 0px 0px 25px white;">A community of weather enthusiasts.</h2>
+    </div>
+    <br><br><br>
+    <div class="infodiv">
+        <div class="infodivchild">
+            <h2>A small yet growing Discord server of all things weather.</h2>
+            <button onclick="openInvite();">Join today!</button>
+        </div>
+        <div class="infodivchild">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="discord.png">
+        </div>
+    </div>
+    <br><br><br>
+    <div class="infodiv">
+        <div class="infodivchild">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="radar.png">
+        </div>
+        <div class="infodivchild">
+            <h2>Our <a class="link" href="https://busybird15.github.io/radar">custom radar</a> provides alerts, live radar, and satellite. </h2>
+        </div>
+    </div>
+    <br><br><br>
+    <div class="infodiv">
+        <div class="infodivchild">
+            <h2>See every PDS warning as it is issued...</h2>
+        </div>
+        <div class="infodivchild">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="pds_alerts.png">
+        </div>
+    </div>
+    <br><br><br>
+    <div class="infodiv">
+        <div class="infodivchild">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="storm_reps.png">
+        </div>
+        <div class="infodivchild">
+            <h2>...Along with every TOR/SVR warning and preliminary storm report.</h2>
+        </div>
+    </div>
+    <br><br><br>
+    <div class="infodiv">
+        <div class="infodivchild">
+            <h2>Learn about different radar products.</h2>
+        </div>
+        <div class="infodivchild">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="faq.png">
+        </div>
+    </div>
+    <br><br><br>
+    <div width="100%" style="display: flex; justify-content: center; align-items: center;">
+        <button onclick="openInvite();">Join The Weather Team</button>
+    </div>
+    <br><br><br>
+    <div class="footer">
+        <br>
+        <p style="width: max-content;">© 2024 | The Weather Team<br><br>
+            Made by BusyBird15 with ideas from DaGreenBoi.<br><br>
+            <a class="link" href="https://fonts.google.com/specimen/Poppins">Website font</a> from Google Fonts.</p>
+        <br>
+    </div>
+</body>
