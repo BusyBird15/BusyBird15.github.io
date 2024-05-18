@@ -9,6 +9,21 @@
         function openInvite(){
             window.open("https://discord.com/invite/CTyybFMQrM","_blank");
         }
+        function toggletheme(){
+            var themebtn = document.getElementById("theme");
+            var header = document.getElementById("header");
+            if (themebtn.src.includes("lighttheme.png")){
+                themebtn.src = "assets/darktheme.png"
+                document.body.style.background = "rgb(30, 30, 30)";
+                document.body.style.color = "white";
+                header.style.background = "rgba(30, 30, 30, 0.7)"
+            } else {
+                themebtn.src = "assets/lighttheme.png"
+                document.body.style.background = "white";
+                document.body.style.color = "black";
+                header.style.background = "rgba(255, 255, 255, 0.8)"
+            }
+        }
     </script>
     <style>
         body{
@@ -29,7 +44,7 @@
         }
         button:hover{
             background-color: rgb(255, 0, 0);
-            color: white;
+            color: rgb(255, 255, 255);
             cursor: pointer;
         }
         .link{
@@ -44,7 +59,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            background: linear-gradient(0deg, rgba(0,200,255,0.4), rgb(0, 97, 124));
+            background: linear-gradient(0deg, rgba(91, 219, 255, 0.4), rgba(0, 97, 124, 0.4));
             border-radius: 20px;
             width: calc(100% - 30px);
             margin-left: 15px;
@@ -80,15 +95,16 @@
 </head>
 
 <body>
-    <div style="background: rgba(255, 255, 255, 0.8); padding: 10px; width: 100%; display: flex; justify-content: center; align-items: center; position: fixed;">
+    <div id="header" style="background: rgba(255, 255, 255, 0.8); padding: 10px; width: 100%; display: flex; justify-content: center; align-items: center; position: fixed;">
         <br>
         <a href="https://busybird15.github.io/theweatherteam"><img src="https://i.ibb.co/pxrchSs/twt.png" width="50px" height="50px" style="border-radius: 10px;"></a>
-        <a class="link" href="https://busybird15.github.io/radar" style="padding-left: 50%;">Weather Radar</a>
+        <a class="link" href="https://busybird15.github.io/radar" style="margin-left: 40%; margin-right: 40px;">Weather Radar</a>
+        <img style="cursor: pointer;" id="theme" onclick="toggletheme()" width="35px" height="35px" src="lighttheme.png">
         <br>
     </div>
-    <br><br><br><br><br>
+    <br><br><br><br>
     <div style="border-top: 30%; background-image: url(https://i.ibb.co/mJ5wj10/image.png); display: flex; justify-content: center; align-items: center;">
-        <h2 style="text-shadow: 0px 0px 25px white;">A community of weather enthusiasts.</h2>
+        <h2 style="color: black; text-shadow: 0px 0px 25px white;">A community of weather enthusiasts.</h2>
     </div>
     <br><br><br>
     <div class="infodiv">
@@ -97,13 +113,13 @@
             <button onclick="openInvite();">Join today!</button>
         </div>
         <div class="infodivchild">
-            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="discord.png">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="assets/discord.png">
         </div>
     </div>
     <br><br><br>
     <div class="infodiv">
         <div class="infodivchild">
-            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="radar.png">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="assets/radar.png">
         </div>
         <div class="infodivchild">
             <h2>Our <a class="link" href="https://busybird15.github.io/radar">custom radar</a> provides alerts, live radar, and satellite. </h2>
@@ -115,13 +131,13 @@
             <h2>See every PDS warning as it is issued...</h2>
         </div>
         <div class="infodivchild">
-            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="pds_alerts.png">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="assets/pds_alerts.png">
         </div>
     </div>
     <br><br><br>
     <div class="infodiv">
         <div class="infodivchild">
-            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="storm_reps.png">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="assets/storm_reps.png">
         </div>
         <div class="infodivchild">
             <h2>...Along with every TOR/SVR warning and preliminary storm report.</h2>
@@ -133,7 +149,7 @@
             <h2>Learn about different radar products.</h2>
         </div>
         <div class="infodivchild">
-            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="faq.png">
+            <img class="infoimg" style="max-width: 550px; max-height: 450px;" src="assets/faq.png">
         </div>
     </div>
     <br><br><br>
