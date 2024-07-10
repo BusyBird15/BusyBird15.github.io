@@ -237,12 +237,12 @@ function getReport(polycoords, type){
     const minute = parseInt(timestamp.substring(2, 4));
     const date = new Date();
     date.setHours(hour, minute);
-    const hours = date.getHours();
+    const hours = date.getHours() - 4;
     const minutes = date.getMinutes();
     const ampm = hours >= 12 ? 'pm' : 'am';
     const formattedHours = (hours % 12) || 12;
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    newTime = `${formattedHours}:${formattedMinutes} ${ampm}`;
+    newTime = `${formattedHours}:${formattedMinutes} ${ampm} EST`;
 
     construct = construct + '<p style="margin: 0px;"><b>Report Time:</b> ' + newTime + '</p>';
 
