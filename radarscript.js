@@ -41,29 +41,90 @@ var displaySpecWarnings = true;
 var displayTorWarnings = true;
 var displaySvrWarnings = true;
 
+var displayTorReports = true;
+var displayWndReports = true;
+var displayHalReports = true;
+
+var canRefresh = true;
+
+var displayTorWatches = true;
+var displaySvrWatches = true;
+
+function reportSettings(){
+    document.getElementById("alertsett").style.display = "none";
+    document.getElementById("radarsett").style.display = "none";
+    document.getElementById("reportsett").style.display = "block";
+    document.getElementById("alertset").style.backgroundColor = "rgb(51, 51, 51)";
+    document.getElementById("radarset").style.backgroundColor = "rgb(51, 51, 51)";
+    document.getElementById("reportset").style.backgroundColor = "rgb(67, 67, 241)";
+}
+
+function alertSettings(){
+    document.getElementById("alertsett").style.display = "block";
+    document.getElementById("radarsett").style.display = "none";
+    document.getElementById("reportsett").style.display = "none";
+    document.getElementById("alertset").style.backgroundColor = "rgb(67, 67, 241)";
+    document.getElementById("radarset").style.backgroundColor = "rgb(51, 51, 51)";
+    document.getElementById("reportset").style.backgroundColor = "rgb(51, 51, 51)";
+}
+
+function radarSettings(){
+    document.getElementById("alertsett").style.display = "none";
+    document.getElementById("radarsett").style.display = "block";
+    document.getElementById("reportsett").style.display = "none";
+    document.getElementById("alertset").style.backgroundColor = "rgb(51, 51, 51)";
+    document.getElementById("radarset").style.backgroundColor = "rgb(67, 67, 241)";
+    document.getElementById("reportset").style.backgroundColor = "rgb(51, 51, 51)";
+}
+
 function floodChange(){
     displayFloodWarnings = !displayFloodWarnings;
-    loadAlerts();
+    refresh();
 }
 function ffloodChange(){
     displayFFloodWarnings = !displayFFloodWarnings;
-    loadAlerts();
+    refresh();
 }
 function othChange(){
     displayOtherWarnings = !displayOtherWarnings;
-    loadAlerts();
+    refresh();
 }
 function svrChange(){
     displaySvrWarnings = !displaySvrWarnings;
-    loadAlerts();
+    refresh();
 }
 function specChange(){
     displaySpecWarnings = !displaySpecWarnings;
-    loadAlerts();
+    refresh();
 }
 function torChange(){
     displayTorWarnings = !displayTorWarnings;
-    loadAlerts();
+    refresh();
+}
+
+function torRep(){
+    displayTorReports = !displayTorReports;
+    refresh();
+}
+
+function wndRep(){
+    displayWndReports = !displayWndReports;
+    refresh();
+}
+
+function halRep(){
+    displayHalReports = !displayHalReports;
+    refresh();
+}
+
+function svrwwChange(){
+    displaySvrWatches = !displaySvrWatches;
+    refresh();
+}
+
+function torwwChange(){
+    displayTorWatches = !displayTorWatches;
+    refresh();
 }
 
 function settings(){
@@ -127,6 +188,22 @@ function convertDictsToArrayOfArrays(arr) {
     return arr.map(obj => Object.values(obj));
 }
 
+async function getCSV(url) {
+    const response = await fetch(url);
+    const data = await response.text();
+    const lines = data.split('\n');
+    const headers = lines[0].split(',');
+
+    jsonData = lines.slice(1).map(line => {
+        const values = line.split(',');
+        return headers.reduce((obj, header, index) => {
+            obj[header] = values[index];
+            return obj;
+        }, {});
+    });
+    return JSON.stringify(jsonData, null, 2);
+}
+
 function radarOpacityChange() {
     var sliderValue = document.getElementById('radop').value;
     radarOpacity = sliderValue / 100;
@@ -139,10 +216,103 @@ function alertOpacityChange() {
     refresh()
 }
 
+function getReport(polycoords, type){
+    console.log(type)
+    var alertInfo = polycoords
+    var alertTitlecolor = 'white';
+    var alertTitlebackgroundColor = "white";
+    if (type == "Tornado Report"){
+        alertTitlecolor = 'black';
+        alertTitlebackgroundColor = "red";
+    } else if (type == "Wind Report"){
+        alertTitlebackgroundColor = "blue";
+    } else if (type == "Hail Report"){
+        alertTitlebackgroundColor = "green";
+    }
+
+    var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + type + '</div><br>';
+    
+    const timestamp = alertInfo.Time;
+    const hour = parseInt(timestamp.substring(0, 2));
+    const minute = parseInt(timestamp.substring(2, 4));
+    const date = new Date();
+    date.setHours(hour, minute);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    const formattedHours = (hours % 12) || 12;
+    const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
+    newTime = `${formattedHours}:${formattedMinutes} ${ampm}`;
+
+    construct = construct + '<p style="margin: 0px;"><b>Report Time:</b> ' + newTime + '</p>';
+
+    if (type == "Tornado Report"){
+        construct = construct + '<p style="margin: 0px;"><b>EF-Rating:</b> ' + alertInfo.F_Scale + '</p>';
+    } else if (type == "Wind Report" && alertInfo.Speed != "UNK"){
+        construct = construct + '<p style="margin: 0px;"><b>Wind Speed:</b> ' + alertInfo.Speed + 'mph</p>';
+    } else if (type == "Hail Report"){
+        construct = construct + '<p style="margin: 0px;"><b>Hail Size:</b> ' + Math.ceil(alertInfo.Size / 100) + '"</p>';
+    }
+
+    construct = construct + '<p style="margin: 0px;"><b>Location:</b> ' + alertInfo.Location + "; " + alertInfo.County + ", " + alertInfo.State + " (" + alertInfo.Lat + ", " + alertInfo.Lon + ")" + '</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Comments:</b> ' + alertInfo.Comments + '</p><br>'
+
+    construct = construct + '</div>'
+
+    return construct;
+}
+
+function loadReports() {
+
+    if (displayTorReports){
+        getCSV('https://www.spc.noaa.gov/climo/reports/today_filtered_torn.csv').then(json => {
+            var torreps = JSON.parse(json);
+            for (let i = 0; i < torreps.length; i++) {
+                try {
+                    report = torreps[i];
+                    const marker = L.marker([parseFloat(report.Lat), parseFloat(report.Lon)]).addTo(map);
+                    marker.setIcon(L.divIcon({ className: 'tor-marker' }));
+                    marker.bindPopup(getReport(report, "Tornado Report"), {"autoPan": true, 'maxheight': '300' , 'maxWidth': '250', 'className': 'alertpopup'});
+                }
+                catch{}
+            }
+        });;
+    }
+    if (displayHalReports) {
+        getCSV('https://www.spc.noaa.gov/climo/reports/today_filtered_hail.csv').then(json => {
+            var reps = JSON.parse(json);
+            for (let i = 0; i < reps.length; i++) {
+                try {
+                    report = reps[i];
+                    const marker = L.marker([parseFloat(report.Lat), parseFloat(report.Lon)]).addTo(map);
+                    marker.setIcon(L.divIcon({ className: 'hail-marker' }));
+                    marker.bindPopup(getReport(report, "Hail Report"), {"autoPan": true, 'maxheight': '300' , 'maxWidth': '250', 'className': 'alertpopup'});
+                }
+                catch{}
+            }
+        });;
+    }
+    if (displayWndReports) {
+        getCSV('https://www.spc.noaa.gov/climo/reports/today_filtered_wind.csv').then(json => {
+            var reps = JSON.parse(json);
+            for (let i = 0; i < reps.length; i++) {
+                try {
+                    report = reps[i];
+                    const marker = L.marker([parseFloat(report.Lat), parseFloat(report.Lon)]).addTo(map);
+                    marker.setIcon(L.divIcon({ className: 'wind-marker' }));
+                    marker.bindPopup(getReport(report, "Wind Report"), {"autoPan": true, 'maxheight': '300' , 'maxWidth': '250', 'className': 'alertpopup'});
+                }
+                catch{}
+            }
+        });;
+    }
+}
+
 function fixHazards(haz){
     // Fix hail sizes
     haz = haz.toLowerCase();
     haz = haz.replace("pea size", '0.25"');
+    haz = haz.replace("half inch", '0.50"');
     haz = haz.replace("penny size", '0.75"');
     haz = haz.replace("nickel size", '7/8"');
     haz = haz.replace("quarter size", '1.00"');
@@ -156,6 +326,10 @@ function fixHazards(haz){
     haz = haz.replace("softball size", '4.00"');
     haz = haz.replace("grapefruit size", '4.50"');
     return haz;
+}
+
+function loadAlerts(){
+  console.log("placeholder")
 }
 
 function getAlert(polycoords){
@@ -179,6 +353,9 @@ function getAlert(polycoords){
         alertTitlebackgroundColor = "orange";
     }
     var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+    if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
+        construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
+    }
     construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
     construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatTimestamp(alertInfo.properties.sent) + '</p>';
     construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
@@ -186,38 +363,137 @@ function getAlert(polycoords){
     try {
         var hazards = fixHazards(alertInfo.properties.description.split("HAZARD...")[1].split("\n\n")[0].replace(/\n/g, " "));
     } catch {
-        var hazards = "No hazards identified."
+        var hazards = "no hazards identified."
     }
     
     construct = construct + '<p style="margin: 0px;"><b>Hazards: </b>' + hazards + '</p>'
 
     try {
-        var impacts = alertInfo.properties.description.split("IMPACTS...")[1].split("\n\n")[0].replace(/\n/g, " ");
+        var impacts = alertInfo.properties.description.split("IMPACTS...")[1].split("\n\n")[0].replace(/\n/g, " ").toLowerCase();
     } catch {
         try {
-            var impacts = alertInfo.properties.description.split("IMPACT...")[1].split("\n\n")[0].replace(/\n/g, " ");
+            var impacts = alertInfo.properties.description.split("IMPACT...")[1].split("\n\n")[0].replace(/\n/g, " ").toLowerCase();
         } catch {
-            var impacts = "No impacts identified."
+            var impacts = "no impacts identified."
     }
     }
     construct = construct + '<p style="margin: 0px;"><b>Impacts: </b>' + impacts + '</p><br><br>'
 
-    construct = construct + '<p style="margin: 0px;">' + alertInfo.properties.description.replace("\n", "<br>") + '</p></div>'
+    construct = construct + '<p style="margin: 0px;">' + alertInfo.properties.description.replace(/(?:SVR|FFW|TOR)\d{4}/g, "").replace(/\n/g, "<br>") + '</p></div>'
 
     console.log(construct)
     return construct;
+}
+
+function formatWatchDate (timestamp) {
+    const year = parseInt(timestamp.slice(0, 4));
+    const month = parseInt(timestamp.slice(4, 6)) - 1;
+    const day = parseInt(timestamp.slice(6, 8));
+    const hour = parseInt(timestamp.slice(8, 10));
+    const minute = parseInt(timestamp.slice(10, 12));
+
+    const utcDate = new Date(Date.UTC(year, month, day, hour, minute));
+
+    const localDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'EST' }));
+
+    const formattedDate = `${(localDate.getMonth() + 1).toString().padStart(2, '0')}/${localDate.getDate().toString().padStart(2, '0')} ${localDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} EST`;
+
+    return formattedDate;
+}
+
+function getWatch(polycoords){
+    var alertInfo = polycoords
+    var alertTitlecolor = 'black';
+    var alertTitlebackgroundColor = "white";
+    if (alertInfo.properties.TYPE == "SVR"){
+        alertTitlebackgroundColor = "#516BFF";
+    } else if (alertInfo.properties.TYPE == "TOR"){
+        alertTitlebackgroundColor = "#FE5859";
+    }
+
+    var alertTitle = "";
+    if (alertInfo.properties.IS_PDS){
+        alertTitle = alertTitle + "PDS ";
+    }
+
+    if (alertInfo.properties.TYPE == "TOR"){
+        alertTitle = alertTitle + "Tornado Watch ";
+    } else {
+        alertTitle = alertTitle + "Severe Tstorm Watch ";
+    }
+
+    alertTitle = alertTitle + alertInfo.properties.NUM;
+
+    var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertTitle + '</div><br>';
+    construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatWatchDate(alertInfo.properties.ISSUE) + '</p>';
+    construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Expires:</b> ' + formatWatchDate(alertInfo.properties.EXPIRE) + '</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + alertInfo.properties.MAX_HAIL + '"</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945) + 'mph</p><br>';
+    construct = construct + '<h3>Probability of...</h3>';
+    construct = construct + '<p style="margin: 0px;"><b>Two or more tornadoes: </b> ' + alertInfo.properties.P_TORTWO + '%</p>';
+    construct = construct + '<p style="margin: 0px;"><b>One or more significant tornadoes: </b> ' + alertInfo.properties.P_TOREF2 + '%</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Ten or more severe wind events: </b> ' + alertInfo.properties.P_WIND10 + '%</p>';
+    construct = construct + '<p style="margin: 0px;"><b>One or more significant wind events: </b> ' + alertInfo.properties.P_WIND65 + '%</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Ten or more severe hail events: </b> ' + alertInfo.properties.P_HAIL10 + '%</p>';
+    construct = construct + '<p style="margin: 0px;"><b>One or more significant hail events: </b> ' + alertInfo.properties.P_HAIL2I + '%</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Six or more severe wind and hail events: </b> ' + alertInfo.properties.P_HAILWND + '%</p>';
+
+    construct = construct + '</div>'
+
+    return construct;
+}
+
+
+function loadWatches() {
+    console.log("Getting watches");
+    var xhr = new XMLHttpRequest();
+    var currentDate = new Date();
+    currentDate.setMonth(currentDate.getMonth() + 1); // idk why, but the date is always one month behind, so this fixes that
+    
+    xhr.open('GET', 'https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getUTCDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getUTCDate() + '&hour2=23&minute2=0&format=geojson', true);
+    console.log('https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getUTCDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getUTCDate() + '&hour2=23&minute2=0&format=geojson')
+    xhr.setRequestHeader('Accept', 'Application/geo+json');
+
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            var watches = JSON.parse(xhr.responseText).features;
+            watches.forEach(function(watch) {
+                    var thisItem = reverseSubarrays(watch.geometry.coordinates[0][0]);
+                    if (watch.properties.TYPE == "SVR" && displaySvrWatches){
+                        if (displaySvrWatches) {
+                            var polygon = L.polygon(thisItem, {color: '#516BFF'}).addTo(map);
+                            polygon.setStyle({fillOpacity: 0});
+                            polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'});
+                            polygon.on('mouseover', function (e) {
+                                polygon.setStyle({ color: '#516BFF', fillOpacity: 0.5 });
+                            }); polygon.on('mouseout', function (e) {
+                                polygon.setStyle({ color: '#516BFF', fillOpacity: 0 });
+                            });
+                        }
+                    } else if (watch.properties.TYPE == "TOR" && displayTorWatches){
+                        if (displayTorWatches) {
+                            var polygon = L.polygon(thisItem, {color: '#FE5859'}).addTo(map);
+                            polygon.setStyle({fillOpacity: 0});
+                            polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'});
+                            polygon.on('mouseover', function (e) {
+                                polygon.setStyle({ color: '#FE5859', fillOpacity: 0.5 });
+                            }); polygon.on('mouseout', function (e) {
+                                polygon.setStyle({ color: '#FE5859', fillOpacity: 0 });
+                            });
+                        }
+                    }
+                    console.log("Added watch")
+            });
+        }
+    };
+    xhr.send();
+    return true;
 }
 
 function loadAlerts() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://api.weather.gov/alerts/active', true);
     xhr.setRequestHeader('Accept', 'Application/geo+json');
-
-    map.eachLayer(function(layer) {
-        if (layer instanceof L.Polygon) {
-        map.removeLayer(layer);
-        }
-    });
 
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
@@ -551,6 +827,18 @@ function setKind(kind) {
     } else if (kind == 'past') {
         doFuture = false;
         initialize(apiData, optionKind);
+    } else if (kind == 'rain') {
+        optionSnowColors = 0;
+        refresh();
+    } else if (kind == 'snow') {
+        optionSnowColors = 1;
+        refresh();
+    } else if (kind == 'rough') {
+        optionSmoothData = 0;
+        refresh();
+    } else if (kind == 'smooth') {
+        optionSmoothData = 1;
+        refresh();
     }
 }
 
@@ -595,24 +883,57 @@ function refresh(){
         initialize(apiData, optionKind);
     };
     apiRequest.send();
+
+    // clear map polygons
+    map.eachLayer(function(layer) {
+        if (layer instanceof L.Polygon) {
+        map.removeLayer(layer);
+        }
+    });
+    map.eachLayer(function(layer) {
+        if (layer instanceof L.Marker) {
+        map.removeLayer(layer);
+        }
+    });
+
     loadAlerts();
+    loadReports();
+    loadWatches();
     console.log("Refreshed!")
     }
 
 
 function loop() {
-    var apiRequest = new XMLHttpRequest();
-    apiRequest.open("GET", "https://api.rainviewer.com/public/weather-maps.json", true);
-    apiRequest.onload = function(e) {
-        // store the API response for re-use purposes in memory
-        apiData = JSON.parse(apiRequest.response);
-        initialize(apiData, optionKind);
-    };
-    apiRequest.send();
-    loadAlerts();
-    console.log("Refreshed!")
+    if (canRefresh){
+        var apiRequest = new XMLHttpRequest();
+        apiRequest.open("GET", "https://api.rainviewer.com/public/weather-maps.json", true);
+        apiRequest.onload = function(e) {
+            // store the API response for re-use purposes in memory
+            apiData = JSON.parse(apiRequest.response);
+            initialize(apiData, optionKind);
+        };
+        apiRequest.send();
+        
+        // clear map polygons
+        map.eachLayer(function(layer) {
+            if (layer instanceof L.Polygon) {
+            map.removeLayer(layer);
+            }
+        });
+        map.eachLayer(function(layer) {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+        
+
+        var foo = loadWatches(); // this ensures watches load before warnings so the warnings don't get trapped under the watches and become unclickable
+        loadAlerts();
+        loadReports();
+        console.log("Refreshed!")
+    }
     
-    setTimeout(loop, 60000);
+    setTimeout(loop, 120000);
 }
 
 window.addEventListener('load', (event) => {
