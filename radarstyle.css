@@ -16,7 +16,6 @@ body{
     font-weight: 300;
     font-style: normal;
     overflow-y: hidden;
-    font-size: 16px;
 }
 .material-symbols-outlined {
     font-variation-settings:
@@ -40,6 +39,16 @@ button {
 }
 button:hover {
     background-color: rgb(165, 165, 165);
+}
+
+.mbtn {
+    background-color: white;
+    border: grey 1px solid;
+    padding: 5px;
+    padding-left: 7px;
+    padding-right: 7px;
+    font-weight: bold;
+    border-radius: 7px;
 }
 
 .close {
@@ -108,7 +117,7 @@ select {
 .alertpopup .leaflet-popup-content-wrapper {
     background: #000000;
     color: #eee;
-    font-size: 14px;
+    font-size: medium;
     font-family: "Outfit", sans-serif;
     line-height: 24px;
     border-radius: 10px;
@@ -144,6 +153,16 @@ select {
     height: 100px;
 }
 
+/*.leaflet-layer,
+.leaflet-control-zoom-in,
+.leaflet-control-zoom-out,
+.leaflet-control-attribution {
+  filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+.leaflet-container {
+    background: #000
+}
+*/
 
 
 
