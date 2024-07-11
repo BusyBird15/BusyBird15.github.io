@@ -242,7 +242,7 @@ function getReport(polycoords, type){
     const ampm = hours >= 12 ? 'pm' : 'am';
     const formattedHours = (hours % 12) || 12;
     const formattedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    newTime = `${formattedHours}:${formattedMinutes} ${ampm} EST`;
+    newTime = `${formattedHours}:${formattedMinutes} ${ampm}`;
 
     construct = construct + '<p style="margin: 0px;"><b>Report Time:</b> ' + newTime + '</p>';
 
@@ -352,12 +352,21 @@ function getAlert(polycoords){
     } else {
         alertTitlebackgroundColor = "orange";
     }
-    var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+    var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
     if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
-        construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
+        construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
     }
-    construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
+    if (alertInfo.properties.description.includes("confirmed tornado")){
+        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
+    } else if (alertInfo.properties.description.includes("reported tornado")){
+        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
+    }
+    if (alertInfo.properties.description.includes("considerable")){
+        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p></div><br>';
+    }
+
     construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatTimestamp(alertInfo.properties.sent) + '</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
     construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
     
     try {
@@ -394,7 +403,7 @@ function formatWatchDate (timestamp) {
 
     const utcDate = new Date(Date.UTC(year, month, day, hour, minute));
 
-    const localDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'EST' }));
+    const localDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'America/New_York' }));
 
     const formattedDate = `${(localDate.getMonth() + 1).toString().padStart(2, '0')}/${localDate.getDate().toString().padStart(2, '0')} ${localDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })} EST`;
 
@@ -424,7 +433,7 @@ function getWatch(polycoords){
 
     alertTitle = alertTitle + alertInfo.properties.NUM;
 
-    var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertTitle + '</div><br>';
+    var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertTitle + '</div><br>';
     construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatWatchDate(alertInfo.properties.ISSUE) + '</p>';
     construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Expires:</b> ' + formatWatchDate(alertInfo.properties.EXPIRE) + '</p>';
     construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + alertInfo.properties.MAX_HAIL + '"</p>';
@@ -450,8 +459,8 @@ function loadWatches() {
     var currentDate = new Date();
     currentDate.setMonth(currentDate.getMonth() + 1); // idk why, but the date is always one month behind, so this fixes that
     
-    xhr.open('GET', 'https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getUTCDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getUTCDate() + '&hour2=23&minute2=0&format=geojson', true);
-    console.log('https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getUTCDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getUTCDate() + '&hour2=23&minute2=0&format=geojson')
+    xhr.open('GET', 'https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getDate() + '&hour2=23&minute2=0&format=geojson', true);
+    console.log('https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getDate() + '&hour2=23&minute2=0&format=geojson')
     xhr.setRequestHeader('Accept', 'Application/geo+json');
 
     xhr.onreadystatechange = function() {
@@ -463,7 +472,11 @@ function loadWatches() {
                         if (displaySvrWatches) {
                             var polygon = L.polygon(thisItem, {color: '#516BFF'}).addTo(map);
                             polygon.setStyle({fillOpacity: 0});
-                            polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'});
+                            if (!checkMobile()){
+                                polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: '#516BFF', fillOpacity: 0.5 });
                             }); polygon.on('mouseout', function (e) {
@@ -474,8 +487,11 @@ function loadWatches() {
                         if (displayTorWatches) {
                             var polygon = L.polygon(thisItem, {color: '#FE5859'}).addTo(map);
                             polygon.setStyle({fillOpacity: 0});
-                            polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'});
-                            polygon.on('mouseover', function (e) {
+                            if (!checkMobile()){
+                                polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getWatch(watch), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }                            polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: '#FE5859', fillOpacity: 0.5 });
                             }); polygon.on('mouseout', function (e) {
                                 polygon.setStyle({ color: '#FE5859', fillOpacity: 0 });
@@ -509,7 +525,11 @@ function loadAlerts() {
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
                             allalerts.push(thisAlert);
-                            polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            if (!checkMobile()){
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
@@ -534,8 +554,11 @@ function loadAlerts() {
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
                             allalerts.push(thisAlert);
-                            polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
-                            polygon.on('mouseover', function (e) {
+                            if (!checkMobile()){
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }                            polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
                                 polygon.setStyle({ color: 'red', fillOpacity: alertOpacity});
@@ -549,7 +572,11 @@ function loadAlerts() {
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
                             allalerts.push(thisAlert);
-                            polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            if (!checkMobile()){
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }
                             polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
@@ -564,8 +591,11 @@ function loadAlerts() {
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
                             allalerts.push(thisAlert);
-                            polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
-                            polygon.on('mouseover', function (e) {
+                            if (!checkMobile()){
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }                            polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
                                 polygon.setStyle({ color: 'green', fillOpacity: alertOpacity});
@@ -579,8 +609,11 @@ function loadAlerts() {
                             thisAlert.push(polygon.getLatLngs().join())
                             thisAlert.push(alert.properties.id)
                             allalerts.push(thisAlert);
-                            polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
-                            polygon.on('mouseover', function (e) {
+                            if (!checkMobile()){
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                            } else {
+                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                            }                            polygon.on('mouseover', function (e) {
                                 polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                             }); polygon.on('mouseout', function (e) {
                                 polygon.setStyle({ color: 'magenta', fillOpacity: alertOpacity });
@@ -595,8 +628,11 @@ function loadAlerts() {
                                 thisAlert.push(polygon.getLatLngs().join())
                                 thisAlert.push(alert.properties.id)
                                 allalerts.push(thisAlert);
-                                polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
-                                polygon.on('mouseover', function (e) {
+                                if (!checkMobile()){
+                                    polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '500' , 'maxWidth': '400', 'className': 'alertpopup'});
+                                } else {
+                                    polygon.bindPopup(getAlert(alert), {"autoPan": true, 'maxheight': '200' , 'maxWidth': '200', 'className': 'alertpopup'});
+                                }                                polygon.on('mouseover', function (e) {
                                     polygon.setStyle({ color: 'orange', fillOpacity: 0.7 });
                                 }); polygon.on('mouseout', function (e) {
                                     polygon.setStyle({ color: '#FF8E02', fillOpacity: alertOpacity });
@@ -896,10 +932,13 @@ function refresh(){
         }
     });
 
-    loadAlerts();
-    loadReports();
     loadWatches();
-    console.log("Refreshed!")
+    setTimeout(function() {
+        loadAlerts();
+        loadReports();
+        console.log("Refreshed!")
+    }, 1000);
+    
     }
 
 
@@ -927,10 +966,12 @@ function loop() {
         });
         
 
-        var foo = loadWatches(); // this ensures watches load before warnings so the warnings don't get trapped under the watches and become unclickable
+    loadWatches();
+    setTimeout(function() {
         loadAlerts();
         loadReports();
         console.log("Refreshed!")
+    }, 1000);
     }
     
     setTimeout(loop, 120000);
@@ -940,4 +981,26 @@ window.addEventListener('load', (event) => {
     document.getElementById("loader").style.display = "none";
 });
 
+// Adapt site if user is on mobile
+function checkMobile() {
+    let userIsOnMobile = false;
+    (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) userIsOnMobile = true;})(navigator.userAgent||navigator.vendor||window.opera);
+    return userIsOnMobile;
+}
+
+if (checkMobile()){
+    document.body.style.fontSize = '12px';
+    document.getElementById("mapid").style.bottom = '50px';
+    document.getElementById("official-radar").remove();
+    document.getElementById("desktopctrl").style.display = 'none';
+    document.getElementById("mobilectrl").style.display = 'flex';
+    document.getElementById("settingsModal").style.width = '250px';
+    var elements = document.querySelectorAll(".material-symbols-outlined");
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].style.fontSize = "14px";
+    }
+}
+
+
+// Auto-update radar
 loop()
