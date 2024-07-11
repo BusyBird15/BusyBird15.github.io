@@ -27,7 +27,7 @@
     <!--JS is added at the end of the body after elements are constructed-->
 
 </head>
-<body>
+<body style="font-size: 18px;">
     <div id="loader" style="top: 0px; left: 0px; display: none; justify-content: center; vertical-align: middle; position: absolute; z-index: 9999; background-color: rgb(100, 100, 100); width: 100%; height: 100%;">
         <div class="wrapper">
             <div class="circle"></div>
@@ -39,26 +39,27 @@
             <span><b>Loading</b></span>
         </div>
     </div>
-    <div style="position: absolute; left: 50%; bottom: 20px;">
-        <div class="overlay-object" style="position: relative; left: -50%;">
-            <ul style="text-align: center; padding-left: 0px; margin: 0px;">
-                <li class="sli"><button onclick="stop(); showFrame(animationPosition - 1); return;" class="material-symbols-outlined" style="font-size: 20px;">skip_previous</button></li>
-                <li class="sli"><button onclick="playStop();" id="stbtn" class="material-symbols-outlined" style="font-size: 20px;">play_arrow</button></li>
-                <li class="sli"><button onclick="stop(); showFrame(animationPosition + 1); return;" class="material-symbols-outlined" style="font-size: 20px; margin-right: 10px;">skip_next</button></li>
-                <li class="sli"><button onclick="refresh();" class="material-symbols-outlined" style="font-size: 20px;">refresh</button></li>
-                <li class="sli"><button onclick="settings();" id="modalBtn" class="material-symbols-outlined" style="font-size: 20px;">settings</button></li>
-                <!--<li class="sli"><button onclick="toggleLayerModal();" id="layerBtn" class="material-symbols-outlined" style="font-size: 20px;">layers</button></li>-->
-                <li class="sli"><button onclick="toggleInfoModal();" id="layerBtn" class="material-symbols-outlined" style="font-size: 20px;">info</button></li>
+
+    <div style="position: absolute; right: 20px; top: 20px;">
+        <div class="overlay-object" id="timestamp" style="cursor: default; text-align:center; position: relative;">Loading...</div>
+    </div>
+
+    <div id="desktopctrl" style="display:block; position: absolute; left: 50%; bottom: 20px;">
+        <div id="radarctrlsdiv" class="overlay-object" style="position: relative; left: -50%;">
+            <ul id="radarctrls" style="text-align: center; padding-left: 0px; margin: 0px; font-size: 20px;">
+                <li class="sli"><button onclick="stop(); showFrame(animationPosition - 1); return;" class="material-symbols-outlined">skip_previous</button></li>
+                <li class="sli"><button onclick="playStop();" id="stbtn" class="material-symbols-outlined">play_arrow</button></li>
+                <li class="sli"><button onclick="stop(); showFrame(animationPosition + 1); return;" class="material-symbols-outlined" style="margin-right: 10px;">skip_next</button></li>
+                <li class="sli"><button onclick="refresh();" class="material-symbols-outlined" >refresh</button></li>
+                <li class="sli"><button onclick="settings();" id="modalBtn" class="material-symbols-outlined">settings</button></li>
+                <!--<li class="sli"><button onclick="toggleLayerModal();" id="layerBtn" class="material-symbols-outlined">layers</button></li>-->
+                <li class="sli"><button onclick="toggleInfoModal();" id="layerBtn" class="material-symbols-outlined">info</button></li>
             </ul>
         </div>
     </div>
-    
-    <div style="position: absolute; right: 0px; top: 20px;">
-        <div class="overlay-object" id="timestamp" style="cursor: default; text-align:center; position: relative; left: -50%;">Loading...</div>
-    </div>
 
     <div style="position: absolute; left: 50%; bottom: 90px;">
-        <div id="settingsModal" class="overlay-object" style="width: 300px; padding: 20px; display: none; position: relative; left: -50%; height: 310px;">
+        <div id="settingsModal" class="overlay-object" style="width: 330px; padding: 20px; display: none; position: relative; left: -50%; height: 310px;">
                 <button onclick="closeSettings();" class="close"><div class="material-symbols-outlined" style="font-size: 16px;">close</div></button>
             <div style="height: 240px; overflow-y: scroll; overflow-x: hidden; scrollbar-width: none; margin-bottom: 10px;">
                 <div id="radarsett">
@@ -156,7 +157,7 @@
     </div>
 
     <div style="position: absolute; left: 50%; bottom: 90px;">
-        <div id="infoModal" class="overlay-object" style="display: none; position: relative; left: -50%; width: 300px; height: 330px; background-color: black;">
+        <div id="infoModal" class="overlay-object" style="display: none; position: relative; left: -50%; width: 300px; height: 370px; background-color: black;">
             <div class="alertlist" style="border-left: 0px; width: 300px;">
                 <button onclick="closeSettings();" class="close"><span class="material-symbols-outlined" style="font-size: 16px;">close</span></button>
                 <h2 style="margin: 10px;"><b>About this Page</b></h2><br>
@@ -189,11 +190,23 @@
     <a style="color: white;" href="https://busybird15.github.io/theweatherteam">
         <div class="overlay-object" style="display: flex; top: 20px; left: 65px;">
             <img src="https://busybird15.github.io/assets/twt.png" width="40px" height="40px" style="border-radius: 10px;">
-            <p style="padding-left: 10px; margin: 12px 0px 10px 0px;"><b>Official Radar</b></p>
+            <p id="official-radar" style="padding-left: 10px; margin: 10px 0px 5px 0px;"><b>Official Radar</b></p>
         </div>
     </a>
     
     <div id="mapid" style="border-radius: 10px; position: absolute; top: 10px; left: 10px; bottom: 10px; right: 10px;"></div>
+
+    <div id="mobilectrl" style="position:absolute; bottom: 10px; width:calc(100% - 20px); display:none; z-index: 9999; justify-content: center;">
+        <ul id="radarctrls" style="text-align: center; padding-left: 0px; margin: 0px; font-size: 20px; ">
+            <li class="sli"><button onclick="stop(); showFrame(animationPosition - 1); return;" class="material-symbols-outlined mbtn">skip_previous</button></li>
+            <li class="sli"><button onclick="playStop();" id="stbtn" class="material-symbols-outlined mbtn">play_arrow</button></li>
+            <li class="sli"><button onclick="stop(); showFrame(animationPosition + 1); return;" class="material-symbols-outlined mbtn" style="margin-right: 10px;">skip_next</button></li>
+            <li class="sli"><button onclick="refresh();" class="material-symbols-outlined mbtn" >refresh</button></li>
+            <li class="sli"><button onclick="settings();" id="modalBtn" class="material-symbols-outlined mbtn">settings</button></li>
+            <!--<li class="sli"><button onclick="toggleLayerModal();" id="layerBtn" class="material-symbols-outlined mbtn">layers</button></li>-->
+            <li class="sli"><button onclick="toggleInfoModal();" id="layerBtn" class="material-symbols-outlined mbtn">info</button></li>
+        </ul>
+    </div>
     
 
     <!--Add JS after elements are added-->
