@@ -1,0 +1,210 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <!--Tab title and icon-->
+    <title>Live Radar - The Weather Team </title>
+    <link rel="icon" type="image/png" href="https://busybird15.github.io/assets/twt-round.png">
+
+    <!--Idk what these do...-->
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+    <!--Links to the Leaflet CSS/JS-->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet"/>
+
+    <!--Links to the Google icon set-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    
+    <!--Links to the font used-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+
+    <!--CSS-->
+    <link rel="stylesheet" href="radarstyle.css"></link>
+    <!--JS is added at the end of the body after elements are constructed-->
+
+</head>
+<body style="font-size: 18px;">
+
+    <div style="position: absolute; right: 20px; top: 20px;">
+        <div class="overlay-object" id="timestamp" style="cursor: default; text-align:center; position: relative;">Loading...</div>
+    </div>
+
+    <div id="desktopctrl" style="display:block; position: absolute; left: 50%; bottom: 20px;">
+        <div id="radarctrlsdiv" class="overlay-object" style="position: relative; left: -50%;">
+            <ul id="radarctrls" style="text-align: center; padding-left: 0px; margin: 0px; font-size: 20px;">
+                <li class="sli"><button title="Go back one frame" onclick="stop(); showFrame(animationPosition - 1); return;" class="material-symbols-outlined">skip_previous</button></li>
+                <li class="sli"><button title="Pause or play the animation" onclick="playStop();" id="stbtn" class="material-symbols-outlined">play_arrow</button></li>
+                <li class="sli"><button title="Go forward one frame" onclick="stop(); showFrame(animationPosition + 1); return;" class="material-symbols-outlined" style="margin-right: 10px;">skip_next</button></li>
+                <li class="sli"><button title="Refresh the radar" onclick="refresh();" class="material-symbols-outlined" >refresh</button></li>
+                <li class="sli"><button title="Open the settings menu" onclick="settingsModal();" id="modalBtn" class="material-symbols-outlined">settings</button></li>
+                <!--<li class="sli"><button onclick="toggleLayerModal();" id="layerBtn" class="material-symbols-outlined">layers</button></li>-->
+                <li class="sli"><button title="Open the credits menu" onclick="toggleInfoModal();" id="layerBtn" class="material-symbols-outlined">info</button></li>
+            </ul>
+        </div>
+    </div>
+
+    <div style="position: absolute; left: 50%; bottom: 90px;">
+        <div id="settingsModal" class="overlay-object" style="width: 330px; padding: 20px; display: none; position: relative; left: -50%; height: 310px; background-color: rgba(0, 0, 0, 0.7);">
+                <button onclick="closeSettings();" class="close"><div class="material-symbols-outlined" style="font-size: 16px;">close</div></button>
+            <div style="height: 240px; overflow-y: scroll; overflow-x: hidden; scrollbar-width: none; margin-bottom: 10px;">
+                <div id="radarsett">
+                    <h3 style="justify-content: center; margin-top: 0px;"><b>Radar Settings</b></h3>
+                    <p style="margin-bottom: 1px; margin-top: 1px;">Radar Type</p>
+                    <input type="radio" name="kind" checked="checked" id="radar" onchange="setKind('radar')">Radar <input type="radio" id="satellite" name="kind" onchange="setKind('satellite')">Infrared Satellite<br>
+                    <p style="margin-bottom: 1px;">Radar Time</p>
+                    <input type="radio" name="duration" checked="checked" id="past" onchange="setKind('past')">Past <input type="radio" name="duration" id="future" onchange="setKind('future')">Past + Future<br>
+                    <p style="margin-bottom: 1px;">Snow Colors</p>
+                    <input type="radio" name="snowColor" id="snow" onchange="setKind('snow')">Treat as snow <input type="radio" id="rain" name="snowColor" checked="checked" onchange="setKind('rain')">Treat as rain<br>
+                    <p style="margin-bottom: 1px;">Radar Smoothing</p>
+                    <input type="radio" name="smoothing" id="rough" checked="checked" onchange="setKind('smooth')">Smooth <input type="radio" id="smooth" name="smoothing" onchange="setKind('rough')">Rough<br>
+
+                    <p style="margin-bottom: 1px;">Radar Opacity</p>
+                    <input width="250px" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity"><br>
+
+                    <p style="margin-bottom: 1px;">Radar Color Scheme</p>
+                    <select id="colors" onchange="setColors(); return;">
+                        <option value="0">Monochrome</option>
+                        <option value="1">Fruit</option>
+                        <option value="2">Flames</option>
+                        <option value="3">Titan</option>
+                        <option value="4">The Weather Channel</option>
+                        <option value="5">WeatherBug</option>
+                        <option value="6" selected="selected">The Weather Team</option>
+                        <option value="7">Juice</option>
+                        <option value="8">Dark Sky</option>
+                    </select>
+                </div>
+                <div id="alertsett" style="display: none;">
+                    <h3 style="justify-content: center; margin-top: 0px;"><b>Alert Settings</b></h3>
+                    <p style="margin-bottom: 1px;">Alert Fill Opacity</p>
+                    <input width="250px" type="range" min="1" max="100" value="40" class="slider" id="alop" onchange="alertOpacityChange()" title="Alert Opacity">
+                    <p style="margin-bottom: 1px;">Warnings to Show</p>
+                    <div class="alertlist" style="border-left: 0px;">
+                        <input style="padding-left: 5px;" type="checkbox" id="tor" onchange="torChange()" name="tor" checked="checked" value="tor"><p style="padding-left: 5px; color: red; margin: 4px; display: inline;"><b>RED: </b>Tornado Warning</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="svr" onchange="svrChange()" name="svr" checked="checked" value="svr"><p style="padding-left: 5px; color: rgb(236, 193, 0); margin: 4px; display: inline;"><b>YELLLOW: </b>Severe T-storm Warning</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="flood" onchange="floodChange()" name="flood" checked="checked" value="flood"><p style="padding-left: 2px; color: magenta; margin: 4px; display: inline;"><b>MAGENTA: </b>Flood Warning</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="fflood" onchange="ffloodChange()" name="fflood" checked="checked" value="fflood"><p style="padding-left: 2px; color: green; margin: 4px; display: inline;"><b>GREEN: </b>Flash Flood Warning</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="spec" onchange="specChange()" name="spec" checked="checked" value="spec"><p style="padding-left: 5px; color: blue; margin: 4px; display: inline;"><b>BLUE: </b>Special Weather Statement</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="oth" onchange="othChange()" name="oth" checked="checked" value="oth"><p style="padding-left: 2px; color: orange; margin: 4px; display: inline;"><b>ORANGE: </b>Other</p>
+                    </div><br>
+                    <p style="margin-bottom: 1px;">Watches to Show</p>
+                    <div class="alertlist" style="border-left: 0px;">
+                        <input style="padding-left: 5px;" type="checkbox" id="torww" onchange="torwwChange()" name="tor" checked="checked" value="tor"><p style="padding-left: 5px; color: #FE5859; margin: 4px; display: inline;"><b>RED: </b>Tornado Watch</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="svrww" onchange="svrwwChange()" name="svr" checked="checked" value="svr"><p style="padding-left: 5px; color: #516BFF; margin: 4px; display: inline;"><b>BLUE: </b>Severe T-storm Watch</p>
+                    </div>
+                </div>
+                <div id="reportsett" style="display: none;">
+                    <h3 style="justify-content: center; margin-top: 0px;"><b>Storm Report Settings</b></h3>
+                    <p style="margin-bottom: 1px;">Reports to Show</p>
+                    <div class="alertlist" style="border-left: 0px;">
+                        <input style="padding-left: 5px;" type="checkbox" id="torr" onchange="torRep()" name="tor" checked="checked" value="tor"><p style="padding-left: 5px; color: red; margin: 4px; display: inline;"><b>RED: </b>Tornado Reports</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="wndr" onchange="wndRep()" name="wnd" checked="checked" value="svr"><p style="padding-left: 5px; color: blue; margin: 4px; display: inline;"><b>BLUE: </b>Wind Reports</p>
+                        <br>
+                        <input style="padding-left: 5px;" type="checkbox" id="halr" onchange="halRep()" name="hal" checked="checked" value="flood"><p style="padding-left: 2px; color: green; margin: 4px; display: inline;"><b>GREEN: </b>Hail Reports</p>
+                    </div>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center; flex-direction: row;">
+                <button onclick="radarSettings();" id="radarset" class="settinggrp" style="margin-right: 50px; background-color: rgb(67, 67, 241); "><div class="material-symbols-outlined" style="font-size: 22px;">radar</div></button>
+                <button onclick="alertSettings();" id="alertset" class="settinggrp"  style="margin-right: 50px"><div class="material-symbols-outlined" style="font-size: 22px;">warning</div></button>
+                <button onclick="reportSettings();" id="reportset" class="settinggrp"><div class="material-symbols-outlined" style="font-size: 22px;">report</div></button>
+            </div>
+                
+            
+        </div>
+    </div>
+    
+    <div style="position: absolute; left: 50%; bottom: 90px;">
+        <div id="layerModal" class="overlay-object" style="display: none; position: relative; left: -50%; width: 340px; height: 150px; background-color: black;">
+            <div class="alertlist" style="border-left: 0px;">
+                <button onclick="closeSettings();" class="close"><span class="material-symbols-outlined" style="font-size: 16px;">close</span></button>
+                <br>
+                <input style="padding-left: 5px;" type="checkbox" id="tor" onchange="torChange()" name="tor" checked="checked" value="tor"><p style="padding-left: 5px; color: red; margin: 4px; display: inline;"><b>RED: </b>Tornado Warning</p>
+                <br>
+                <input style="padding-left: 5px;" type="checkbox" id="svr" onchange="svrChange()" name="svr" checked="checked" value="svr"><p style="padding-left: 5px; color: rgb(236, 193, 0); margin: 4px; display: inline;"><b>YELLLOW: </b>Severe Thunderstorm Warning</p>
+                <br>
+                <input style="padding-left: 5px;" type="checkbox" id="flood" onchange="floodChange()" name="flood" checked="checked" value="flood"><p style="padding-left: 2px; color: magenta; margin: 4px; display: inline;"><b>MAGENTA: </b>Flood Warning</p>
+                <br>
+                <input style="padding-left: 5px;" type="checkbox" id="fflood" onchange="ffloodChange()" name="fflood" checked="checked" value="fflood"><p style="padding-left: 2px; color: green; margin: 4px; display: inline;"><b>GREEN: </b>Flash Flood Warning</p>
+                <br>
+                <input style="padding-left: 5px;" type="checkbox" id="spec" onchange="specChange()" name="spec" checked="checked" value="spec"><p style="padding-left: 5px; color: blue; margin: 4px; display: inline;"><b>BLUE: </b>Special Weather Statement</p>
+                <br>
+                <input style="padding-left: 5px;" type="checkbox" id="oth" onchange="othChange()" name="oth" checked="checked" value="oth"><p style="padding-left: 2px; color: orange; margin: 4px; display: inline;"><b>ORANGE: </b>Other</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="position: absolute; left: 50%; bottom: 90px;">
+        <div id="infoModal" class="overlay-object" style="display: none; position: relative; left: -50%; width: 300px; height: 300px; background-color: rgba(0, 0, 0, 0.7);">
+            <div class="alertlist" style="border-left: 0px; width: 300px;">
+                <button onclick="closeSettings();" class="close"><span class="material-symbols-outlined" style="font-size: 16px;">close</span></button>
+                <h2 style="margin: 10px;"><b>About this Page</b></h2>
+                <div style="height: 10px;"></div>
+                <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>Built for </b><a href="https://busybird15.github.io/theweatherteam" target="_blank">The Weather Team</a> by <a href="https://x.com/busybird150" target="_blank">BusyBird15</a> (<a href="mailto:busybird15@email.com">contact me</a>).</p>
+                <div style="height: 10px;"></div>
+                <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>Radar Tiles</b> from <a href="https://rainviewer.com/api.html" target="_blank">RainViewer</a>.</p>
+                <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>Map Tiles</b> from <a href="https://leafletjs.com" target="_blank">Leaflet</a> and <a href="https://carto.com/attributions" target="_blank">CARTO</a>.</p>
+                <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>Warnings</b> from <a href="https://www.weather.gov/documentation/services-web-api#/" target="_blank">NOAA's API</a>.</p>
+                <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>Watches</b> from <a href="https://www.mesonet.agron.iastate.edu/request/gis/spc_watch.phtml" target="_blank">the IEM WW Archive</a>.</p>
+                <!--<p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>Some ideas</b> from <a href="https://www.radar.xtremewx.com/" target="_blank">the XWD radar</a>.</p>-->
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="overlay-object" style="border: 5px solid rgb(26, 26, 26); width: 360px; visibility: hidden; overflow-y: auto; margin-top: 10px; height: 50%; border-radius: 15px;  -moz-border-radius: 10px; scrollbar-width: none; position: absolute; bottom: 20px; left: 20px;" id="alertDeets">
+        <div id="alert_title" style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder;"></div>
+        <p style="height:2px"></p>
+        <p id="alert_issued" style="padding-left: 5px; margin: 4px;">Unknown issuance</p>
+        <p id="alert_expiration" style="padding-left: 5px; margin: 4px;">Unknown expiration</p>
+        <p style="height:2px"></p>
+        <p id="alert_hazards" style="padding-left: 5px; margin: 4px;">Unknown issuance</p>
+        <p id="alert_impacts" style="padding-left: 5px; margin: 4px;">Unknown issuance</p>
+        <p style="height:2px"></p>
+        <p id="alert_areas" style="padding-left: 5px; margin: 4px;">Unknown areas</p>
+        <br>
+        <p id="alert_description" style="padding-left: 5px; margin: 4px;">Unknown description</p>
+    </div>
+
+    <!--The Weather Team attribution-->
+    <a style="color: white;" href="https://busybird15.github.io/theweatherteam">
+        <div class="overlay-object" style="display: flex; top: 20px; left: 20px;">
+            <img src="https://busybird15.github.io/assets/twt.png" width="40px" height="40px" style="border-radius: 10px;">
+            <p id="official-radar" style="padding-left: 10px; margin: 10px 0px 5px 0px;"><b>Official Radar</b></p>
+        </div>
+    </a>
+
+    <!--Map selector-->
+    <div class="overlay-object" style="display: flex; bottom: 20px; left: 20px; height: 30px; width: 30px; justify-content: center; align-items: center;">
+        <p title="Change map color theme" class="material-symbols-outlined" style="margin: 0px; cursor: pointer;" onclick="setMapType('toggle');">map</p>
+    </div>
+    
+    <div id="mapid" style="border-radius: 10px; position: absolute; top: 6px; left: 6px; bottom: 6px; right: 6px;"></div>
+
+    <div id="mobilectrl" style="position:absolute; bottom: 10px; width:calc(100% - 20px); display:none; z-index: 9999; justify-content: center;">
+        <ul id="radarctrls" style="text-align: center; padding-left: 0px; margin: 0px; font-size: 20px; ">
+            <li class="sli"><button onclick="stop(); showFrame(animationPosition - 1); return;" class="material-symbols-outlined mbtn">skip_previous</button></li>
+            <li class="sli"><button onclick="playStop();" id="stbtn" class="material-symbols-outlined mbtn">play_arrow</button></li>
+            <li class="sli"><button  onclick="stop(); showFrame(animationPosition + 1); return;" class="material-symbols-outlined mbtn" style="margin-right: 10px;">skip_next</button></li>
+            <li class="sli"><button onclick="refresh();" class="material-symbols-outlined mbtn" >refresh</button></li>
+            <li class="sli"><button onclick="settingsModal();" id="modalBtn" class="material-symbols-outlined mbtn">settings</button></li>
+            <!--<li class="sli"><button onclick="toggleLayerModal();" id="layerBtn" class="material-symbols-outlined mbtn">layers</button></li>-->
+            <li class="sli"><button onclick="toggleInfoModal();" id="layerBtn" class="material-symbols-outlined mbtn">info</button></li>
+        </ul>
+    </div>
+    
+
+    <!--Add JS after elements are added-->
+    <script src="radarscript.js"></script>
+</body>    
