@@ -415,7 +415,7 @@ function onMapRightClick(e) {
 
                 content = content + '<p style="margin:0px;"><b>Temperature: </b>' + data.currentobservation.Temp + '°F</p>';
                 content = content + '<p style="margin:0px;"><b>Humidity: </b>' + data.currentobservation.Relh + '%</p>';
-                content = content + '<p style="margin:0px;"><b>Dew Point: </b>' + data.currentobservation.Dewp + '%</p>';
+                content = content + '<p style="margin:0px;"><b>Dew Point: </b>' + data.currentobservation.Dewp + '°F</p>';
                 content = content + '<p style="margin:0px;"><b>Pressure (SLP): </b>' + data.currentobservation.SLP + 'inHg</p>';
                 content = content + '<p><b>Forecast: </b>' + data.data.text[0] + '</p>';
 
