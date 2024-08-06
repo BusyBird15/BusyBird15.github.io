@@ -7,7 +7,6 @@
     <style>
         body {
     margin: 0;
-    height: 100vh;
     background-image: url('cloudy.jpg');
     background-size: cover;
     background-position: center;
@@ -25,7 +24,7 @@
     -webkit-backdrop-filter: blur(3px);
     width: calc(100% - 20px);
     border-radius: 5px;
-    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5);
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
 }
 
 .searchbox {
@@ -70,6 +69,20 @@
 .searchbtn:hover{
     background: rgb(255, 255, 255);
 }
+
+.forecastitem {
+    background: white;
+    color: black;
+    border-radius: 5px;
+    margin: 10px 0px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 250px;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5);
+}
     </style>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
     <!--Links to the font used-->
@@ -82,6 +95,7 @@
         <input id="searchbox" class="searchbox" placeholder="Enter a location" type="text" style="margin: 2px; width: -webkit-fill-available;">
         <button onclick="querylocation();" class="searchbtn material-symbols-outlined">refresh</button>
     </div>
+    <div id="products" class="section" style="display: flex; flex-direction: column;"></div>
     <div class="section" style="display: flex;">
         <div style="display: flex; align-items: center;">
             <img id="conditionimg" src="https://forecast.weather.gov/newimages/large/sct.png" style="width: 80px; height: 80px; border-radius: 5px; margin: 5px;">
@@ -101,6 +115,10 @@
     <div class="section" style="display: flex; flex-direction: column;">
         <img id="radar" src="https://radar.weather.gov/ridge/standard/CONUS_loop.gif" style="margin: 10px; max-width: 500px; height: auto; border-radius: 5px;">
     </div>
+    <div id="forecast" class="section" style="display: flex; scrollbar-width: none; width: calc(100%-40px); white-space: nowrap; position: relative; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch;"></div>
+    <div class="section" style="display: flex; flex-direction: column; text-align: center;">
+        <p id="officelink" style="margin: 5px;"><b>Forecast office: </b>--</p>
+    </div>
 </body>
 
 <script>
@@ -110,6 +128,7 @@
             if (response.ok) {
                 return response.json(); // Parse the response data as JSON
             } else {
+                alert("Couldn't get weather data for this location.");
                 throw new Error('API request failed');
             }
         })
@@ -120,12 +139,14 @@
                 document.body.style.backgroundImage = "url('storm.jpg')";
             } else if (data.currentobservation.Weather.includes("Rain") || data.currentobservation.Weather.includes("Shower") || data.currentobservation.Weather.includes("Drizzle")){
                 document.body.style.backgroundImage = "url('rain.jpg')";
-            } else if (data.currentobservation.Weather.includes("Partly")){
+            } else if (data.currentobservation.Weather.includes("Partly") || data.currentobservation.Weather.includes("Few Clouds")){
                 document.body.style.backgroundImage = "url('partsun.jpg')";
             } else if (data.currentobservation.Weather.includes("Cloud") || data.currentobservation.Weather.includes("Overcast")){
                 document.body.style.backgroundImage = "url('cloudy.jpg')";
             } else if (data.currentobservation.Weather.includes("Sun") || data.currentobservation.Weather.includes("Fair")){
                 document.body.style.backgroundImage = "url('sun.jpg')";
+            } else {
+                document.body.style.backgroundImage = "url('partsun.jpg')";
             }
 
             var windd = undefined;
@@ -163,7 +184,47 @@
             document.getElementById("vislabel").innerHTML = '<b>Visibility: </b>' + data.currentobservation.Visibility + ' mi';
             document.getElementById("dewplabel").innerHTML = '<b>Dew point: </b>' + data.currentobservation.Dewp + ' °F';
             document.getElementById("pressurelabel").innerHTML = '<b>Sea level pressure: </b>' + data.currentobservation.SLP + ' inHg';
+            document.getElementById("officelink").innerHTML = '<b>Forecast office: </b><a target="_blank" href="' + data.credit + '">' + data.location.wfo + '</a>';
             document.getElementById("radar").src = 'https://radar.weather.gov/ridge/standard/' + data.location.radar + '_loop.gif?T=' + timestamp;
+
+            var prods = '';
+            var index = 0;
+            data.data.hazard.forEach(function(hazard) {
+                var hazardColor = undefined;
+                var hazardFontColor = undefined;
+                if (hazard.includes("Tornado")) {
+                    hazardColor = 'red';
+                    hazardFontColor = 'white';
+                } else if (hazard.includes("Flood")) {
+                    hazardColor = 'magenta'
+                    hazardFontColor = 'black';
+                } else if (hazard.includes("Watch") || hazard.includes("Advisory")) {
+                    hazardColor = 'yellow'
+                    hazardFontColor = 'black';
+                } else if (hazard.includes("Warning")) {
+                    hazardColor = 'orange'
+                    hazardFontColor = 'black';
+                } else {
+                    hazardColor = 'blue'
+                    hazardFontColor = 'white';
+                }
+                prods = prods + '<a style="text-decoration: none;" target="_blank" href="' + data.data.hazardUrl[index] + '"><div style="background-color: ' + hazardColor + '; color: ' + hazardFontColor + '; border-radius: 5px; margin: 5px; display: flex; justify-content: center; text-align: center; max-width: 500px;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>' + hazard + '</b></p></div></a>';
+                index ++;
+            });
+            document.getElementById("products").innerHTML = prods;
+
+            var forecast = '';
+            var index = 0;
+            data.time.startPeriodName.forEach(function(period) {
+                forecast = forecast + '<div class="forecastitem">';
+                forecast = forecast + '<p style="margin: 5px;"><b>' + period + '</b></p>';
+                forecast = forecast + '<img src="' + data.data.iconLink[index] + '" style="width: 80px; height: 80px; border-radius: 10px; margin: 5px;">';
+                forecast = forecast + '<p style="margin: 5px; width: 140px; text-align: center; text-wrap: wrap;">' + data.data.weather[index] + '</p>';
+                forecast = forecast + '<p style="margin: 5px; width: 140px; text-align: center;"><b>' + data.time.tempLabel[index] + ':</b> ' + data.data.temperature[index] + ' °F</p>';
+                forecast = forecast + '</div>'
+                index ++;
+            });
+            document.getElementById("forecast").innerHTML = forecast;
 
         })
         .catch(error => {
@@ -183,7 +244,11 @@ function querylocation(){
             }
         })
         .then(data => {
-            getWeather(data[0].lat, data[0].lon);
+            try {
+                getWeather(data[0].lat, data[0].lon);
+            } catch {
+                alert("Unable to find a location that matches your search.");
+            }
         })
         .catch(error => {
             console.error(error);
@@ -195,5 +260,45 @@ document.getElementById("searchbox").addEventListener('keyup', function onEvent(
         querylocation();
     }
 });
+
+document.getElementById('forecast').addEventListener('wheel', (event) => {
+    event.preventDefault();
+    document.getElementById('forecast').scrollLeft += event.deltaY;
+});
+
+// Load the location by param or GPS
+const urlParams = new URLSearchParams(window.location.search);
+if (urlParams.has('lat') && urlParams.has('lon')) {
+    const lat = urlParams.get('lat');
+    const lon = urlParams.get('lon');
+    getWeather(lat, lon);
+} else if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+    } else {
+        console.log("Geolocation is not supported by this browser.");
+    }
+  
+function showPosition(position) {
+    console.log("Latitude: " + position.coords.latitude);
+    console.log("Longitude: " + position.coords.longitude);
+    getWeather(position.coords.latitude, position.coords.longitude);
+}
+  
+function showError(error) {
+    switch(error.code) {
+        case error.PERMISSION_DENIED:
+            console.log("User denied the request for Geolocation.");
+            break;
+        case error.POSITION_UNAVAILABLE:
+            console.log("Location information is unavailable.");
+            break;
+        case error.TIMEOUT:
+            console.log("The request to get user location timed out.");
+            break;
+        case error.UNKNOWN_ERROR:
+            console.log("An unknown error occurred.");
+            break;
+    }
+}
 </script>
 </html>
