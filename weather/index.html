@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Conditions and Forecast</title>
+    <style>
+        body {
+    margin: 0;
+    height: 100vh;
+    background-image: url('cloudy.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(3px);
+    font-family: 'Outfit', sans-serif;
+}
+
+.section {
+    margin: 10px;
+    background-color: rgba(255, 255, 255, 0.4); 
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    width: calc(100% - 20px);
+    border-radius: 5px;
+    box-shadow: 10px 10px 20px rgba(0, 0, 0, 0.5);
+}
+
+.searchbox {
+    display: block;
+    padding: 5px;
+    border: none;
+    border-radius: 5px;
+    outline: none;
+    background-color: rgba(0, 0, 0, 0);
+    transition-duration: 500ms;
+    font-family: 'Outfit', sans-serif;
+}
+
+.searchbox::placeholder {
+    color: #3d3d3d;
+}
+
+.searchbox:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.searchbox:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 600,
+        'GRAD' 0,
+        'opsz' 20
+}
+
+.searchbtn {
+    background: none;
+    border: none;
+    border-radius: 5px;
+    transition-duration: 500ms;
+    cursor: pointer;
+}
+
+.searchbtn:hover{
+    background: rgb(255, 255, 255);
+}
+    </style>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <!--Links to the font used-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="section" style="display: flex;">
+        <input id="searchbox" class="searchbox" placeholder="Enter a location" type="text" style="margin: 2px; width: -webkit-fill-available;">
+        <button onclick="querylocation();" class="searchbtn material-symbols-outlined">refresh</button>
+    </div>
+    <div class="section" style="display: flex;">
+        <div style="display: flex; align-items: center;">
+            <img id="conditionimg" src="https://forecast.weather.gov/newimages/large/sct.png" style="width: 80px; height: 80px; border-radius: 5px; margin: 5px;">
+            <div style="display: flex; margin-left: 5px; flex-direction: column;">
+                <h3 id="conditionlabel" style="margin: 2px;">Conditions</h3>
+                <h2 id="templabel" style="margin: 2px;">--°F</h2>
+            </div>
+        </div>
+    </div>
+    <div class="section" style="display: flex; flex-direction: column;">
+        <p id="humidlabel" style="margin: 2px; margin-left: 10px;"><b>Humidity: </b>--%</p>
+        <p id="windlabel" style="margin: 2px; margin-left: 10px;"><b>Winds: </b>-- mph from the N</p>
+        <p id="vislabel" style="margin: 2px; margin-left: 10px;"><b>Visibility: </b>-- mi</p>
+        <p id="dewplabel" style="margin: 2px; margin-left: 10px;"><b>Dew point: </b>-- °F</p>
+        <p id="pressurelabel" style="margin: 2px; margin-left: 10px;"><b>Sea level pressure: </b>-- inHg</p>
+    </div>
+    <div class="section" style="display: flex; flex-direction: column;">
+        <img id="radar" src="https://radar.weather.gov/ridge/standard/CONUS_loop.gif" style="margin: 10px; max-width: 500px; height: auto; border-radius: 5px;">
+    </div>
+</body>
+
+<script>
+    function getWeather (lat, lon){
+    fetch('https://forecast.weather.gov/MapClick.php?lon=' + lon + '&lat=' + lat + '&FcstType=json')
+        .then(response => {
+            if (response.ok) {
+                return response.json(); // Parse the response data as JSON
+            } else {
+                throw new Error('API request failed');
+            }
+        })
+        .then(data => {
+            document.getElementById("searchbox").value = data.location.areaDescription;
+
+            if (data.currentobservation.Weather.includes("Thunder")){
+                document.body.style.backgroundImage = "url('storm.jpg')";
+            } else if (data.currentobservation.Weather.includes("Rain") || data.currentobservation.Weather.includes("Shower") || data.currentobservation.Weather.includes("Drizzle")){
+                document.body.style.backgroundImage = "url('rain.jpg')";
+            } else if (data.currentobservation.Weather.includes("Partly")){
+                document.body.style.backgroundImage = "url('partsun.jpg')";
+            } else if (data.currentobservation.Weather.includes("Cloud") || data.currentobservation.Weather.includes("Overcast")){
+                document.body.style.backgroundImage = "url('cloudy.jpg')";
+            } else if (data.currentobservation.Weather.includes("Sun") || data.currentobservation.Weather.includes("Fair")){
+                document.body.style.backgroundImage = "url('sun.jpg')";
+            }
+
+            var windd = undefined;
+            if (data.currentobservation.windd < 30){
+                windd = "S"
+            } else if (data.currentobservation.windd < 60){
+                windd = "SW"
+            } else if (data.currentobservation.windd < 120){
+                windd = "W"
+            } else if (data.currentobservation.windd < 150){
+                windd = "NW"
+            } else if (data.currentobservation.windd < 210){
+                windd = "N"
+            } else if (data.currentobservation.windd < 240){
+                windd = "NE"
+            } else if (data.currentobservation.windd < 300){
+                windd = "E"
+            } else if (data.currentobservation.windd < 330){
+                windd = "SE"
+            } else {
+                windd = "S"
+            }
+
+            const timestamp = new Date();
+
+            document.getElementById("conditionimg").src = 'https://forecast.weather.gov/newimages/large/' + data.currentobservation.Weatherimage;
+            document.getElementById("conditionlabel").innerHTML = data.currentobservation.Weather;
+            document.getElementById("templabel").innerHTML = data.currentobservation.Temp + '°F';
+            document.getElementById("humidlabel").innerHTML = '<b>Humidity: </b>' + data.currentobservation.Relh + '%';
+            if (data.currentobservation.Winds == 0 && data.currentobservation.Windd == 0){
+                document.getElementById("windlabel").innerHTML = '<b>Winds: </b> calm';
+            } else {
+                document.getElementById("windlabel").innerHTML = '<b>Winds: </b>' + data.currentobservation.Winds + ' mph from the ' + windd;
+            }
+            document.getElementById("vislabel").innerHTML = '<b>Visibility: </b>' + data.currentobservation.Visibility + ' mi';
+            document.getElementById("dewplabel").innerHTML = '<b>Dew point: </b>' + data.currentobservation.Dewp + ' °F';
+            document.getElementById("pressurelabel").innerHTML = '<b>Sea level pressure: </b>' + data.currentobservation.SLP + ' inHg';
+            document.getElementById("radar").src = 'https://radar.weather.gov/ridge/standard/' + data.location.radar + '_loop.gif?T=' + timestamp;
+
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+function querylocation(){
+    var query = document.getElementById("searchbox").value;
+    // pls dont steal my key XD i only get 10,000 reqs per month
+    fetch('https://geocode.maps.co/search?q=' + query + '&api_key=66b1644d09004400643272poj3a2878')
+        .then(response => {
+            if (response.ok) {
+                return response.json(); // Parse the response data as JSON
+            } else {
+                throw new Error('API request failed');
+            }
+        })
+        .then(data => {
+            getWeather(data[0].lat, data[0].lon);
+        })
+        .catch(error => {
+            console.error(error);
+        });
+}
+
+document.getElementById("searchbox").addEventListener('keyup', function onEvent(e) {
+    if (e.keyCode === 13) {
+        querylocation();
+    }
+});
+</script>
+</html>
