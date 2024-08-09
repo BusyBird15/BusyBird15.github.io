@@ -151,7 +151,7 @@ function mapSettings(){
 
 function showLocation() {
     if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(function(){
+        navigator.geolocation.getCurrentPosition(function(position){
             const customIcon = L.icon({
                 iconUrl: 'https://busybird15.github.io/assets/locationicon.png',
                 iconSize: [26, 26],
