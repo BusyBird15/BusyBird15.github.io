@@ -1316,7 +1316,6 @@ document.onkeydown = function (e) {
 async function refresh(){
     saveSettings();
 
-    document.getElementById("alertDeets").style.visibility = "hidden";
     var apiRequest = new XMLHttpRequest();
     apiRequest.open("GET", "https://api.rainviewer.com/public/weather-maps.json", true);
     apiRequest.onload = function(e) {
