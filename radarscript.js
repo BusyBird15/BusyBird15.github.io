@@ -5,13 +5,15 @@ var map = L.map(mapobj, { attributionControl: false, zoomControl: false}).setVie
 var lightModeLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
-    maxZoom: 19
+    maxZoom: 19,
+    zoomSnap: 0
 }).addTo(map);
 
 var darkModeLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     subdomains: 'abcd',
-    maxZoom: 19
+    maxZoom: 19,
+    zoomSnap: 0
 });
 
 var currentMapLayer = lightModeLayer;
@@ -187,6 +189,7 @@ function startUpdatingLocation() {
                             console.log("Location information is unavailable.");
                             break;
                         case error.TIMEOUT:
+                            alert("Took too long to recieve a location, perhaps GPS is too weak.");
                             console.log("The request to get user location timed out.");
                             break;
                         case error.UNKNOWN_ERROR:
@@ -201,7 +204,7 @@ function startUpdatingLocation() {
                 {
                     enableHighAccuracy: true,
                     maximumAge: 0,
-                    timeout: 5000
+                    timeout: 10000
                 }
             );
         }
