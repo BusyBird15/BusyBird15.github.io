@@ -1417,7 +1417,7 @@ function severewxcenter(){
 sizing();
 
 // Auto-update radar
-await refresh()
+refresh()
 setInterval(loop, 120000);
 
 // Hide stuff if the radar gets too small
