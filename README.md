@@ -12,3 +12,6 @@
 ## Outdated pages
 
 **The Weather Team Radar for Mobile:** https://busybird15.github.io/m-radar (Due to /radar page new mobile optomization)
+
+## Use of this code
+* This code is open source, that is, you can view it and observe how it works. If you want to use parts of my code in your own work, please get in contact with me. Contact me via discord; you can join my server at https://busybird15.github.io/theweatherteam
