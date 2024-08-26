@@ -735,6 +735,7 @@ function fixHazards(haz){
     haz = haz.replace("ping pong ball size", '1.50"');
     haz = haz.replace("golf ball size", '1.75"');
     haz = haz.replace("lime size", '2.00"');
+    haz = haz.replace("two inch", '2.00"');
     haz = haz.replace("tennis ball size", '2.50"');
     haz = haz.replace("baseball size", '2.75"');
     haz = haz.replace("apple size", '3.00"');
