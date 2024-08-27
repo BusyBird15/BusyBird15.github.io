@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Calendar</title>
+    <link href="calendar.css" rel="stylesheet">
+    <script defer src="calendar.js"></script>
+    <link rel="icon" type="image/png" href="https://th.bing.com/th/id/OIG1.4orgdTuNmqE4NugoPU3_?w=173&h=173&c=6&r=0&o=5&pid=ImgGn">
+  </head>
+  <body>
+    <!-- (A) PERIOD SELECTOR -->
+    <div id="calPeriod">
+      <input id="calBack" type="button" value="&lt;">
+      <select id="calMonth"></select>
+      <input type="number" id="calYear" style="cursor: text;">
+      <input id="calNext" type="button" value="&gt;">
+      <img src="https://th.bing.com/th/id/OIG1.4orgdTuNmqE4NugoPU3_?w=173&h=173&c=6&r=0&o=5&pid=ImgGn">
+    </div>
+
+    <!-- (B) CALENDAR -->
+    <div id="calWrap"></div>
+
+    <!-- (C) EVENT FORM -->
+    <dialog id="calForm"><form method="dialog">
+      <div id="evtClose">X</div>
+      <h2>EDIT ASSIGNMENTS</h2>
+      <label>Date</label>
+      <input type="text" id="evtDate" readonly>
+      <label>Lesson</label>
+      <input type="text" id="lessonum">
+      <label>To-do</label>
+      <textarea id="evtTxt"></textarea>
+
+      <input id="evtDel" type="button" value="Delete">
+      <input id="evtSave" type="submit" value="Save">
+    </form></dialog>
+  </body>
+</html>
