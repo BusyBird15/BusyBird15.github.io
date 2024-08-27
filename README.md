@@ -8,6 +8,8 @@
 
 **The Weather Team Weather Page:** https://busybird15.github.io/weather/
 
+**Simple Academic Assignment Calendar:** https://busybird15.github.io/assignments
+
 
 ## Outdated pages
 
