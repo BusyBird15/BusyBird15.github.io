@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+    <title>Simplecode</title>
+    <meta name="viewport" content="width=device-width, initial-scale=0.8">
+    <!--Link to the Google icon set-->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+    <style id="styleFont">
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400&display=swap');
+
+        #preCode code,
+        textarea,
+        #lineNumbers,
+        .lineNumbers {
+            font-family: "Roboto Mono", monospace;
+            font-weight: 400;
+            font-size: 12pt;
+            line-height: 150%;
+        }
+    </style>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 600,
+                'GRAD' 0,
+                'opsz' 20
+        }
+
+        button {
+            background: #777777;
+            border: none;
+            color: white;
+            padding: 5px;
+            border-radius: 5px;
+            margin: 5px;
+            cursor: pointer;
+            transition-duration: 0.2s
+        }
+
+        button:hover {
+            background: #888888;
+        }
+
+        body {
+            margin: 0px 10px 10px 10px;
+            background: #000;
+            color: #fff;
+            box-sizing: border-box;
+            font-family: "Roboto Mono", monospace, Consolas;
+        }
+
+        #divCodeWrapper {
+                height: calc(100vh - 100px);
+                overflow: hidden;
+                border: 2px solid #a5a5a5;
+                border-radius: 10px;
+                position: relative;
+        }
+
+        #preCode {
+            height: 100%;
+            width: calc(100% - 50px);
+            position: absolute;
+            top: 0;
+            left: 50px;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            background: #1b1b1b;
+            border: none;
+        }
+
+        #preCode code {
+            padding: 15px;
+            height: calc(100% - 30px);
+            width: calc(100% - 30px);
+            overflow-y: scroll;
+            overflow-x: auto;
+        }
+
+        textarea {
+            position: absolute;
+            top: 0;
+            left: 50px;
+            height: calc(100% - 30px);
+            width: calc(100% - 80px);
+            padding: 15px;
+            z-index: 2;
+            overflow-x: auto;
+            overflow-y: scroll;
+            white-space: nowrap;
+            background-color: rgba(0, 0, 0, 0);
+            color: rgba(0, 0, 0, 0);
+            caret-color: white;
+            border: none;
+            outline: none;
+            border-left: 1px solid #383838;
+		 scrollar-color: black;
+		 resize: none;
+        }
+
+        #lineNumbers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            padding: 15px 5px;
+            height: calc(100% - 50px);
+            width: 100px;
+            overflow: hidden;
+        }
+
+        input[type="text"] {
+                border: none;
+                padding: 6px;
+                border-radius: 5px;
+                background: #777777;
+                color: white;
+                font-size: medium;
+                font-weight: bold;
+        }
+
+        .dialogcontaier {
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            width: 100vw;
+            z-index: 900;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+
+        }
+
+        .dialog {
+            background-color: #777777;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: auto;
+            max-width: 90vw;
+            max-height: 80vh;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.2);
+            overflow-y: scroll;
+            scrollbar-width: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        p {
+            margin: 2px;
+        }
+        .objcard {
+            display: flex;
+            flex-direction: column;
+            margin: 10px; 10px; 0px; 0px;
+            justify-content: center;
+            align-items: center;
+            background: #777777;
+            padding: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        .objcard:hover {
+            background: #888888;
+        }
+        .objcard h2 {
+            margin-top: 0px;
+        }
+        .objcard img {
+            border-radius: 5px;
+            max-width: 450px;
+            height: auto;
+            width: auto;
+        }
+    </style>
+
+    <link id="theme1" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/vs2015.min.css" rel="stylesheet" />
+    <script src="codeEditorShortcutKeys.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"
+        type="text/javascript"></script>
+</head>
+
+<body>
+    <!-- Help -->
+    <div id="helpdialog" class="dialogcontaier">
+        <div class="dialog">
+            <button class="material-symbols-outlined" onclick="closeDialogs();">close</button>
+            <h1>Welcome to Simplecode!</h1>
+            <div style="text-align: left; width: 100%">
+                <p>The simplest, easiest, lightest code editor on the web.</p><br>
+                <p>At the top you will find the toolbar, which consists of:<br>
+                * <b>Theme editor:</b> for changing the code editor themes.<br>
+                * <b>Font editor:</b> for changing the code editor font.<br>
+                * <b>Highlight language:</b> for setting the syntax highlighting language.<br>
+                * <b>Download button:</b> to download your code file.<br>
+                * <b>Upload button:</b> to upload a file for editing.<br>
+                * <b>Settings button:</b> to set other settings like font size.<br>
+                * <b>Help button:</b> to re-open this dialog again.<br></p><br>
+            </div>
+            <p><em>Happy coding!</em></p>
+        </div>
+    </div>
+
+    <!-- Theme -->
+    <div id="themedialog" style="display: none;" class="dialogcontaier">
+        <div class="dialog">
+            <button class="material-symbols-outlined" onclick="closeDialogs();">close</button>
+            <h1>Theme Explorer</h1>
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center;">
+                <div class="objcard" onclick="setTheme('a11y-dark.min.css')">
+                    <h2>A11Y - dark (default)</h2>
+                    <img src="images/A11dk.png">
+                </div>
+                <div class="objcard" onclick="setTheme('a11y-light.min.css')">
+                    <h2>A11Y - light</h2>
+                    <img src="images/A11lt.png">
+                </div>
+                <div class="objcard" onclick="setTheme('androidstudio.min.css')">
+                    <h2>Android Studio</h2>
+                    <img src="images/astud.png">
+                </div>
+                <div class="objcard" onclick="setTheme('agate.min.css')">
+                    <h2>Agate</h2>
+                    <img src="images/agate.png">
+                </div>
+                <div class="objcard" onclick="setTheme('arduino-light.min.css')">
+                    <h2>Arduino - light</h2>
+                    <img src="images/arduino.png">
+                </div>
+                <div class="objcard" onclick="setTheme('stackoverflow-light.min.css')">
+                    <h2>Stack Overflow - light</h2>
+                    <img src="images/soverlt.png">
+                </div>
+                <div class="objcard" onclick="setTheme('stackoverflow-dark.min.css')">
+                    <h2>Stack Overflow - dark</h2>
+                    <img src="images/soverdk.png">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Font -->
+    <div id="fontdialog" style="display: none;" class="dialogcontaier">
+        <div class="dialog">
+            <button class="material-symbols-outlined" onclick="closeDialogs();">close</button>
+            <h1>Font Explorer</h1>
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center;">
+                <div class="objcard" onclick="updateFont('Roboto Mono')">
+                    <h2>Roboto Mono (default)</h2>
+                    <img src="images/robotomono.png">
+                </div>
+                <div class="objcard" onclick="updateFont('Consolas')">
+                    <h2>Consolas</h2>
+                    <img src="images/consolas.png">
+                </div>
+                <div class="objcard" onclick="updateFont('Cascadia Mono')">
+                    <h2>Cascadia Mono</h2>
+                    <img src="images/cascadia.png">
+                </div>
+                <div class="objcard" onclick="updateFont('JetBrains Mono')">
+                    <h2>JetBrains</h2>
+                    <img src="images/jb.png">
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Language -->
+    <div id="languagedialog" style="display: none;" class="dialogcontaier">
+        <div class="dialog">
+            <button class="material-symbols-outlined" onclick="closeDialogs();">close</button>
+            <h1>Change Highlighting Language</h1>
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; width: 100%;">
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('plaintext')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/text.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">Plain Text</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-html')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/html.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">HTML</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-javascript')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/js.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">JavaScript</h2>
+                </div>
+			<div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-typescript');">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/ts.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">TypeScript</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-python')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/python.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">Python</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-java')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/java.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">Java</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-csharp')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/csharp.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">C#</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-php')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/php.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">PHP</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-cpp')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/cpp.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">CPP</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-ruby');">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/ruby.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">Ruby</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-swift')">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/swift.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">Swift</h2>
+                </div>
+                <div class="objcard" style="display: flex; flex-direction: row; width: 100%; justify-content: flex-start;" onclick="setLanguage('language-kotlin');">
+                    <img style="max-height: 50px; height: auto; width: auto;" src="images/kotlin.png">
+                    <h2 style="margin: 0px; margin-left: 10px;">Kotlin</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div style="height: 70px; margin: 0px; padding: 8px; display: flex; flex-direction: row; align-items: center;">
+        <button class="material-symbols-outlined" title="Change editor theme" id="themeedit">brush</button>
+        <button class="material-symbols-outlined" title="Change font" id="updateFont">text_fields</button>
+        <button class="material-symbols-outlined" title="Change highlighting language" id="updateLanguage">code</button>
+        <button class="material-symbols-outlined" title="Download the current file" onclick="downloadFile(document.getElementById('filename').value, document.getElementById('textarea1').value);">download</button>
+        <button class="material-symbols-outlined" title="Upload a file" id="uploadFile">upload</button>
+        <button class="material-symbols-outlined" title="Change editor settings">settings</button>
+        <button class="material-symbols-outlined" title="Show the info dialog" id="help">help</button>
+        <input id="filename" type="text" placeholder="Filename" value="index.html" onchange="updateTitle();" style="margin-left: 20px; width: -webkit-fill-available; max-width: 500px; min-width: 50px;">
+
+        </div>
+
+
+    <!-- Textarea, the code editor -->
+
+    <div id="divCodeWrapper" style="width: auto; resize: none;">
+        <pre><code style="position: absolute; width: 100%; height: 100%; top: 0; left: 0; background: #1e1e1e;" class="lineNumbers"></code></pre>
+        <pre><code id="lineNumbers" style="opacity: 0.5;"></code></pre>
+        <pre id="preCode"><code id="codeBlock" class="language-html"></code></pre>
+        <textarea id="textarea1" wrap="soft" spellcheck="false"></textarea>
+    </div>
+
+
+
+    <script type="text/javascript">
+
+        const textarea1 = document.getElementById("textarea1");
+        const codeBlock = document.getElementById("codeBlock");
+        const lineNumbers = document.getElementById('lineNumbers');
+
+	   bindCodeEditorShortcutKeys(textarea1);
+
+        document.getElementById('uploadFile').addEventListener('click', function() {
+        // Create an input element of type 'file'
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+
+        // Listen for file selection
+        fileInput.addEventListener('change', function(event) {
+            const selectedFile = event.target.files[0];
+
+            if (selectedFile) {
+                // Read the file content
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileContent = event.target.result;
+                    document.getElementById('textarea1').value = fileContent;
+                    document.getElementById('filename').value = selectedFile.name;
+                    updateCode();
+                    updateTitle();
+                };
+                reader.readAsText(selectedFile);
+            }
+        });
+
+        fileInput.click();
+    });
+
+
+        function updateLineNumbers() {
+            let lineCount = textarea1.value.split('\n').length;
+            let lines = '';
+            for (let i = 1; i <= lineCount; i++) {
+                lines += i + '\n';
+            }
+            lineNumbers.innerHTML = lines;
+        }
+
+        function updateTitle() {
+            document.title = "Simplecode - " + document.getElementById("filename").value;
+        }
+
+        updateTitle();
+
+        // copy code from textarea to code block
+        function updateCode() {
+
+            let content = textarea1.value;
+
+            // encode the special characters
+            content = content.replace(/&/g, '&amp;');
+            content = content.replace(/</g, '&lt;');
+            content = content.replace(/>/g, '&gt;');
+
+            // fill the encoded text to the code
+            codeBlock.innerHTML = content;
+            updateLineNumbers();
+
+            // call highlight.js to render the syntax highligtning
+            highlightJS();
+        }
+
+        // syntax highlight
+        function highlightJS() {
+            document.querySelectorAll('pre code').forEach((el) => {
+                hljs.highlightElement(el);
+            });
+        }
+
+        // detect content changes in the textarea
+        textarea1.addEventListener("input", () => {
+            updateCode();
+        });
+
+        // sync the scroll bar position between textarea and code block
+        textarea1.addEventListener("scroll", () => {
+            codeBlock.scrollTop = textarea1.scrollTop;
+            codeBlock.scrollLeft = textarea1.scrollLeft;
+            lineNumbers.scrollTop = textarea1.scrollTop;
+        });
+
+
+
+        // change theme
+        //document.getElementById("selectStyle").addEventListener("change", (e) => {
+        //    document.getElementById("theme1").href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/${e.target.value}`;
+        //});
+        function setTheme (theme) {
+            document.getElementById("theme1").href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/${theme}`;
+            closeDialogs();
+        }
+        // change font
+        document.getElementById("updateFont").addEventListener("click", () => { document.getElementById("fontdialog").style.display = "flex"; });
+
+        // change font
+        function updateFont(font) {
+            let fontName = font;
+            let fontNameUrl = fontName.replace(" ", "+");
+            let inputFontSize = 12 //document.getElementById("inputFontSize");
+            let lineHeight = 150 //document.getElementById("lineHeight");
+
+            document.getElementById("styleFont").textContent = `
+            @import url('https://fonts.googleapis.com/css2?&display=swap&family=${fontNameUrl}');
+            pre, code, textarea, #lineNumbers, .lineNumbers {
+                font-family: "${fontName}", monospace;
+                font-size: ${inputFontSize}pt;
+                line-height: ${lineHeight}%;
+            }`;
+            closeDialogs();
+        }
+
+        // change programming language
+        //document.getElementById("selectLanguage").addEventListener("change", function () {
+        //    document.getElementById("codeBlock").className = this.value;
+        //    highlightJS();
+        //});
+        document.getElementById("updateLanguage").addEventListener("click", () => { document.getElementById("languagedialog").style.display = "flex"; });
+        function setLanguage(lang) {
+            document.getElementById("codeBlock").className = lang;
+            highlightJS();
+            closeDialogs();
+        };
+
+        // change font size
+        //document.getElementById("inputFontSize").addEventListener("input", () => { updateFont(); });
+
+
+        // change line height
+        //document.getElementById("lineHeight").addEventListener("input", () => { updateFont(); });
+
+        // Theme set
+        document.getElementById("themeedit").addEventListener("click", () => { document.getElementById("themedialog").style.display = "flex"; });
+        // Help
+        document.getElementById("help").addEventListener("click", () => { document.getElementById("helpdialog").style.display = "flex"; });
+        // Close dialogs
+        function closeDialogs(){
+            document.getElementById("helpdialog").style.display = "none";
+            document.getElementById("themedialog").style.display = "none";
+            document.getElementById("fontdialog").style.display = "none";
+            document.getElementById("languagedialog").style.display = "none";
+        }
+
+	   function downloadFile(filename, content) {
+              const element = document.createElement('a');
+              const blob = new Blob([content], { type: 'plain/text' });
+              const fileUrl = URL.createObjectURL(blob);
+              element.setAttribute('href', fileUrl); // file location
+              element.setAttribute('download', filename); // file name
+              element.style.display = 'none';
+              document.body.appendChild(element);
+              element.click();
+              document.body.removeChild(element);
+          };
+        
+        setTheme('a11y-dark.min.css');
+
+    </script>
+</body>
+
+</html>
