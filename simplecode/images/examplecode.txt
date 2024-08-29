@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Simplecode</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1,0">
+        <style>
+            div { height: 100px; display: block;}
+        </style>
+    </head>
+</html>
+<script>
+    var str = "hello, world";
+    console.log(str);
+</script>
