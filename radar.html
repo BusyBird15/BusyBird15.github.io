@@ -22,6 +22,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+    
+    <!--Links to the ESRI extension for hurricanes-->
+    <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
 
     <!--CSS-->
     <link rel="stylesheet" href="radarstyle.css"></link>
@@ -36,12 +39,12 @@
 
     <div id="desktopctrl" style="display:block; position: absolute; left: 50%; bottom: 20px;">
         <div id="radarctrlsdiv" class="overlay-object" style="position: relative; left: -50%;">
-            <ul id="radarctrls" style="text-align: center; padding-left: 0px; margin: 0px; font-size: 20px;">
+            <ul id="radarctrls" style="text-align: center; padding-left: 0px; margin: 0px; font-size: 0px;">
                 <li class="sli"><button title="Go to first frame" onclick="stop(); showFrame(0); return;" class="material-symbols-outlined">first_page</button></li>
                 <li class="sli"><button title="Go back one frame" onclick="stop(); showFrame(animationPosition - 1); return;" class="material-symbols-outlined">skip_previous</button></li>
                 <li class="sli"><button title="Pause or play the animation" onclick="playStop();" id="stbtn" class="material-symbols-outlined">play_arrow</button></li>
                 <li class="sli"><button title="Go forward one frame" onclick="stop(); showFrame(animationPosition + 1); return;" class="material-symbols-outlined">skip_next</button></li>
-                <li class="sli"><button title="Go to last frame" onclick="stop(); showFrame(1000); return;" class="material-symbols-outlined" style="margin-right: 10px;">last_page</button></li>
+                <li class="sli"><button title="Go to last frame" onclick="stop(); showFrame(1000); return;" class="material-symbols-outlined" style="margin-right: 20px;">last_page</button></li>
                 <li class="sli"><button onclick="refresh();" id="hoverButton" class="material-symbols-outlined" >refresh</button></li>
                 <li class="sli"><button title="Open the settings menu" onclick="settingsModal();" id="modalBtn" class="material-symbols-outlined">settings</button></li>
                 <!--<li class="sli"><button onclick="toggleLayerModal();" id="layerBtn" class="material-symbols-outlined">layers</button></li>-->
@@ -70,6 +73,8 @@
                     <input type="radio" name="theme" checked="checked" id="light" onchange="setMapType('light');">Light <input type="radio" id="dark" name="theme" onchange="setMapType('dark');">Dark<br>
                     <p style="margin-bottom: 1px;">Current SPC Outlook</p>
                     <input type="radio" name="showoutlook" checked="checked" id="showoutlook" onchange="showOutlooks(true);">Show <input type="radio" id="hideoutlook" name="showoutlook" onchange="showOutlooks(false);">Hide<br>
+                    <p style="margin-bottom: 1px;"><b>NEW</b> Hurricane Tracks</p>
+                    <input type="radio" name="hurricanes" checked="checked" id="showhurricanes" onchange="toggleHurricanes(true);">Show <input type="radio" id="hidehurricanes" name="hurricanes" onchange="toggleHurricanes(false);">Hide<br>
                     <p style="margin-bottom: 1px;">Show Current Location</p>
                     <input style="padding-left: 5px;" type="checkbox" id="location" onchange="showLocation();" name="location" value="location"><p style="padding-left: 5px; margin: 4px; display: inline;">Display location</p><br>
                     <div style="margin-left: 25px; display: flex; flex-direction: row; align-items: center; margin-top: 2px; ">
@@ -186,11 +191,23 @@
                 <h2 style="margin: 10px; margin-bottom: 20px;"><b>Info and Credits</b></h2>
                 <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 25px;"><b>Built for </b><a href="https://busybird15.github.io/theweatherteam" target="_blank">The Weather Team</a> by <a href="https://x.com/busybird150" target="_blank">BusyBird15</a> (<a href="mailto:busybird15@email.com">contact me</a>).</p>
                 <div style="text-align: left; margin-bottom: 25px;">
+                    <h3 style="margin: 10px;"><b>What's New:</b></h3>
+                    <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Version number: v1.12</p>
+                    <ul style="margin: 0px;">
+                        <li style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;"><b>NEW </b>hurricane / tropical storm tracker.</li>
+                        <li style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Added animations when closing dialogs.</li>
+                        <li style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Redesigned toolbar.</li>
+                        <li style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Defined map bounds.</li>
+                        <li style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Map no longer auto-refreshes while you are reading a popup.</li>
+                    </ul>
+                </div>
+                <div style="text-align: left; margin-bottom: 25px;">
                     <h3 style="margin: 10px;"><b>Attributions</b></h3>
                     <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Radar Tiles: <a href="https://rainviewer.com/api.html" target="_blank">RainViewer</a></p>
                     <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Map Tiles: <a href="https://leafletjs.com" target="_blank">Leaflet</a> and <a href="https://carto.com/attributions" target="_blank">CARTO</a></p>
                     <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Warnings: <a href="https://www.weather.gov/documentation/services-web-api#/" target="_blank">NOAA's API</a></p>
                     <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">Watches: <a href="https://www.mesonet.agron.iastate.edu/request/gis/spc_watch.phtml" target="_blank">the IEM WW Archive</a></p>
+                    <p style="padding-left: 10px; margin-top: 5px; margin-bottom: 5px;">SPC Outlooks: <a href="https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson" target="_blank">SPC GeoJSON data</a></p>
                 </div>
                 <div style="text-align: left; margin-bottom: 25px;">
                     <h3 style="margin: 10px;"><b>Credits</b></h3>
@@ -201,7 +218,7 @@
     </div>
 
     <!--Mobile Alert Box-->
-    <div id="mobilealertbox" style="overflow-y: auto; display: none; position: absolute; flex-direction: column; z-index: 550; top: 0px; left: 0px; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);"></div>
+    <div id="mobilealertbox" style="overflow-y: auto; display: none; position: absolute; flex-direction: column; z-index: 550; top: 0px; left: 0px; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);"></div>
 
     <!--The Weather Team attribution-->
     <a style="color: white;" href="https://busybird15.github.io/theweatherteam">
@@ -212,7 +229,7 @@
     </a>
 
     <!--Stream Player-->
-    <div class="overlay-object" id="player" style="overflow-x: none; overflow-y: none; display: flex; bottom: 20px; left: 20px; flex-direction: column; min-width: 250px; min-height: 200px;">
+    <div class="overlay-object" id="player" style="overflow-x: none; overflow-y: none; display: none; bottom: 20px; left: 20px; flex-direction: column; min-width: 250px; min-height: 200px;">
         <div id="handle"></div>
         <div style="display: flex; flex-direction: row;">
             <input type="text" id="streamUrl" placeholder="Paste stream embed" style="width: calc(100% - 10px); border-radius: 5px; height: auto; margin-right: 10px;">
@@ -274,9 +291,9 @@
             <img class="alertgraphic" id="WWmap" style="margin-bottom: 5px;" src="https://www.spc.noaa.gov/products/watch/validww.png">
             <p style="margin: 0px; margin-top: 10px; margin-bottom: 5px;"><b>Storm Report Map</b></p>
             <img class="alertgraphic" id="REPmap" style="margin-bottom: 5px;" src="https://www.spc.noaa.gov/climo/reports/today.gif">
-        </div> 
+        </div>
     </div>
-    
+
     <div id="mapid" style="border-radius: 10px; position: absolute; top: 6px; left: 6px; bottom: 6px; right: 6px;"></div>
 
     <div id="mobilectrl" style="position:absolute; bottom: 10px; width:calc(100% - 20px); display:none; z-index: 500; justify-content: center;">
@@ -292,8 +309,8 @@
             <li class="sli"><button onclick="toggleInfoModal();" id="layerBtn" class="material-symbols-outlined mbtn">info</button></li>
         </ul>
     </div>
-    
+
 
     <!--Add JS after elements are added-->
     <script src="radarscript.js"></script>
-</body>    
+</body>

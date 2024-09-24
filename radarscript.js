@@ -1,6 +1,16 @@
 // Thanks to wxtership from XWD for the light/dark theme maps code
 var mapobj = document.getElementById("mapid");
-var map = L.map(mapobj, { attributionControl: false, zoomControl: false, zoomSnap: 0}).setView([38.0, -100.4], 4);
+var map = L.map(mapobj, { attributionControl: false, zoomControl: false, zoomSnap: 0, minZoom: 2}).setView([38.0, -100.4], 4);
+
+// Set the max bounds
+var southWest = L.latLng(-85, -180);
+var northEast = L.latLng(85, 180);
+var bounds = L.latLngBounds(southWest, northEast);
+
+map.setMaxBounds(bounds);
+map.on('drag', function() {
+    map.panInsideBounds(bounds, { animate: false });
+});
 
 var lightModeLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
@@ -18,6 +28,14 @@ var darkModeLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/
 
 var currentMapLayer = lightModeLayer;
 
+function fadeOutElement(element) {
+    element = document.getElementById(element);
+    element.classList.add('fade-out');
+    setTimeout(function() {
+        element.style.display = 'none';
+        element.classList.remove('fade-out');
+    }, 400);
+}
 
 // Adapt site if user is on mobile
 function checkMobile() {
@@ -144,6 +162,51 @@ var alertsLoaded = false;
 
 var showYoutubeEmbed = true;
 var showspcOutlooks = true;
+var showHurricaneTracks = true;
+
+
+
+// Hurricane Icons
+const td_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/td.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const ts_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/ts.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const cat1_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/cat1.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const cat2_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/cat2.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const cat3_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/cat3.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const cat4_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/cat4.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const cat5_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/cat5.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
+const ptc_icon = L.icon({
+    iconUrl: 'https://busybird15.github.io/assets/hurricanes/ptc.png',
+    iconSize: [36, 36],
+    iconAnchor: [18, 18],
+});
 
 function reportSettings(){
     document.getElementById("alertsett").style.display = "none";
@@ -214,7 +277,7 @@ function startUpdatingLocation() {
                         iconUrl: 'https://busybird15.github.io/assets/locationicon.png',
                         iconSize: [26, 26],
                         iconAnchor: [13, 13], });
-                    currentLocationMarker = L.marker([lat, lon], { icon: currentLocationIcon }).addTo(map);  
+                    currentLocationMarker = L.marker([lat, lon], { icon: currentLocationIcon }).addTo(map);
                     if (isLocationOn) {
                         map.flyTo([lat, lon], 7);
                     }
@@ -344,44 +407,44 @@ function showEmbed(tof){
     if (Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) > 1000 && showYoutubeEmbed){
         document.getElementById('player').style.display = 'flex';
     } else {
-        document.getElementById('player').style.display = 'none';
+        fadeOutElement('player');
     }
 }
 
 function showOutlooks(tof){
-    showspcOutlooks = !showspcOutlooks;
+    showspcOutlooks = tof;
     refresh();
     saveSettings();
 }
 
-// Load the YT Embed player manually on load
-if (Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0) > 1000 && showYoutubeEmbed){
-    document.getElementById('player').style.display = 'flex';
-} else {
-    document.getElementById('player').style.display = 'none';
+function toggleHurricanes(tof){
+    showHurricaneTracks = tof;
+    refresh();
+    saveSettings();
 }
+
 
 function settingsModal(){
     document.getElementById("settingsModal").style.display = "block";
-    document.getElementById("layerModal").style.display = "none";
-    document.getElementById("infoModal").style.display = "none";
+    fadeOutElement("layerModal");
+    fadeOutElement("infoModal");
 }
 
 function toggleLayerModal(){
-    document.getElementById("settingsModal").style.display = "none";
+    fadeOutElement("settingsModal");
     document.getElementById("layerModal").style.display = "block";
-    document.getElementById("infoModal").style.display = "none";
+    fadeOutElement("infoModal");
 }
 
 function closeSettings(){
-    document.getElementById("settingsModal").style.display = "none";
-    document.getElementById("layerModal").style.display = "none";
-    document.getElementById("infoModal").style.display = "none";
+    fadeOutElement("settingsModal");
+    fadeOutElement("layerModal");
+    fadeOutElement("infoModal");
 }
 
 function toggleInfoModal(){
-    document.getElementById("settingsModal").style.display = "none";
-    document.getElementById("layerModal").style.display = "none";
+    fadeOutElement("settingsModal");
+    fadeOutElement("layerModal");
     document.getElementById("infoModal").style.display = "flex";
 }
 
@@ -408,6 +471,7 @@ function saveSettings() {
         displayWndReports,
         showYoutubeEmbed,
         showspcOutlooks,
+        showHurricaneTracks
     };
     localStorage.setItem('preferences', JSON.stringify(settingsToSave));
 }
@@ -437,6 +501,7 @@ if (settings){
     displayWndReports = settings.displayWndReports;
     showYoutubeEmbed = settings.showYoutubeEmbed;
     showspcOutlooks = settings.showspcOutlooks;
+    showHurricaneTracks = settings.showHurricaneTracks;
 
     if (optionKind == 'radar'){
         document.getElementById("radar").checked = true;
@@ -461,6 +526,13 @@ if (settings){
     } else {
         document.getElementById("hideoutlook").checked = true;
     }
+
+    if (showHurricaneTracks){
+        document.getElementById("showhurricanes").checked = true;
+    } else {
+        document.getElementById("hidehurricanes").checked = true;
+    }
+
 
     if (settings.optionSnowColors == 1){
         document.getElementById("snow").checked = true;
@@ -557,13 +629,13 @@ function alertOpacityChange() {
     refresh()
 }
 
-function onMapRightClick(e) {  
+function onMapRightClick(e) {
     var popLocation= e.latlng;
     var popup = L.popup({"autoPan": true, 'maxheight': '600' , 'maxWidth': '500', 'className': 'alertpopup'})
     .setLatLng(popLocation)
     .setContent("Loading...")
-    .openOn(map); 
-    
+    .openOn(map);
+
     var xhr = new XMLHttpRequest();
     xhr.open('GET', 'https://forecast.weather.gov/MapClick.php?lon=' + popLocation.lng + '&lat=' + popLocation.lat + '&FcstType=json', true);
     xhr.onreadystatechange = function() {
@@ -622,7 +694,7 @@ function onMapRightClick(e) {
     };
 
     xhr.send();
-    
+
 };
 
 map.on('contextmenu', onMapRightClick);
@@ -642,7 +714,7 @@ function getReport(polycoords, type){
     }
 
     var construct = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: 20px; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + type + '</div><br>';
-    
+
     const timestamp = alertInfo.Time;
     const hour = parseInt(timestamp.substring(0, 2));
     const minute = parseInt(timestamp.substring(2, 4));
@@ -722,6 +794,240 @@ function loadReports() {
     return new Promise((resolve) => setTimeout(resolve, 1000));
 }
 
+
+function getHurricaneIcon(stormType, ssnum) {
+    switch (stormType) {
+        case 'TD':
+            return td_icon;
+        case 'TS':
+            return ts_icon;
+        case 'HU':
+            if (ssnum == 1){
+                return cat1_icon;
+            } else if (ssnum == 2){
+                return cat2_icon;
+            }
+        case 'MH':
+            if (ssnum == 3){
+                return cat3_icon;
+            } else if (ssnum == 4){
+                return cat4_icon;
+            } else if (ssnum == 5){
+                return cat5_icon;
+            }
+        default:
+            return ptc_icon;
+    }
+}
+
+function getTrackStyle(stormType) {
+    switch (stormType) {
+        case 'TD':
+            return "blue";
+        case 'TS':
+            return "green";
+        case 'Category 1 Hurricane':
+            return "yellow";
+        case 'Category 2 Hurricane':
+            return "orange";
+        case 'Category 3 Hurricane':
+            return "red";
+        case 'Category 4 Hurricane':
+            return "pink";
+        case 'Category 5 Hurricane':
+            return "purple";
+        default:
+            return "#00ff00";
+    }
+}
+
+// Function to parse the date string and convert it to the desired format
+function formatHurricaneDateString(dateString) {
+  const [datePart, timePart, period, , timezone] = dateString.split(' ');
+  const date = new Date(`${datePart}T${timePart} ${period} ${timezone}`);
+  const dateOptions = { month: 'long', day: 'numeric' };
+  const timeOptions = { hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' };
+  const formattedDate = new Intl.DateTimeFormat('en-US', dateOptions).format(date);
+  const formattedTime = new Intl.DateTimeFormat('en-US', timeOptions).format(date);
+  return `${formattedDate} at ${formattedTime}`;
+}
+
+function fixDirection (dir) {
+    dir = parseInt(dir.replace("°", ""));
+    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+    const index = Math.round(dir / 22.5) % 16;
+    return directions[index];
+}
+
+async function loadHurricanes() {
+    // Add the hurricane track
+    L.esri.featureLayer({
+        url: 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/Active_Hurricanes_v1/FeatureServer/0',
+        pointToLayer: function (feature, latlng) {
+            var stormType = feature.properties.STORMTYPE;
+            var ssnum = feature.properties.SSNUM;
+            return L.marker(latlng, { icon: getHurricaneIcon(stormType, ssnum) });
+        },
+        style: function (feature) {
+            var stormType = feature.properties.STORMTYPE;
+            return {
+                color: getTrackStyle(stormType),
+                weight: 2,
+                opacity: 1
+            };
+        },
+        onEachFeature: function (feature, layer) {
+            var stormName = feature.properties.STORMNAME;
+            var stormType = feature.properties.STORMSRC;
+            var stormTypeID = feature.properties.STORMTYPE;
+            var maxWind = feature.properties.MAXWIND;
+            var gust = feature.properties.GUST;
+            var pressure = feature.properties.MSLP;
+            var direction = feature.properties.TCDIR;
+            var speed = feature.properties.TCSPD;
+            var dateTime = feature.properties.FLDATELBL; //formatHurricaneDateString(feature.properties.FLDATELBL);
+            var shortDateTime = feature.properties.DATELBL + " " + feature.properties.TIMEZONE;
+            var cat = feature.properties.SSNUM;
+
+            console.log(feature);
+            if (stormTypeID == "TS") {
+                stormType = "Tropical Storm";
+            } else if (stormTypeID == "TD") {
+                stormType = "Tropical Depression";
+            } else if (stormTypeID == "STD") {
+                stormType = "Sub-Tropical Depression";
+            } else if (stormTypeID == "MH") {
+                stormType = "Major Hurricane";
+            } else {
+                stormType = "Hurricane"
+            }
+
+            if (feature.properties.BASIN == "WP") {
+                var basin = "Western Pacific";
+            } else if (feature.properties.BASIN == "EP") {
+                var basin = "Eastern Pacific";
+            } else if (feature.properties.BASIN == "AL") {
+                var basin = "Atlantic";
+            } else {
+                var basin = "Unknown: " + feature.properties.BASIN;
+            }
+
+            var pressureText = (pressure && pressure !== 9999) ? pressure + " mb" : "Pressure data not available";
+            var directionText = (direction && direction !== 9999) ? direction + "°" : "Direction data not available";
+            var speedText = (speed && speed !== 9999) ? speed + " mph" : "Speed data not available";
+
+            var popupContent = '<div style="overflow-y: auto; display: flex; flex-direction: column;"> <div style="display: flex; flex-direction: row;"><img class="rotating" src="https://busybird15.github.io/assets/hurricanes/td.png"><div style="display: flex; justify-content: center; width: 100%; padding: 5px; padding-left: 10px; border-radius: 5px; font-size: 20px; font-weight: bolder; color: white;">' + stormType + ' ' + stormName + '</div></div><p style="margin: 0px;">';
+            popupContent += (cat && cat !== 0) ? '<br><b>Category:</b> CAT ' + cat.toString() + "<br>" : "<br>";
+
+
+            popupContent += "<b>Time:</b> " + shortDateTime + "<br>";
+            popupContent += "<b>Winds:</b> " + maxWind + " mph<br>";
+            popupContent += (gust && gust !== 0) ? "<b>Gusts:</b> " + gust + " mph<br><br>" : "<br>";
+
+            if (pressureText !== "Pressure data not available") {
+                popupContent += "<b>Pressure:</b> " + pressureText + "<br>";
+            }
+            if (directionText !== "Direction data not available" && speedText !== "Speed data not available") {
+                popupContent += "<b>Bearing:</b> " + fixDirection(directionText) + " at " + speedText + "<br><br>";
+            }
+
+            popupContent += "<b>Basin:</b> " + basin + "<br>";
+            popupContent += "<b>Identifier:</b> " + feature.properties.STORMTYPE + " " + feature.properties.STORMNUM + "<br>";
+            popupContent += "<b>Location:</b> " + feature.properties.LAT + ", " + feature.properties.LON + "<br>";
+            popupContent += "</p>"
+            var timestamp = new Date().getTime();
+            const currentYear = new Date().getFullYear();
+            if (basin == "Atlantic") { popupContent += '<br><img class="alertgraphic" src="https://www.nhc.noaa.gov/storm_graphics/AT' + String(feature.properties.STORMNUM).padStart(2, '0') + '/AL' + String(feature.properties.STORMNUM).padStart(2, '0') + currentYear + '_5day_cone_no_line_and_wind.png?t=' + timestamp + '">' }
+            if (basin == "Eastern Pacific") { popupContent += '<br><img class="alertgraphic" src="https://www.nhc.noaa.gov/storm_graphics/EP' + String(feature.properties.STORMNUM).padStart(2, '0') + '/EP' + String(feature.properties.STORMNUM).padStart(2, '0') + currentYear + '_5day_cone_no_line_and_wind.png?t=' + timestamp + '">' }
+            if (basin != "Western Pacific") { popupContent += '<p style="margin-bottom: 0px;">Graphics from the <a style="color: lightblue;" target="_blank" href="https://nhc.noaa.gov">NHC</a></p>'; }
+            popupContent += '<p style="width: 100%; overflow-x: clip;">==========================================================================================</p>'
+
+
+            layer.bindPopup(popupContent, {"autoPan": true, 'maxheight': '400' , 'maxWidth': '300', 'className': 'alertpopup'});
+        }
+    }).addTo(map);
+
+    // Add the hurricane cone layer with the new styling
+    L.esri.featureLayer({
+        url: 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Active_Hurricanes_v1/FeatureServer/4',
+        style: function (feature) {
+            return {
+                color: "#000000", // Black border
+                weight: 2, // Border weight
+                opacity: 1, // Full opacity for border
+                fillColor: "gray", // Cyan color for fill
+                fillOpacity: 0.2 // Low opacity for fill
+            };
+        },
+        onEachFeature: function (feature, layer) {}
+    }).addTo(map);
+
+    // Add the wind swath layer with different styling
+    L.esri.featureLayer({
+        url: 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Active_Hurricanes_v1/FeatureServer/2',
+        style: function (feature) {
+            return {
+                color: "gray", // Black border
+                weight: 2, // Border weight
+                opacity: 1, // Full opacity for border
+                fillColor: "gray", // Orange color for fill
+                fillOpacity: 0.4 // Higher opacity for fill
+            };
+        },
+        onEachFeature: function (feature, layer) {}
+    }).addTo(map);
+
+    // Add the watches and warnings layer using the TCWW field for styling
+    /*L.esri.featureLayer({
+        url: 'https://services9.arcgis.com/RHVPKKiFTONKtxq3/ArcGIS/rest/services/Active_Hurricanes_v1/FeatureServer/5',
+        style: function (feature) {
+            var tcww = feature.properties.TCWW; // Field used to determine style
+            switch (tcww) {
+                case 'HWR': // Hurricane Warning
+                    return { color: 'rgb(255,0,0)', weight: 8, opacity: 1 };
+                case 'TWR': // Tropical Storm Warning
+                    return { color: 'rgb(0,0,255)', weight: 3.4, opacity: 1 };
+                case 'HWA': // Hurricane Watch
+                    return { color: 'rgb(255,174,185)', weight: 8, opacity: 1 };
+                case 'TWA': // Tropical Storm Watch
+                    return { color: 'rgb(238,238,0)', weight: 8, opacity: 1 };
+                default:
+                    return { color: 'gray', weight: 2, opacity: 1 };
+            }
+        },
+        onEachFeature: function (feature, layer) {
+            // Convert TCWW codes to full names
+            var tcww = feature.properties.TCWW;
+            var warningName = '';
+
+            switch (tcww) {
+                case 'HWR':
+                    warningName = 'Hurricane Warning';
+                    break;
+                case 'TWR':
+                    warningName = 'Tropical Storm Warning';
+                    break;
+                case 'HWA':
+                    warningName = 'Hurricane Watch';
+                    break;
+                case 'TWA':
+                    warningName = 'Tropical Storm Watch';
+                    break;
+                default:
+                    warningName = 'Unknown Warning Type';
+                    break;
+            }
+
+            // Display the converted name in the popup
+            var popupContent = "<strong>" + warningName + "</strong>";
+            layer.bindPopup(popupContent);
+        }
+    }).addTo(map);*/
+    return new Promise((resolve) => setTimeout(resolve, 1000));
+}
+
+
+
 function fixHazards(haz){
     // Fix hail sizes
     haz = haz.toLowerCase();
@@ -735,7 +1041,6 @@ function fixHazards(haz){
     haz = haz.replace("ping pong ball size", '1.50"');
     haz = haz.replace("golf ball size", '1.75"');
     haz = haz.replace("lime size", '2.00"');
-    haz = haz.replace("two inch", '2.00"');
     haz = haz.replace("tennis ball size", '2.50"');
     haz = haz.replace("baseball size", '2.75"');
     haz = haz.replace("apple size", '3.00"');
@@ -856,13 +1161,13 @@ function getAlert(polycoords){
     } else if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
         construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
     }
-    
+
     if (alertInfo.properties.description.includes("confirmed tornado")){
         construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
     } else if (alertInfo.properties.description.includes("reported tornado")){
         construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
     }
-    
+
     if (alertInfo.properties.description.includes("DESTRUCTIVE")){
         construct = construct + '<div style="background-color: red; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
     } else if (alertInfo.properties.description.includes("considerable") || isConsid(alertInfo.properties.description)){
@@ -872,13 +1177,13 @@ function getAlert(polycoords){
     construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatTimestamp(alertInfo.properties.sent) + '</p>';
     construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
     construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
-    
+
     try {
         var hazards = fixHazards(alertInfo.properties.description.split("HAZARD...")[1].split("\n\n")[0].replace(/\n/g, " "));
     } catch {
         var hazards = null
     }
-    
+
     if(hazards){construct = construct + '<p style="margin: 0px;"><b>Hazards: </b>' + hazards + '</p>'}
 
     try {
@@ -1055,7 +1360,7 @@ async function loadWatches() {
     var xhr = new XMLHttpRequest();
     var currentDate = new Date();
     currentDate.setMonth(currentDate.getMonth() + 1); // idk why, but the date is always one month behind, so this fixes that
-    
+
     xhr.open('GET', 'https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getDate() + '&hour2=23&minute2=0&format=geojson', true);
     console.log('https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getDate() + '&hour2=23&minute2=0&format=geojson')
 
@@ -1257,10 +1562,10 @@ async function loadAlerts() {
             });
         }
     };
-    
+
     xhr.send();
     return new Promise((resolve) => setTimeout(resolve, 1000));
-    
+
 }
 
 async function loadOutlook() {
@@ -1296,31 +1601,31 @@ async function loadOutlook() {
 function formatDate(inputDateString) {
     // Parse the input date string
     const inputDate = new Date(inputDateString);
-  
+
     // Get the time portion as a string
     const timeString = inputDate.toTimeString();
-  
+
     // Extract hours and minutes
     const hours = inputDate.getHours();
     const minutes = inputDate.getMinutes();
-  
+
     // Convert hours to 12-hour format
     const formattedHours = (hours % 12) || 12;
-  
+
     // Determine AM or PM
     const amOrPm = hours >= 12 ? 'PM' : 'AM';
-  
+
     // Construct the final formatted string
     const formattedTimeString = `${formattedHours}:${minutes.toString().padStart(2, '0')} ${amOrPm} EST`;
-  
+
     return formattedTimeString;
 }
 
 function startLoadingTile() {
-    loadingTilesCount++;    
+    loadingTilesCount++;
 }
 function finishLoadingTile() {
-    // Delayed increase loaded count to prevent changing the layer before 
+    // Delayed increase loaded count to prevent changing the layer before
     // it will be replaced by next
     setTimeout(function() { loadedTilesCount++; }, 250);
 }
@@ -1391,10 +1696,10 @@ function addLayer(frame) {
             zIndex: frame.time
         });
 
-        // Track layer loading state to not display the overlay 
+        // Track layer loading state to not display the overlay
         // before it will completelly loads
         source.on('loading', startLoadingTile);
-        source.on('load', finishLoadingTile); 
+        source.on('load', finishLoadingTile);
         source.on('remove', finishLoadingTile);
 
         radarLayers[frame.path] = source;
@@ -1440,7 +1745,7 @@ function changeRadarPosition(position, preloadOnly, force) {
 
     var pastOrForecast = nextFrame.time > Date.now() / 1000 ? 'FORECAST' : 'PAST';
 
-    document.getElementById("timestamp").innerHTML = pastOrForecast + ' | ' + formatDate((new Date(nextFrame.time * 1000)).toString());
+    document.getElementById("timestamp").innerHTML = pastOrForecast + ' <b style="padding: 0px 5px 0px 5px;"> • </b> ' + formatDate((new Date(nextFrame.time * 1000)).toString());
 }
 
 /**
@@ -1522,6 +1827,7 @@ function setKind(kind) {
         optionSmoothData = 1;
         refresh();
     }
+	saveSettings();
 }
 
 
@@ -1568,17 +1874,15 @@ async function loadRadar(){
 }
 
 async function refresh(){
+    document.getElementById("hoverButton").classList.remove("waitingForRefresh");
+    document.getElementById("hoverButton").disabled = true;
+    document.getElementById("hoverButton").style.color = 'darkgray';
+
     saveSettings();
 
-    // clear map polygons
-    map.eachLayer(function(layer) {
-        if (layer instanceof L.Polygon) {
-        map.removeLayer(layer);
-        }
-    });
-    map.eachLayer(function(layer) {
-        if (layer instanceof L.Marker) {
-        map.removeLayer(layer);
+    map.eachLayer(function (layer) {
+        if (!(layer instanceof L.TileLayer)) {
+            map.removeLayer(layer);
         }
     });
 
@@ -1587,49 +1891,68 @@ async function refresh(){
             iconUrl: 'https://busybird15.github.io/assets/locationicon.png',
             iconSize: [26, 26],
             iconAnchor: [13, 13], });
-         currentLocationMarker = L.marker([nowlat, nowlon], { icon: currentLocationIcon }).addTo(map);  
+         currentLocationMarker = L.marker([nowlat, nowlon], { icon: currentLocationIcon }).addTo(map);
      }
-    
+
     if (showspcOutlooks){await loadOutlook();}
-    
+    if (showHurricaneTracks){await loadHurricanes();}
     await loadRadar();
     await loadWatches();
     await loadAlerts();
     await loadReports();
-    
-    
+
+    document.getElementById("hoverButton").disabled = false;
+    document.getElementById("hoverButton").style.color = 'white';
 }
 
 
 async function loop() {
-    if (canRefresh){
-        // clear map polygons
-        map.eachLayer(function(layer) {
-            if (layer instanceof L.Polygon) {
-            map.removeLayer(layer);
+    // Don't refresh if the user is reading a popup
+    // Once the popup closes, then refresh      <-- this part doesnt work, not sure why
+    var hasAnOpenPopup = false;
+    map.eachLayer(function (layer) {
+        if (layer instanceof L.Polygon || layer instanceof L.Marker) {
+            var popup = layer.getPopup();
+            if (layer.getPopup() && layer.getPopup().isOpen()) {
+                hasAnOpenPopup = true;
+                document.getElementById("hoverButton").classList.add("waitingForRefresh");
+                popup.on('popupclose', async function () {
+                    await refresh();
+                });
             }
-        });
-        map.eachLayer(function(layer) {
-            if (layer instanceof L.Marker) {
+        }
+    });
+
+
+    if (canRefresh && !hasAnOpenPopup){
+        document.getElementById("hoverButton").classList.remove("waitingForRefresh");
+        document.getElementById("hoverButton").disabled = true;
+        document.getElementById("hoverButton").style.color = 'darkgray';
+
+        map.eachLayer(function (layer) {
+            if (!(layer instanceof L.TileLayer)) {
                 map.removeLayer(layer);
             }
         });
+
 
         if (isLocationOn) {
             const currentLocationIcon = L.icon({
                 iconUrl: 'https://busybird15.github.io/assets/locationicon.png',
                 iconSize: [26, 26],
                 iconAnchor: [13, 13], });
-            currentLocationMarker = L.marker([nowlat, nowlon], { icon: currentLocationIcon }).addTo(map);  
+            currentLocationMarker = L.marker([nowlat, nowlon], { icon: currentLocationIcon }).addTo(map);
         }
 
         if (showspcOutlooks){await loadOutlook();}
-
+        if (showHurricaneTracks){await loadHurricanes();}
         await loadRadar();
         await loadWatches();
         await loadAlerts();
         await loadReports();
 
+        document.getElementById("hoverButton").disabled = false;
+        document.getElementById("hoverButton").style.color = 'white';
     }
 }
 
@@ -1663,14 +1986,14 @@ function sizing(){
     if (vw > vwmax){
         document.getElementById("severewxcenteropener").style.display = 'flex';
     } else {
-        document.getElementById("severewxcenteropener").style.display = 'none';
-        document.getElementById("severewxcenter").style.display = 'none';
+        fadeOutElement("severewxcenteropener");
+        fadeOutElement("severewxcenter");
     }
 
     if (vw > 1000 && showYoutubeEmbed){
         document.getElementById('player').style.display = 'flex';
     } else {
-        document.getElementById('player').style.display = 'none';
+        fadeOutElement('player');
     }
 }
 
@@ -1684,8 +2007,8 @@ function severewxcenter(){
         document.getElementById("swody1_HAIL").src = "https://www.spc.noaa.gov/partners/outlooks/national/swody1_HAIL.png?t=" + timestamp;
         document.getElementById("WWmap").src = "https://www.spc.noaa.gov/products/watch/validww.png?t=" + timestamp;
         document.getElementById("REPmap").src = "https://www.spc.noaa.gov/climo/reports/today.gif?t=" + timestamp;
-    } else { 
-        document.getElementById("severewxcenter").style.display = 'none';
+    } else {
+        fadeOutElement("severewxcenter");
     }
 }
 
@@ -1703,11 +2026,11 @@ window.addEventListener('resize', function(event){
 
 function closeModal(modal){
     if (modal == 1){
-        document.getElementById("tstmtagbox").style.display = 'none';
+        fadeOutElement("tstmtagbox");
     } else if (modal == 2){
-        document.getElementById("tutorialbox").style.display = 'none';
+        fadeOutElement("tutorialbox");
     } else if (modal == 3){
-        document.getElementById("embedinfobox").style.display = 'none';
+        fadeOutElement("embedinfobox");
     }
 }
 
@@ -1808,7 +2131,7 @@ button.addEventListener('mouseover', () => {
   hoverTimeout = setTimeout(() => {
     const rect = button.getBoundingClientRect();
     menu.style.left = `${rect.left - 65}px`;
-    menu.style.top = `${rect.top - menu.offsetHeight - 230}px`;
+    menu.style.top = `${rect.top - menu.offsetHeight - 235}px`;
     menu.classList.remove('hidden');
   }, 1000);
 });

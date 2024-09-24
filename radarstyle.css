@@ -8,6 +8,24 @@ a:hover {
     list-style: none;
     display: inline-block;
 }
+
+.sli button {
+    font-size: 28px;
+    padding: 2px 10px 2px 10px;
+    background-color: rgba(0, 0, 0, 0);
+    color: white;
+    border: grey 0px solid;
+    font-variation-settings:
+        'FILL' 0,
+        'wght' 400,
+        'GRAD' 0,
+        'opsz' 20
+}
+
+.sli button:hover {
+    background-color: rgb(150, 150, 150);
+}
+
 body{
     background-color: rgb(26, 26, 26);
     color: white;
@@ -27,6 +45,7 @@ body{
 
 button {
     background-color: white;
+    color: black;
     border: grey 2px solid;
     padding: 5px;
     padding-left: 10px;
@@ -38,7 +57,7 @@ button {
     transition-duration: 0.1s;
 }
 button:hover {
-    background-color: rgb(165, 165, 165);
+    background-color: rgb(220, 220, 220);
 }
 
 .mbtn {
@@ -92,26 +111,49 @@ select {
 }
 
 .overlay-object {
-    opacity: 0;
-    animation: fadeInUp 0.3s forwards;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: fadeInUp 0.4s forwards;
     border-left: 0px;
     border-radius: 10px;
     padding: 10px;
     position: absolute;
     z-index: 500;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
+}
+
+.fade-out {
+    animation: fadeOutDown 0.4s forwards;
 }
 
 @keyframes fadeInUp {
     0% {
-        transform: translateY(10px);
+        transform: translateY(20px);
         opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
     }
     100% {
         transform: translateY(0);
         opacity: 1;
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+}
+
+@keyframes fadeOutDown {
+    0% {
+        transform: translateY(0);
+        opacity: 1;
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+    }
+    100% {
+        transform: translateY(20px);
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
     }
 }
 
@@ -146,9 +188,19 @@ select {
     50% { fill: red; }
 }
 
+.waitingForRefresh {
+    animation: pulsered 2s infinite;
+}
+
+@keyframes pulsered {
+    0% { color: white; }
+    50% { color: red; }
+}
+
 .alertpopup .leaflet-popup-content-wrapper {
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     color: #eee;
     font-size: medium;
     font-family: "Outfit", sans-serif;
@@ -164,6 +216,7 @@ select {
 .alertpopup_dark .leaflet-popup-content-wrapper {
     background-color: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     color: #eee;
     font-size: medium;
     font-family: "Outfit", sans-serif;
@@ -179,11 +232,13 @@ select {
 .alertpopup .leaflet-popup-tip {
     background-color: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .alertpopup_dark .leaflet-popup-tip {
     background-color: rgba(255, 255, 255, 0.2);
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 .tor-marker {
@@ -246,6 +301,7 @@ iframe {
     z-index: 500;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
 }
 
 #handle {
@@ -277,6 +333,7 @@ iframe {
   z-index: 501;
   background-color: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.3);
   flex-direction: column;
   display: flex;
@@ -309,4 +366,20 @@ select {
 @keyframes comein {
     0% { opacity: 0; display: none; }
     100% { opacity: 1; display: flex; }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+.rotating {
+      animation: rotate 5s linear infinite;
+      width: 30px;
+      height: 30px;
+      margin: 5px;
 }
