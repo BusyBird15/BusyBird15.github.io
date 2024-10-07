@@ -29,6 +29,8 @@ var radarStation = "conus";
 var radarProduct = "bref";
 var radartimerefresher = undefined;
 
+var alertDataSet = {}
+
 console.warn('NOTICE: "loadAlerts() > fetch() > iterloop >  TypeError"s are not problems with the radar, but rather that the alert has no geometry and can be safely ignored.')
 
 // Radar site icons
@@ -126,7 +128,7 @@ function menuToggle(toOpen) {
 }
 
 function dialog(toOpen, object=null){
-    const objects = ['settings', 'appinfo'];
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about'];
     if (toOpen) {
         document.getElementById("dialog").style.display = 'flex';
         if (object) {
@@ -140,6 +142,113 @@ function dialog(toOpen, object=null){
         document.getElementById("dialog").style.display = 'none';
     }
 }
+
+function openAlertProduct(alertInfoId) {
+    dialog(true, 'alertinfo');
+    var alertInfo = JSON.parse(alertDataSet[alertInfoId]);
+
+    var alertTitlecolor = 'white';
+    var alertTitlebackgroundColor = "white";
+
+    if (alertInfo.properties.event.includes("Severe Thunderstorm")){
+        alertTitlecolor = 'black';
+        alertTitlebackgroundColor = "orange";
+    } else if (alertInfo.properties.event.includes("Tornado")){
+        alertTitlebackgroundColor = "red";
+    } else if (alertInfo.properties.event.includes("Flood Advisory")){
+        alertTitlebackgroundColor = "slateblue";
+    } else if (alertInfo.properties.event.includes("Flash Flood")){
+        alertTitlebackgroundColor = "green";
+    } else if (alertInfo.properties.event.includes("Flood Warning")){
+        alertTitlebackgroundColor = "blue";
+    } else if (alertInfo.properties.event.includes("Special Weather")){
+        alertTitlebackgroundColor = "yellow";
+        alertTitlecolor = 'black';
+    } else if (alertInfo.properties.event.includes("Extreme Wind")){
+        alertTitlebackgroundColor = "fuchsia";
+        alertTitlecolor = 'black';
+    } else if (alertInfo.properties.event.includes("Special Marine")){
+        alertTitlebackgroundColor = "brown";
+    }
+    if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
+         alertInfo.properties.event = "Flash Flood Emergency"
+    }
+
+    var construct = '<div> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+    if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
+        construct = construct + '<div style="background-color: #a744a7; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
+    } else if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
+        construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
+    }
+
+    if (alertInfo.properties.description.includes("confirmed tornado")){
+        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
+    } else if (alertInfo.properties.description.includes("reported tornado")){
+        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
+    }
+
+    if (alertInfo.properties.description.includes("DESTRUCTIVE")){
+        construct = construct + '<div style="background-color: red; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
+    } else if (alertInfo.properties.description.includes("considerable") || isConsid(alertInfo.properties.description)){
+        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
+    }
+
+    console.log(alertInfo.properties.parameters)
+    // New parameters I found in the API
+    try { var vtec = alertInfo.properties.parameters.VTEC[0]; } catch {}
+    try { var awipsidentifier = alertInfo.properties.parameters.AWIPSidentifier[0]; } catch {}
+    try { var easorg = alertInfo.properties.parameters['EAS-ORG'][0]; } catch {}
+    try { var wmoidentifier = alertInfo.properties.parameters.WMOidentifier[0]; } catch {}
+    try { var motiondesc = alertInfo.properties.parameters.eventMotionDescription[0]; } catch {}
+    try { var maxhail = alertInfo.properties.parameters.maxHailSize[0]; } catch {}
+    try { var maxwind = alertInfo.properties.parameters.maxWindGust[0]; } catch {}
+    try { var fflooddamage = alertInfo.properties.parameters.flashFloodDamageThreat[0]; } catch {}
+    try { var fflooddetection = alertInfo.properties.parameters.flashFloodDetection[0]; } catch {}
+    try { var windthreat = alertInfo.properties.parameters.windThreat[0]; } catch {}
+    try { var hailthreat = alertInfo.properties.parameters.hailThreat[0]; } catch {}
+    try { var tordetection = alertInfo.properties.parameters.tornadoDetection[0]; } catch {}
+
+    construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatTimestamp(alertInfo.properties.sent) + '</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
+    construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
+
+    try {
+        var hazards = fixHazards(alertInfo.properties.description.split("HAZARD...")[1].split("\n\n")[0].replace(/\n/g, " "));
+    } catch {
+        var hazards = null
+    }
+
+    if (tordetection) {construct = construct + '<p style="margin: 0px;"><b style="color: #ff5252;">Tornado:</b> ' + tordetection.toLowerCase() + '.</p>';}
+
+    if(hazards){construct = construct + '<p style="margin: 0px;"><b>Hazards: </b>' + hazards + '</p>'}
+
+    try {
+        var impacts = alertInfo.properties.description.split("IMPACTS...")[1].split("\n\n")[0].replace(/\n/g, " ").toLowerCase();
+    } catch {
+        try {
+            var impacts = alertInfo.properties.description.split("IMPACT...")[1].split("\n\n")[0].replace(/\n/g, " ").toLowerCase();
+        } catch {
+            var impacts = null
+    }
+    }
+    if(impacts) {construct = construct + '<p style="margin: 0px;"><b>Impacts: </b>' + impacts + '</p><br><br>'}
+
+    construct = construct + '<p style="margin: 0px; margin-bottom: 20px;">' + alertInfo.properties.description.replace(/\n\n/g, "<br><br>") + '</p>'
+
+    if (wmoidentifier) {construct = construct + '<p style="margin: 0px;"><b>WMO Identifier:</b> ' + wmoidentifier + '</p>';}
+    if (maxwind) {construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + maxwind + '</p>';}
+    if (windthreat) {construct = construct + '<p style="margin: 0px;"><b>Wind Detection:</b> ' + windthreat + '</p>';}
+    if (maxhail) {construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + maxhail + '</p>';}
+    if (hailthreat) {construct = construct + '<p style="margin: 0px;"><b>Hail Detection:</b> ' + hailthreat + '</p>';}
+    if (fflooddamage) {construct = construct + '<p style="margin: 0px;"><b>Flooding Damage Threat:</b> ' + fflooddamage + '</p>';}
+    if (fflooddetection) {construct = construct + '<p style="margin: 0px;"><b>Flooding Detection:</b> ' + fflooddetection + '</p>';}
+
+    construct = construct + "</div>";
+
+    document.getElementById("alertinfo").innerHTML = construct;
+}
+
+
 
 function buildRadarContent (feature) {
     try { var stus = feature.properties.rda.properties.status; }
@@ -203,7 +312,8 @@ function putRadarStationsOnMap() {
                 "autoPan": true,
                 "maxHeight": 500,
                 "maxWidth": 500,
-                "className": "popup"
+                "className": "popup",
+                "autoPanPadding": [10, 110],
             });
         });
     })
@@ -450,6 +560,8 @@ function buildAlertPopup(alertInfo, lat, lng) {
             alertTitlebackgroundColor = "orange";
         } else if (alertInfo.properties.event.includes("Tornado")){
             alertTitlebackgroundColor = "red";
+        } else if (alertInfo.properties.event.includes("Flood Advisory")){
+            alertTitlebackgroundColor = "slateblue";
         } else if (alertInfo.properties.event.includes("Flash Flood")){
             alertTitlebackgroundColor = "green";
         } else if (alertInfo.properties.event.includes("Flood Warning")){
@@ -457,12 +569,17 @@ function buildAlertPopup(alertInfo, lat, lng) {
         } else if (alertInfo.properties.event.includes("Special Weather")){
             alertTitlebackgroundColor = "yellow";
             alertTitlecolor = 'black';
+        } else if (alertInfo.properties.event.includes("Extreme Wind")){
+            alertTitlebackgroundColor = "fuchsia";
+            alertTitlecolor = 'black';
+        } else if (alertInfo.properties.event.includes("Special Marine")){
+            alertTitlebackgroundColor = "brown";
         }
         if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
              alertInfo.properties.event = "Flash Flood Emergency"
         }
 
-        var construct = '<div style="overflow-y: auto; overflow-x: clip;"> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+        var construct = '<div> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
         if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
             construct = construct + '<div style="background-color: #a744a7; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
         } else if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
@@ -494,6 +611,8 @@ function buildAlertPopup(alertInfo, lat, lng) {
         try { var hailthreat = alertInfo.properties.parameters.hailThreat[0]; } catch {}
         try { var tordetection = alertInfo.properties.parameters.tornadoDetection[0]; } catch {}
 
+        construct = construct + '<div style="overflow-y: auto; overflow-x: clip;">'
+
         construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
         construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
 
@@ -511,11 +630,12 @@ function buildAlertPopup(alertInfo, lat, lng) {
             construct = construct + '</div>'
         }
 
+        var alertInfoId = 'alert_' + String(alertInfo.id);
+        alertDataSet[alertInfoId] = JSON.stringify(alertInfo);
 
-
-        construct = construct + '<div style="display: flex; justify-content: space-around;">'
-        construct = construct + '<button class="function-btn" title="Find the nearest radar"><i class="fa-solid fa-satellite-dish" onclick="openNearestRadarFromAlert(' + lat + ', ' + lng + ');" style="font-size: 18px;"></i></button>'
-        construct = construct + '<button class="function-btn" title="View the alert text product"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
+        construct = construct + '</div><div style="display: flex; justify-content: space-around;">'
+        construct = construct + '<button class="function-btn" title="Find the nearest radar" onclick="openNearestRadarFromAlert(' + lat + ', ' + lng + ');"><i class="fa-solid fa-satellite-dish" style="font-size: 18px;"></i></button>'
+        construct = construct + '<button class="function-btn" title="View the alert text product" onclick="openAlertProduct(\'' + alertInfoId + '\');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
         construct = construct + '<button class="function-btn" title="Get the weather conditions for this area"><i class="fa-solid fa-cloud-sun-rain" style="font-size: 18px;"></i></button>'
         construct = construct + "</div></div>";
 
@@ -542,14 +662,26 @@ function loadAlerts() {
     })
     .then(data => {
         alerts.clearLayers();
-        // Flood warnings - minimum importance
+        alertDataSet = {};
+        // Flood advisories - minimum importance
+        data.features.forEach(function(alert) {
+            try {
+                var thisItem = alert.geometry.coordinates[0];
+                if (alert.properties.event.includes("Flood Advisory")){
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'slateblue', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                }
+            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+        });
+        // Flood warnings - lower importance
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'blue', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
         });
@@ -560,7 +692,18 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flash Flood")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                }
+            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+        });
+        // Marine Statements - low importance
+        data.features.forEach(function(alert) {
+            try {
+                var thisItem = alert.geometry.coordinates[0];
+                if (alert.properties.event.includes("Special Marine")){
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'brown', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
         });
@@ -571,7 +714,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Weather")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'yellow', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
         });
@@ -582,7 +725,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Severe Thunderstorm")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
         });
@@ -593,7 +736,18 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Tornado")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                }
+            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+        });
+        // Extreme Wind Warning - higher importance
+        data.features.forEach(function(alert) {
+            try {
+                var thisItem = alert.geometry.coordinates[0];
+                if (alert.properties.event.includes("Extreme Wind")){
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'fuchsia', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
         });
@@ -651,12 +805,18 @@ function showSearchedLocation(lat, lon){
 function sizing(){
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 
-    if (vw > 700) {
+    if (vw > 600) {
         document.getElementById("searchbox").style.display = 'flex';
     } else {
         document.getElementById("searchbox").style.display = 'none';
     }
 }
+
+// Hide stuff if the radar is or gets too small
+sizing();
+window.addEventListener('resize', function(event){
+    sizing();
+  });
 
 function setProduct() {
     var e = document.getElementById('prod');
@@ -675,13 +835,14 @@ function loadOutlook() {
     .then(data => {
         outlook.clearLayers();
         data.features.forEach(function(feature) {
+            // Polylines to avoid clicking them
             try {
                 feature.geometry.coordinates.forEach(function(object){
-                    var polygon = L.polygon(reverseSubarrays(object[0]), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect' }).addTo(outlook);
+                    var polygon = L.polyline(reverseSubarrays(object[0]), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect' }).addTo(outlook);
                 });
             } catch {
                 feature.geometry.coordinates.forEach(function(object){
-                    var polygon = L.polygon(reverseSubarrays(object), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect' }).addTo(outlook);
+                    var polygon = L.polyline(reverseSubarrays(object), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect' }).addTo(outlook);
                 });
             }
         });

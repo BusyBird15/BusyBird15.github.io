@@ -65,10 +65,11 @@ Programming of the Spark Radar project began in September 2024.
         </button>
         <img src="logo.png" style="width: calc(100% - 20px); height: auto; border-radius: 10px; margin: 10px;">
         <br>
-        <div style="overflow-y: hidden; scrollbar-width: narrow;">
+        <div style="overflow-y: auto; scrollbar-width: none;">
             <div onclick="dialog(true, 'settings');" class="menuitem"><i class="fa-solid fa-gear" style="color: #27bffff;"></i><b>Settings</b></div>
             <div onclick="dialog(true, 'appinfo');" class="menuitem"><i class="fa-solid fa-circle-info" style="color: #27bffff;"></i><b>About</b></div>
-            <a style="text-decoration: none;" href="https://github.com/BusyBird15/busybird15.github.io"><div class="menuitem"><i class="fa-brands fa-github" style="color: #27bffff;"></i><b>Github</b></div></a>
+            <div onclick="dialog(true, 'about');" class="menuitem"><i class="fa-solid fa-circle-question" style="color: #27bffff;"></i><b>Technical Info</b></div>
+            <a style="text-decoration: none;" target="_blank" href="https://github.com/BusyBird15/busybird15.github.io"><div class="menuitem"><i class="fa-brands fa-github" style="color: #27bffff;"></i><b>Github</b></div></a>
         </div>
     </div>
 
@@ -104,6 +105,14 @@ Programming of the Spark Radar project began in September 2024.
                 <p style="margin: 20px 5px 5px 5px; font-size: large;"><b>Honorable Mentions</b></p>
                 <p style="margin: 5px 5px 10px 5px; font-size: medium;">The following people have helped make the radar or have helped me with finding data:</p>
                 <p style="margin: 5px 5px 10px 15px; font-size: medium; width: calc(100% - 40px); text-align: left;"><b>SteepAtticStairs</b> (Creator of AtticRadar)<br><b>Dan Paulat</b> (Creator of SupercellWX)<br><b>Wxtership</b> (Owner of Xtreme Weather Discord)</p>
+            </div>
+
+            <div id="about" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.2</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 7, 2024</p>
+            </div>
+
+            <div id="alertinfo" style="font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
             </div>
         </div>
     </div>
