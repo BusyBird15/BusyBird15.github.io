@@ -1,0 +1,240 @@
+* {
+    font-family: "Cabin", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings:
+      "wdth" 100;
+    opacity: 1;
+}
+
+* a {
+    color: #27beffff;
+}
+
+* a:hover {
+    color: #2a7fffff;
+}
+
+body {
+    overflow: hidden;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    z-index: 1;
+}
+  
+.hidden {
+    opacity: 0 !important;
+    transform: translateY(20px) !important;
+}
+  
+.overlay-object {
+    transform: translateY(0);
+    transition: opacity 0.5s, transform 0.5s !important;
+    border-radius: 10px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+    box-shadow: #0000008c 3px 3px 9px 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    transition-duration: 0.5s;
+}
+
+.nav-btn {
+    background: black;
+    padding: 10px;
+    border: none;
+    top: 10px;
+    left: 10px;
+    width: fit-content;
+    height: fit-content;
+}
+
+.nav-btn:hover {
+    background: rgb(70, 70, 70) !important;
+}
+
+button {
+    cursor: pointer;
+}
+
+.popup .leaflet-popup-content-wrapper {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    color: #fff;
+    font-size: medium;
+    font-family: "Cabin", sans-serif;
+    border-radius: 10px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    scrollbar-width: none;
+    max-height: 300px;
+    max-width: 300px;
+    border: 2px solid black;
+}
+
+.leaflet-popup {
+    width: max-content !important;
+    height: max-content !important;
+}
+
+.leaflet-popup-content {
+    width: auto !important;
+    padding: 0px !important;
+}
+
+.popup .leaflet-popup-tip {
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+.leaflet-popup-content p {
+    margin: 0px;
+}
+
+.leaflet-popup-content {
+    padding: 5px;
+}
+
+b {
+    font-weight: bolder;
+}
+
+.marker {
+    width: 20px;
+    height: 20px;
+    background-size: cover;
+    border: 1px solid black;
+    border-radius: 50%;
+    transition-duration: 0.2s;
+}
+
+.tdwr {
+    border-radius: 0px;
+}
+
+.marker:hover{
+    background: #27beffff !important;
+}
+
+
+.menuitem {
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    background: #2a7fffff;
+    color: white;
+    display: flex;
+    cursor: pointer;
+    font-size: medium;
+    transition-duration: 0.2s;
+}
+
+.menuitem:hover {
+    background: #27beffff;
+    color: black;
+}
+
+.menuitem i {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+input, select{
+  accent-color: #27beffff;
+}
+
+select {
+    background: white;
+    padding: 0px;
+    width: 100%;
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+    border: 8px solid white;
+    border-radius: 5px;
+    transition-duration: 0.2s;
+}
+
+#textbox:focus {
+    outline: none;
+    color: black !important;
+    background-color: rgba(255, 255, 255, 1) !important;
+}
+
+input::placeholder {
+    color: lightgray;
+}
+input::-webkit-input-placeholder {
+    color: lightgray;
+}
+
+input:focus::placeholder {
+    color: darkgray !important;
+}
+input:focus::-webkit-input-placeholder {
+    color: darkgray !important;
+}
+
+.searchbuttons {
+    background: none;
+    color: rgb(200, 200, 200);
+    border: none;
+}
+
+.searchbuttons:hover {
+    color: white;
+    background: none;
+}
+
+.resultitem {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.resultitem:hover {
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+
+#results {
+    display: none;
+}
+
+.noselect {
+    cursor: grab;
+}
+
+.function-btn {
+    background: #27beffff;
+    color: black;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    transition-duration: 0.2s;
+}
+
+.function-btn:hover {
+    background: #2a7fffff;
+    color: white !important;
+}
+
+.city-name {
+  background: transparent;
+  color: black;
+  font-weight: bold;
+}
