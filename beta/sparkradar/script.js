@@ -29,9 +29,9 @@ var radarStation = "conus";
 var radarProduct = "bref";
 var radartimerefresher = undefined;
 
-var alertDataSet = {}
+var firstsruse = true;
 
-console.warn('NOTICE: "loadAlerts() > fetch() > iterloop >  TypeError"s are not problems with the radar, but rather that the alert has no geometry and can be safely ignored.')
+var alertDataSet = {}
 
 // Radar site icons
 const good = L.divIcon({
@@ -113,17 +113,11 @@ visibility("show", "menu-opener", true);
 
 function menuToggle(toOpen) {
     if (toOpen) {
-        visibility("hide", "menu-opener", true);
-        visibility("show", "menu", true);
-        setTimeout(function() {
-            document.getElementById("menu").style.display = 'flex';
-        }, 500);
+        visibility("show", "menu", false);
+        document.getElementById("menu").style.display = 'flex';
     } else {
-        visibility("show", "menu-opener", true);
-        visibility("hide", "menu", true);
-        setTimeout(function() {
-            document.getElementById("menu").style.display = 'none';
-        }, 500);
+        visibility("hide", "menu", false);
+        document.getElementById("menu").style.display = 'none';
     }
 }
 
@@ -174,23 +168,21 @@ function openAlertProduct(alertInfoId) {
          alertInfo.properties.event = "Flash Flood Emergency"
     }
 
-    var construct = '<div> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+    var construct = '<div> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 10px; font-size: large; font-weight: bolder; margin-top: 10px; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
     if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
-        construct = construct + '<div style="background-color: #a744a7; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
+        construct = construct + '<div style="background-color: #a744a7; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
     } else if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
-        construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
+        construct = construct + '<div style="background-color: magenta; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
     }
 
-    if (alertInfo.properties.description.includes("confirmed tornado")){
-        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
-    } else if (alertInfo.properties.description.includes("reported tornado")){
-        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
+    if (alertInfo.properties.description.includes("confirmed tornado") || alertInfo.properties.description.includes("reported tornado") || alertInfo.properties.description.includes("reported waterspout") || alertInfo.properties.description.includes("confirmed waterspout")){
+        construct = construct + '<div style="background-color: orange; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
     }
 
     if (alertInfo.properties.description.includes("DESTRUCTIVE")){
-        construct = construct + '<div style="background-color: red; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
+        construct = construct + '<div style="background-color: red; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p></div><br>';
     } else if (alertInfo.properties.description.includes("considerable") || isConsid(alertInfo.properties.description)){
-        construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
+        construct = construct + '<div style="background-color: orange; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p></div><br>';
     }
 
     console.log(alertInfo.properties.parameters)
@@ -231,9 +223,9 @@ function openAlertProduct(alertInfoId) {
             var impacts = null
     }
     }
-    if(impacts) {construct = construct + '<p style="margin: 0px;"><b>Impacts: </b>' + impacts + '</p><br><br>'}
+    if(impacts) {construct = construct + '<p style="margin: 0px;"><b>Impacts: </b>' + impacts + '</p><br>'}
 
-    construct = construct + '<p style="margin: 0px; margin-bottom: 20px;">' + alertInfo.properties.description.replace(/\n\n/g, "<br><br>") + '</p>'
+    construct = construct + '<hr style="color: white;"><p style="margin: 0px; background: black; margin-bottom: 20px; margin-top: 20px; font-family: Consolas, monospace, sans-serif !important;">' + alertInfo.properties.description.replace(/\n\n/g, "<br><br>") + '</p><hr style="color: white; margin-bottom: 20px;">'
 
     if (wmoidentifier) {construct = construct + '<p style="margin: 0px;"><b>WMO Identifier:</b> ' + wmoidentifier + '</p>';}
     if (maxwind) {construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + maxwind + '</p>';}
@@ -253,16 +245,32 @@ function openAlertProduct(alertInfoId) {
 function buildRadarContent (feature) {
     try { var stus = feature.properties.rda.properties.status; }
     catch { var stus = "Unknown"; }
+
+    const radarDate = new Date(feature.properties.latency.levelTwoLastReceivedTime);
+    const currentDate = new Date();
+    const timediff = (currentDate - radarDate) / (1000 * 60);
+
     var construct = '<div style="display: flex; margin: 10px; justify-content: space-around;">';
     construct += '<i class="fa-solid fa-satellite-dish" style="font-size: 24px; margin-right: 15px; color: #27beffff;"></i>';
     construct += '<p style="font-size: large;">' + feature.properties.id + '</p>';
     construct += '</div><br>';
 
     construct += '<p style="font-size: medium;"><b>Station type: </b>' + feature.properties.stationType + '</p>';
-    construct += '<p style="font-size: medium;"><b>Status: </b>' + stus + '</p>';
+    if ((Math.round(feature.properties.latency.current.value * 100) / 100) > 500){
+        construct += '<p style="font-size: medium;"><b>Status: </b>Offline</p>';
+        stus = "Offline";
+    } else if (timediff > 10){
+        construct += '<p style="font-size: medium;"><b>Status: </b>Outdated</p>';
+    } else if (stus == "Operate") {
+        construct += '<p style="font-size: medium;"><b>Status: </b>Operational</p>';
+    } else {
+        construct += '<p style="font-size: medium;"><b>Status: </b>' + stus + '</p>';
+    }
     construct += '<p style="font-size: medium;"><b>Ping: </b>' + (Math.round(feature.properties.latency.current.value * 100) / 100).toFixed(2) + ' sec</p>';
 
-    if (stus == "Operate"){
+    if (stus == "Offline"){
+        construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
+    } else if (stus == "Operate" && timediff < 10){
         construct += '<button onclick="addRadarToMap(\'' + feature.properties.id + '\'.toUpperCase()); map.closePopup();" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" class="function-btn">Select Station</button>'
     } else {
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
@@ -272,7 +280,8 @@ function buildRadarContent (feature) {
 
 function putRadarStationsOnMap() {
     if (checkPopups(radars)){ return }
-    console.log("Updating radar stations.")
+    console.info("Updating radar stations.")
+    document.getElementById("infop").innerHTML = "Loading radars...";
     fetch('https://api.weather.gov/radar/stations?stationType=WSR-88D') // Add ,TDWR t include them
     .then(response => {
         if (!response.ok) {
@@ -281,16 +290,21 @@ function putRadarStationsOnMap() {
         return response.json();
     })
     .then(data => {
+        document.getElementById("infop").innerHTML = "Updating radars...";
         radars.clearLayers();
         data.features.forEach(feature => {
             try {
-                if (feature.properties.rda.properties.status == "Operate"){
+                const radarDate = new Date(feature.properties.latency.levelTwoLastReceivedTime);
+                const currentDate = new Date();
+                const timediff = (currentDate - radarDate) / (1000 * 60);
+
+                if (feature.properties.rda.properties.status == "Operate" && timediff < 5){
                     if (feature.properties.id.startsWith("T") && feature.properties.id != "TJUA") {
                         var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: good_tdwr }).addTo(radars);
                     } else {
                         var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: good }).addTo(radars);
                     }
-                } else if (feature.properties.rda.properties.status == "Start-Up") {
+                } else if (feature.properties.rda.properties.status == "Start-Up" || timediff < 10) {
                     if (feature.properties.id.startsWith("T") && feature.properties.id != "TJUA") {
                         var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: problem_tdwr }).addTo(radars);
                     } else {
@@ -302,11 +316,11 @@ function putRadarStationsOnMap() {
                     } else {
                         var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad }).addTo(radars);
                     }
-                    console.log(feature.properties.rda.properties.status);
                 }
             } catch {
                 var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad }).addTo(radars);
-                console.log("Couldn't identify the radar status for " + feature.properties.id + ".");
+                try { console.info("Couldn't identify the radar status for " + feature.properties.id + ": " + feature.properties.rda.properties.status); }
+                catch { console.info("No metadata for " + feature.properties.id + ".") }
             }
             marker.bindPopup(buildRadarContent(feature), {
                 "autoPan": true,
@@ -315,10 +329,12 @@ function putRadarStationsOnMap() {
                 "className": "popup",
                 "autoPanPadding": [10, 110],
             });
+            document.getElementById("infop").innerHTML = "";
         });
     })
     .catch(error => {
         console.error('putRadarStationsOnMap() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
     });
 }
 
@@ -360,12 +376,19 @@ function getBoundingBox(forParams) {
 function addRadarToMap (station="conus") {
     var stattype = ""
     if (station != "conus"){
+        if (firstsruse) { firstsruse=false; document.getElementById("prod").innerHTML = '<option value="bref">Base Reflectivity</option> <option value="bvel">Base Velocity</option> <option value="bdhc">Digital Hydrometer Classification</option> <option value="boha">Rainfall Accumulation (One Hour)</option> <option value="bdsa">Rainfall Accumulation (Storm Total)</option>'; }
+        radarProduct = document.getElementById("prod").value;
         if (radarProduct == "bref" || radarProduct == "bvel"){
             stattype = station.toLowerCase() + '_sr_' + radarProduct
         } else {
             stattype = station.toLowerCase() + '_' + radarProduct
         }
-    } else { stattype = 'conus_bref_qcd'; }
+    } else {
+        thisprod = document.getElementById("prod").value;
+        document.getElementById("prod").innerHTML = '<option value="conus_cref">Composite Reflectivity</option><option value="conus_bref">Base Reflectivity</option>';
+        document.getElementById("prod").value = thisprod;
+        stattype = document.getElementById("prod").value + '_qcd';
+    }
 
     const params = {
         REQUEST: "GetMap",
@@ -381,6 +404,7 @@ function addRadarToMap (station="conus") {
         SRS: "EPSG:3857",
         BBOX: getBoundingBox(true)
     };
+    document.getElementById("infop").innerHTML = "Loading radar...";
 
     const imageUrl = tileURL('https://opengeo.ncep.noaa.gov/geoserver/' + station.toLowerCase() + '/' + stattype + '/ows', params);
     var img = new Image();
@@ -391,10 +415,12 @@ function addRadarToMap (station="conus") {
         if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
         radarStation = station;
         updateRadarInfo(station);
+        document.getElementById("infop").innerHTML = "";
     };
     img.onerror = function() {
         console.error("Failed to load radar tile.");
         console.log(imageUrl)
+        document.getElementById("infop").innerHTML = "";
     };
 }
 
@@ -432,7 +458,7 @@ function updateRadarInfo(stat="conus") {
         document.getElementById("radinfo_lna").innerHTML = "<b>" + radarStation.toUpperCase() + "</b> • " + radarTime;
     } else {
         stat = stat.toUpperCase();
-        console.log("Getting info for " + stat);
+        console.info("Getting info for " + stat);
         fetch('https://api.weather.gov/radar/stations/' + stat)
         .then(response => {
             if (!response.ok) {
@@ -579,23 +605,21 @@ function buildAlertPopup(alertInfo, lat, lng) {
              alertInfo.properties.event = "Flash Flood Emergency"
         }
 
-        var construct = '<div> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+        var construct = '<div> <div style="display: flex; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 10px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
         if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
-            construct = construct + '<div style="background-color: #a744a7; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
+            construct = construct + '<div style="background-color: #a744a7; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
         } else if (alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
-            construct = construct + '<div style="background-color: magenta; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
+            construct = construct + '<div style="background-color: magenta; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px;"><b>THIS IS A PARTICULARLY DANGEROUS SITUATION</b></p></div><br>';
         }
 
-        if (alertInfo.properties.description.includes("confirmed tornado")){
-            construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
-        } else if (alertInfo.properties.description.includes("reported tornado")){
-            construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
-        }
+        if (alertInfo.properties.description.includes("confirmed tornado") || alertInfo.properties.description.includes("reported tornado") || alertInfo.properties.description.includes("reported waterspout") || alertInfo.properties.description.includes("confirmed waterspout")){
+        construct = construct + '<div style="background-color: orange; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px; color: black;"><b>THIS TORNADO IS ON THE GROUND</b></p></div><br>';
+    }
 
         if (alertInfo.properties.description.includes("DESTRUCTIVE")){
-            construct = construct + '<div style="background-color: red; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
+            construct = construct + '<div style="background-color: red; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p></div><br>';
         } else if (alertInfo.properties.description.includes("considerable") || isConsid(alertInfo.properties.description)){
-            construct = construct + '<div style="background-color: orange; border-radius: 5px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p><a onclick="openModal(1);" style="cursor: pointer; margin-top:3px; margin-left:10px; text-decoration: none;"><b>?</b></a></div><br>';
+            construct = construct + '<div style="background-color: orange; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p></div><br>';
         }
 
         try { var vtec = alertInfo.properties.parameters.VTEC[0]; } catch {}
@@ -619,7 +643,7 @@ function buildAlertPopup(alertInfo, lat, lng) {
         if (maxwind || maxhail || fflooddamage) {
             construct = construct + '<div style="display: flex; justify-content: space-around; margin-bottom: 20px;">'
             if (maxwind) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxwind.replace("Up to ", "") + '</p>';}
-            if (maxhail) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-meatball" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
+            if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-meatball" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
             if (fflooddamage) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-showers-heavy" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + fflooddamage + '</p>';}
             construct = construct + '</div>'
         }
@@ -647,12 +671,12 @@ function openNearestRadarFromAlert(lat, lon) {
     var nearestMarker = findNearestMarker(lat, lon);
     if (nearestMarker) {
         nearestMarker.openPopup();
-        console.log(nearestMarker)
     }
 }
 
 function loadAlerts() {
-    console.log("Getting alerts");
+    document.getElementById("infop").innerHTML = "Loading alerts...";
+    console.info("Getting alerts");
     fetch('https://api.weather.gov/alerts/active', {headers: {'Accept': 'Application/geo+json'} })
     .then(response => {
         if (!response.ok) {
@@ -670,9 +694,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flood Advisory")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'slateblue', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flood warnings - lower importance
         data.features.forEach(function(alert) {
@@ -681,9 +705,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'blue', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flash Flood warnings - less importance
         data.features.forEach(function(alert) {
@@ -692,9 +716,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flash Flood")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Marine Statements - low importance
         data.features.forEach(function(alert) {
@@ -703,9 +727,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Marine")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'brown', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // SW Statements - medium importance
         data.features.forEach(function(alert) {
@@ -714,9 +738,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Weather")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'yellow', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // SVR - high importance
         data.features.forEach(function(alert) {
@@ -725,9 +749,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Severe Thunderstorm")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // TOR - high importance
         data.features.forEach(function(alert) {
@@ -736,9 +760,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Tornado")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Extreme Wind Warning - higher importance
         data.features.forEach(function(alert) {
@@ -747,13 +771,16 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Extreme Wind")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'fuchsia', weight: 4, fillOpacity: 0}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
-            } catch (error) { console.error('loadAlerts() > fetch() > iterloop > ', error) }
+
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
+        document.getElementById("infop").innerHTML = "";
     })
     .catch(error => {
-        console.error('loadAlerts() > fetch() > ', error);
+        console.error('loadAlerts() > fetch() > ', error)
+        document.getElementById("infop").innerHTML = "";
     });
 }
 
@@ -774,7 +801,7 @@ document.getElementById('textbox').addEventListener('keypress', function (e) {
 var searchedLocationMarker = undefined;
 
 function doLocSearch(query) {
-    console.log("Getting watches");
+    console.info("Getting watches");
     var xhr = new XMLHttpRequest();
 
     // Yes I know this is not a secure way to store an API key, but I am on a free plan. Please do not use my key, get your own at geocode.maps.co
@@ -788,7 +815,7 @@ function doLocSearch(query) {
             reslist.style.display = 'unset';
             var construct = "";
             results.forEach(function(result) {
-                construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ')" class="resultitem" style="margin-bottom: 3px; background-color: rgba(255, 255, 255, 0.2); padding: 4px; border-radius: 5px; cursor: pointer;" title="Pan to ' + result.display_name + '">' + result.display_name + '</div>';
+                construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ')" class="resultitem" style="margin-bottom: 3px; background-color: rgba(255, 255, 255, 0.2); padding: 4px; border-radius: 10px; cursor: pointer;" title="Pan to ' + result.display_name + '">' + result.display_name + '</div>';
             })
             reslist.innerHTML = construct;
         }
@@ -825,6 +852,7 @@ function setProduct() {
 }
 
 function loadOutlook() {
+    document.getElementById("infop").innerHTML = "Loading outlook...";
     fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson', {headers: {'Accept': 'Application/geo+json'} })
     .then(response => {
         if (!response.ok) {
@@ -846,9 +874,11 @@ function loadOutlook() {
                 });
             }
         });
+        document.getElementById("infop").innerHTML = "";
     })
     .catch(error => {
         console.error('loadOutlook() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
     });
 }
 

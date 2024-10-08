@@ -80,7 +80,7 @@ button {
     overflow-x: hidden;
     scrollbar-width: none;
     max-height: 300px;
-    max-width: 300px;
+    max-width: 330px;
     border: 2px solid black;
 }
 
@@ -237,4 +237,80 @@ input:focus::-webkit-input-placeholder {
   background: transparent;
   color: black;
   font-weight: bold;
+}
+
+.setticon {
+    background: #27beffff;
+    border-radius: 100%;
+    padding: 8px;
+    color: black !important;
+    margin-right: 5px;
+}
+
+.credit {
+    color: #27beffff;
+    transition-duration: 0.2s;
+}
+
+.credit:hover {
+    color: #2a7fffff;
+}
+
+
+
+
+
+
+/* Checkboxes */
+.checkbox-container {
+      display: flex;
+      position: relative;
+      cursor: pointer;
+      font-size: 18px;
+      user-select: none;
+      align-items: center;
+    }
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkmark {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  background-color: #eee;
+  border-radius: 100%;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #00af00ff;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
