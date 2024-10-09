@@ -31,6 +31,11 @@ Programming of the Spark Radar project began in September 2024.
     <!--CSS-->
     <link rel="stylesheet" href="style.css"></link>
 
+    <!--MapTiler SDK-->
+    <script src="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.umd.js"></script>
+    <link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.css" rel="stylesheet" />
+    <script src="https://cdn.maptiler.com/leaflet-maptilersdk/v2.0.0/leaflet-maptilersdk.js"></script>
+
 </head>
 <body>
     <!--Leaflet map-->
@@ -77,30 +82,83 @@ Programming of the Spark Radar project began in September 2024.
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
             </button><br>
 
-            <div id="settings" style="overflow-y: hidden; display: flex; scrollbar-width: narrow; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-star setticon" style="font-size: 16px; color: white;"></i><b>Radar resolution</b></p>
-                <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher resolution provides a more crisp radar image but uses more data and may cause the radar to lag or load slower.</p>
-                <select id="res" onchange="setResolution();">
-                    <option value="1">Maximum</option>
-                    <option value="1.5">Great</option>
-                    <option value="2">Good (Recommended)</option>
-                    <option value="3">Fair</option>
-                    <option value="4">Data saver</option>
-                    <option value="5">Minimum</option>
-                </select>
+            <div id="settings" style="display: flex; flex-direction: column; overflow-x: hide;">
+                <hr style="width: 100%; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-around;">
+                    <button id="settings-general" onclick="settingsmode('settmenu-general', 'settings-general');" class="set-btn" style="background: #27beffff; border-radius: 10px;">
+                        <i class="fa-solid fa-gear" style="font-size: 16px;"></i>
+                    </button>
+                    <button id="settings-map" onclick="settingsmode('settmenu-map', 'settings-map');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                        <i class="fa-solid fa-map" style="font-size: 16px;"></i>
+                    </button>
+                    <button id="settings-radar" onclick="settingsmode('settmenu-radar', 'settings-radar');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                        <i class="fa-solid fa-satellite-dish" style="font-size: 16px"></i>
+                    </button>
+                    <button id="settings-alerts" onclick="settingsmode('settmenu-alerts', 'settings-alerts');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                    </button>
+                </div>
+                <hr style="margin-bottom: 10px; width: 100%;">
 
-                <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
-                <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher opacity value means a less transparent radar.</p>
-                <input type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
+                <div id="settmenu-general" style="flex-direction: column; display: flex;">
+                    <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bugs setticon" style="font-size: 16px; color: white;"></i><b>JS Information</b></p>
+                    <p style="margin: 5px 5px 10px 5px; font-size: medium;">The info appears in the bottom left corner and reveals what the radar is doing.</p>
+                    <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" id="debugger" onchange="if (document.getElementById('debugger').checked) { document.getElementById('infop').style.display = 'flex' } else { document.getElementById('infop').style.display = 'none' }">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        Show debugger
+                    </label>
+                </div>
 
-                <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bugs setticon" style="font-size: 16px; color: white;"></i><b>JS Information</b></p>
-                <p style="margin: 5px 5px 10px 5px; font-size: medium;">The info appears in the bottom left corner and reveals what the radar is doing.</p>
-                <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
-                    <input type="checkbox" id="debugger" onchange="if (document.getElementById('debugger').checked) { document.getElementById('infop').style.display = 'flex' } else { document.getElementById('infop').style.display = 'none' }">
-                    <span class="checkmark" style="margin-right: 10px;"></span>
-                    Show debugger
-                </label>
+                <div id="settmenu-map" style="flex-direction: column; display: none;">
+                    <p style="margin: 10px 5px 10px 5px; font-size: large;"><i class="fa-solid fa-map setticon" style="font-size: 16px; color: white;"></i><b>Map Style</b></p>
+                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" id="defaultmp" onchange="setMapType('defaultmp', map_default)">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        <p style="font-size: medium; margin: 0px;"><b>MapTiler's</b> Basic (default)</p>
+                    </label>
+                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" id="streetsmp" onchange="setMapType('streetsmp', map_streets)">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        <p style="font-size: medium; margin: 0px;"><b>MapTiler's</b> Streets</p>
+                    </label>
+                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" id="darkmattermp" onchange="setMapType('darkmattermp', map_darkmatter)">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        <p style="font-size: medium; margin: 0px;"><b>CartoDB's</b> Dark Matter</p>
+                    </label>
+                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" id="lightmattermp" onchange="setMapType('lightmattermp', map_lightmatter)">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        <p style="font-size: medium; margin: 0px;"><b>CartoDB's</b> Light Matter</p>
+                    </label>
+                </div>
 
+                 <div id="settmenu-radar" style="flex-direction: column; display: none;">
+                     <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-star setticon" style="font-size: 16px; color: white;"></i><b>Radar resolution</b></p>
+                     <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher resolution provides a more crisp radar image but uses more data and may cause the radar to lag or load slower.</p>
+                     <select id="res" onchange="setResolution();">
+                        <option value="1">Maximum</option>
+                        <option value="1.5">Great</option>
+                        <option value="2">Good (Recommended)</option>
+                        <option value="3">Fair</option>
+                        <option value="4">Data saver</option>
+                        <option value="5">Minimum</option>
+                     </select>
+                     <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
+                     <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher opacity value means a less transparent radar.</p>
+                     <input style="width: calc(100% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
+                 </div>
+
+                <div id="settmenu-alerts" style="flex-direction: column; display: none;">
+                    <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>SPC Watches</b></p>
+                    <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show or hide severe thunderstorm and tornado watches issued by the SPC.</p>
+                    <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" checked="true" id="wwtoggle" onchange="watchesEnabled = document.getElementById('wwtoggle').checked; if (watchesEnabled) { loadWatches(); } else { watches.clearLayers(); }">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        Show watches
+                    </label>
+                 </div>
             </div>
 
             <div id="appinfo" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
@@ -123,8 +181,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.3</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 8, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.4</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 9, 2024</p>
             </div>
 
             <div id="alertinfo" style="font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">

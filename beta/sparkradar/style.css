@@ -58,10 +58,27 @@ body {
     left: 10px;
     width: fit-content;
     height: fit-content;
+    transition-duration: 0.2s;
 }
 
 .nav-btn:hover {
     background: rgb(70, 70, 70) !important;
+}
+
+.set-btn {
+    color: black;
+    padding: 10px;
+    border: none;
+    top: 10px;
+    left: 10px;
+    width: fit-content;
+    height: fit-content;
+    transition-duration: 0.2s;
+}
+
+.set-btn:hover {
+    background: #2a7fffff !important;
+    color: white !important;
 }
 
 button {
@@ -313,4 +330,18 @@ input:focus::-webkit-input-placeholder {
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
+}
+
+.TORPDSPolygon {
+    animation: torpdspulse 2s infinite;
+    animation-timing-function: step-start;
+}
+
+@keyframes torpdspulse {
+    0% { stroke: red; }
+    50% { stroke: fuchsia; }
+}
+
+.leaflet-control-attribution {
+    display: none;
 }

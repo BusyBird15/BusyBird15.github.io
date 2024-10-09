@@ -1,23 +1,48 @@
 
 // Make the map
-var map = L.map('map', { attributionControl: false, zoomControl: false, zoomSnap: 0}).setView([38.0, -100.4], 4);
+var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0}).setView([38.0, -100.4], 4);
 
-// Add the map
-L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+// Maps
+map_default = L.maptilerLayer({
+    apiKey: "UMONrX6MjViuKZoR882u",
+    style: L.MaptilerStyle.BASIC,
+});
+
+map_streets = L.maptilerLayer({
+    apiKey: "UMONrX6MjViuKZoR882u",
+    style: L.MaptilerStyle.STREETS,
+});
+
+map_lightmatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-}).addTo(map);
+});
+
+map_darkmatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+});
+
 
 // Setup the layers of the map
-var outlook = L.layerGroup().addTo(map);
-var radar = undefined;
-var alerts = undefined;
-var radars = undefined;
-var reports = undefined;
-setTimeout(() => radar = L.layerGroup().addTo(map), 10);
-setTimeout(() => alerts = L.layerGroup().addTo(map), 20);
-setTimeout(() => radars = L.layerGroup().addTo(map), 30);
-setTimeout(() => reports = L.layerGroup().addTo(map), 40);
+map.createPane('outlook');
+map.createPane('radar');
+map.createPane('watches');
+map.createPane('alerts');
+map.createPane('radars');
+map.createPane('reports');
 
+map.getPane('outlook').style.zIndex = 100;
+map.getPane('radar').style.zIndex = 200;
+map.getPane('watches').style.zIndex = 300;
+map.getPane('alerts').style.zIndex = 400;
+map.getPane('radars').style.zIndex = 500;
+map.getPane('reports').style.zIndex = 600;
+
+var outlook = L.layerGroup().addTo(map);
+var radar = L.layerGroup().addTo(map);
+var watches = L.layerGroup().addTo(map);
+var alerts = L.layerGroup().addTo(map);
+var radars = L.layerGroup().addTo(map);
+var reports = L.layerGroup().addTo(map);
 
 
 // Variables
@@ -30,8 +55,11 @@ var radarProduct = "bref";
 var radartimerefresher = undefined;
 
 var firstsruse = true;
-
+var currentMapLayer = map_default;
 var alertDataSet = {}
+
+// User settings
+var watchesEnabled = true;
 
 // Radar site icons
 const good = L.divIcon({
@@ -69,6 +97,36 @@ const bad_tdwr = L.divIcon({
     iconSize: [20, 20],
     iconAnchor: [10, 10],
     className: ''
+});
+
+
+// Set map
+function setMapType(mapselector, type) {
+    mapselectors = ['defaultmp', 'streetsmp', 'darkmattermp', 'lightmattermp'];
+    mapselectors.forEach(function(thisobj) {
+        document.getElementById(thisobj).checked = false;
+    });
+    document.getElementById(mapselector).checked = true;
+
+    if (currentMapLayer) { map.removeLayer(currentMapLayer); }
+    currentMapLayer = type;
+    map.addLayer(currentMapLayer);
+    if (currentMapLayer != map_darkmatter){
+        document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'white';
+    } else {
+        document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'black';
+    }
+
+    // Remove MapTiler attribution
+    document.querySelectorAll("a").forEach(function(item) {
+        if (item.href == "https://www.maptiler.com/") {
+            item.style.display = "none";
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    setMapType('defaultmp', map_default)
 });
 
 
@@ -185,7 +243,6 @@ function openAlertProduct(alertInfoId) {
         construct = construct + '<div style="background-color: orange; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p></div><br>';
     }
 
-    console.log(alertInfo.properties.parameters)
     // New parameters I found in the API
     try { var vtec = alertInfo.properties.parameters.VTEC[0]; } catch {}
     try { var awipsidentifier = alertInfo.properties.parameters.AWIPSidentifier[0]; } catch {}
@@ -300,25 +357,25 @@ function putRadarStationsOnMap() {
 
                 if (feature.properties.rda.properties.status == "Operate" && timediff < 5){
                     if (feature.properties.id.startsWith("T") && feature.properties.id != "TJUA") {
-                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: good_tdwr }).addTo(radars);
+                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: good_tdwr, pane: 'radars' }).addTo(radars);
                     } else {
-                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: good }).addTo(radars);
+                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: good, pane: 'radars' }).addTo(radars);
                     }
                 } else if (feature.properties.rda.properties.status == "Start-Up" || timediff < 10) {
                     if (feature.properties.id.startsWith("T") && feature.properties.id != "TJUA") {
-                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: problem_tdwr }).addTo(radars);
+                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: problem_tdwr, pane: 'radars' }).addTo(radars);
                     } else {
-                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: problem }).addTo(radars);
+                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: problem, pane: 'radars' }).addTo(radars);
                     }
                 } else {
                     if (feature.properties.id.startsWith("T") && feature.properties.id != "TJUA") {
-                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad_tdwr }).addTo(radars);
+                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad_tdwr, pane: 'radars' }).addTo(radars);
                     } else {
-                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad }).addTo(radars);
+                        var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad, pane: 'radars' }).addTo(radars);
                     }
                 }
             } catch {
-                var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad }).addTo(radars);
+                var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: bad, pane: 'radars' }).addTo(radars);
                 try { console.info("Couldn't identify the radar status for " + feature.properties.id + ": " + feature.properties.rda.properties.status); }
                 catch { console.info("No metadata for " + feature.properties.id + ".") }
             }
@@ -411,7 +468,7 @@ function addRadarToMap (station="conus") {
     img.src = imageUrl
     img.onload = function() {
         radar.clearLayers();
-        L.imageOverlay(imageUrl, getBoundingBox(false), { opacity: radarOpacity }).addTo(radar);
+        L.imageOverlay(imageUrl, getBoundingBox(false), { opacity: radarOpacity, pane: 'radar' }).addTo(radar);
         if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
         radarStation = station;
         updateRadarInfo(station);
@@ -558,7 +615,6 @@ function getDistance(lat1, lon1, lat2, lon2) {
 
 
 function findNearestMarker(lat, lon) {
-    console.log(radars.getLayers());
     var nearestMarker = null;
     var nearestDistance = Infinity;
 
@@ -692,8 +748,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flood Advisory")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'slateblue', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'slateblue', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -703,8 +759,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flood Warning")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'blue', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'blue', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -714,8 +770,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flash Flood")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -725,8 +781,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Special Marine")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'brown', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'brown', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -736,8 +792,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Special Weather")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'yellow', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'yellow', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -747,8 +803,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Severe Thunderstorm")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -758,8 +814,12 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Tornado")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TORPDSPolygon'}).addTo(alerts);
+                    } else {
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -769,8 +829,8 @@ function loadAlerts() {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Extreme Wind")){
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'fuchsia', weight: 4, fillOpacity: 0}).addTo(alerts);
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'fuchsia', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
 
@@ -787,6 +847,119 @@ function loadAlerts() {
 setTimeout(() => loadAlerts(), 100)
 setInterval(() => loadAlerts(), 60000);
 
+
+
+function isWatchValid(timestamp) {
+    // Parse the timestamp
+    const year = parseInt(timestamp.slice(0, 4), 10);
+    const month = parseInt(timestamp.slice(4, 6), 10) - 1; // Months are 0-based in JS
+    const day = parseInt(timestamp.slice(6, 8), 10);
+    const hours = parseInt(timestamp.slice(8, 10), 10);
+    const minutes = parseInt(timestamp.slice(10, 12), 10);
+
+    // Create a Date object in UTC
+    const dateUTC = new Date(Date.UTC(year, month, day, hours, minutes));
+
+    // Get the current time in UTC
+    const nowUTC = new Date();
+
+    // Compare the two dates
+    return (dateUTC > nowUTC);
+}
+
+function formatWatchDate (timestamp) {
+    // Parse the timestamp
+    const year = parseInt(timestamp.slice(0, 4), 10);
+    const month = parseInt(timestamp.slice(4, 6), 10) - 1;
+    const day = parseInt(timestamp.slice(6, 8), 10);
+    const hours = parseInt(timestamp.slice(8, 10), 10);
+    const minutes = parseInt(timestamp.slice(10, 12), 10);
+
+    // Create a Date object in UTC
+    const dateUTC = new Date(Date.UTC(year, month, day, hours, minutes));
+
+    // Convert to EST (Eastern Standard Time)
+    const options = { timeZone: 'America/New_York', hour12: true, month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric' };
+    const dateEST = dateUTC.toLocaleString('en-US', options);
+
+    return dateEST;
+}
+
+function buildWatchPopup(alertInfo, lat, lng) {
+    try {
+        var alertTitlecolor = 'black';
+        var alertTitlebackgroundColor = "white";
+        if (alertInfo.properties.TYPE == "SVR"){
+            alertTitlebackgroundColor = "#516BFF";
+        } else if (alertInfo.properties.TYPE == "TOR"){
+            alertTitlebackgroundColor = "#FE5859";
+        }
+
+        var alertTitle = "";
+        if (alertInfo.properties.IS_PDS){
+            alertTitle = alertTitle + "PDS ";
+        }
+
+        if (alertInfo.properties.TYPE == "TOR"){
+            alertTitle = alertTitle + "Tornado Watch ";
+        } else {
+            alertTitle = alertTitle + "Severe Tstorm Watch ";
+        }
+
+        alertTitle = alertTitle + "#" + alertInfo.properties.NUM;
+
+        var timestamp = new Date().getTime();
+        var construct = '<div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: medium; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';"><b>' + alertTitle + '</b></div><br>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 10px;"><b>Expires:</b> ' + formatWatchDate(alertInfo.properties.EXPIRE) + '</p>';
+        construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + alertInfo.properties.MAX_HAIL + '"</p>';
+        construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945) + 'mph</p><br>';
+
+        construct = construct + '</div><div style="display: flex; justify-content: space-around;">'
+        construct = construct + '<button class="function-btn" title="View the watch text product" onclick="openAlertProduct();"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
+        construct = construct + "</div></div>";
+
+        return construct;
+    } catch (error) {console.error(error)}
+}
+
+function loadWatches() {
+    if(!watchesEnabled) { return; }
+
+    document.getElementById("infop").innerHTML = "Loading watches...";
+    console.info("Getting alerts");
+    var currentDate = new Date();
+    currentDate.setMonth(currentDate.getMonth() + 1);
+
+    fetch('https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getDate() + '&hour2=23&minute2=0&format=geojson', {headers: {'Accept': 'Application/geo+json'} })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        watches.clearLayers();
+        data.features.forEach(function(watch) {
+            var thisItem = reverseSubarrays(watch.geometry.coordinates[0][0]);
+            if (isWatchValid(watch.properties.EXPIRE) && watch.properties.TYPE == "SVR"){
+                var border = L.polygon(thisItem, {color: 'white', weight: 6, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                var polygon = L.polygon(thisItem, {color: '#516BFF', weight: 4, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                polygon.bindPopup(buildWatchPopup(watch, thisItem[0], thisItem[1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+            } else if (isWatchValid(watch.properties.EXPIRE) && watch.properties.TYPE == "TOR"){
+                var border = L.polygon(thisItem, {color: 'white', weight: 6, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                var polygon = L.polygon(thisItem, {color: '#FE5859', weight: 4, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                polygon.bindPopup(buildWatchPopup(watch, thisItem[0], thisItem[1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+            }
+        });
+    })
+    .catch(error => {
+        console.error('loadWatches() > fetch() > ', error)
+        document.getElementById("infop").innerHTML = "";
+    });
+}
+
+setTimeout(() => loadWatches(), 100)
+setInterval(() => loadWatches(), 60000);
 
 
 
@@ -866,11 +1039,11 @@ function loadOutlook() {
             // Polylines to avoid clicking them
             try {
                 feature.geometry.coordinates.forEach(function(object){
-                    var polygon = L.polyline(reverseSubarrays(object[0]), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect' }).addTo(outlook);
+                    var polygon = L.polyline(reverseSubarrays(object[0]), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect', pane: 'outlook' }).addTo(outlook);
                 });
             } catch {
                 feature.geometry.coordinates.forEach(function(object){
-                    var polygon = L.polyline(reverseSubarrays(object), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect' }).addTo(outlook);
+                    var polygon = L.polyline(reverseSubarrays(object), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect', pane: 'outlook' }).addTo(outlook);
                 });
             }
         });
@@ -890,3 +1063,17 @@ setInterval(() => loadOutlook(), 300000);
 // To add city names
 //var myIcon = L.divIcon({className: 'city-name', html: 'City Name'});
 //L.marker([lat, lng], {icon: myIcon}).addTo(map);
+
+
+function settingsmode(thisobj, button) {
+    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar'];
+    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar'];
+    document.getElementById(button).style.background = '#27beffff';
+    document.getElementById(thisobj).style.display = 'flex';
+    objects.forEach(function(obj) {
+        if (obj != thisobj) { document.getElementById(obj).style.display = 'none'; }
+    })
+    btns.forEach(function(btn) {
+        if (btn != button) { document.getElementById(btn).style.background = '#89999f'; }
+    })
+}
