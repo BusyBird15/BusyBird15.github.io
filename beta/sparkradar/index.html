@@ -113,25 +113,24 @@ Programming of the Spark Radar project began in September 2024.
                 <div id="settmenu-map" style="flex-direction: column; display: none;">
                     <p style="margin: 10px 5px 10px 5px; font-size: large;"><i class="fa-solid fa-map setticon" style="font-size: 16px; color: white;"></i><b>Map Style</b></p>
                     <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
+                        <input type="checkbox" id="darkmatmp" onchange="setMapType('darkmatmp', map_darkmaterial)">
+                        <span class="checkmark" style="margin-right: 10px;"></span>
+                        <p style="font-size: medium; margin: 0px;">Dark (Default)</p>
+                    </label>
+                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
                         <input type="checkbox" id="defaultmp" onchange="setMapType('defaultmp', map_default)">
                         <span class="checkmark" style="margin-right: 10px;"></span>
-                        <p style="font-size: medium; margin: 0px;"><b>MapTiler's</b> Basic (default)</p>
+                        <p style="font-size: medium; margin: 0px;">Light</p>
                     </label>
                     <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
                         <input type="checkbox" id="streetsmp" onchange="setMapType('streetsmp', map_streets)">
                         <span class="checkmark" style="margin-right: 10px;"></span>
-                        <p style="font-size: medium; margin: 0px;"><b>MapTiler's</b> Streets</p>
+                        <p style="font-size: medium; margin: 0px;">Streets</p>
                     </label>
-                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
-                        <input type="checkbox" id="darkmattermp" onchange="setMapType('darkmattermp', map_darkmatter)">
-                        <span class="checkmark" style="margin-right: 10px;"></span>
-                        <p style="font-size: medium; margin: 0px;"><b>CartoDB's</b> Dark Matter</p>
-                    </label>
-                    <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
-                        <input type="checkbox" id="lightmattermp" onchange="setMapType('lightmattermp', map_lightmatter)">
-                        <span class="checkmark" style="margin-right: 10px;"></span>
-                        <p style="font-size: medium; margin: 0px;"><b>CartoDB's</b> Light Matter</p>
-                    </label>
+                    <div style="display: flex; align-items: center;">
+                        <p style="margin: 5px;">Maps provided by </p>
+                        <a href="https://maptiler.com/"><img style="transform: translateY(5px);" src="https://api.maptiler.com/resources/logo.svg" alt="MapTiler" width="100" height="30"></a>
+                    </div>
                 </div>
 
                  <div id="settmenu-radar" style="flex-direction: column; display: none;">
@@ -151,6 +150,16 @@ Programming of the Spark Radar project began in September 2024.
                  </div>
 
                 <div id="settmenu-alerts" style="flex-direction: column; display: none;">
+                    <!--<p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-star setticon" style="font-size: 16px; color: white;"></i><b>Radar refresh interval</b></p>
+                    <p style="margin: 5px 5px 10px 5px; font-size: medium;">Choose how often alerts are refreshed from NOAA. This includes the warnings refresh cycle only.</p>
+                    <select id="alertrefint" onchange="setAlertRefreshInterval();">
+                        <option value="120000">2 Minutes</option>
+                        <option value="60000">1 Minute</option>
+                        <option value="45000">45 Seconds</option>
+                        <option value="30000">30 Seconds</option>
+                        <option value="15000">15 Seconds (Recommended)</option>
+                        <option value="10000">10 Seconds</option>
+                    </select>-->
                     <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>SPC Watches</b></p>
                     <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show or hide severe thunderstorm and tornado watches issued by the SPC.</p>
                     <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
@@ -181,8 +190,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.4</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 9, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.5</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 10, 2024</p>
             </div>
 
             <div id="alertinfo" style="font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">

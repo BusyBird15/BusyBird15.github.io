@@ -50,6 +50,10 @@ body {
     transition-duration: 0.5s;
 }
 
+.overlay-object-dark {
+    background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
 .nav-btn {
     background: black;
     padding: 10px;
@@ -339,6 +343,16 @@ input:focus::-webkit-input-placeholder {
 
 @keyframes torpdspulse {
     0% { stroke: red; }
+    50% { stroke: fuchsia; }
+}
+
+.TOREPolygon {
+    animation: torepulse 2s infinite;
+    animation-timing-function: step-start;
+}
+
+@keyframes torepulse {
+    0% { stroke: #c940ff; }
     50% { stroke: fuchsia; }
 }
 

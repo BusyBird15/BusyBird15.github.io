@@ -13,12 +13,9 @@ map_streets = L.maptilerLayer({
     style: L.MaptilerStyle.STREETS,
 });
 
-map_lightmatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-});
-
-map_darkmatter = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+map_darkmaterial = L.maptilerLayer({
+    apiKey: "UMONrX6MjViuKZoR882u",
+    style: '6203b2a0-063f-44b0-95f7-8c69393a3a46',
 });
 
 
@@ -30,12 +27,12 @@ map.createPane('alerts');
 map.createPane('radars');
 map.createPane('reports');
 
-map.getPane('outlook').style.zIndex = 100;
 map.getPane('radar').style.zIndex = 200;
-map.getPane('watches').style.zIndex = 300;
-map.getPane('alerts').style.zIndex = 400;
-map.getPane('radars').style.zIndex = 500;
-map.getPane('reports').style.zIndex = 600;
+map.getPane('outlook').style.zIndex = 300;
+map.getPane('watches').style.zIndex = 400;
+map.getPane('alerts').style.zIndex = 500;
+map.getPane('radars').style.zIndex = 600;
+map.getPane('reports').style.zIndex = 700;
 
 var outlook = L.layerGroup().addTo(map);
 var radar = L.layerGroup().addTo(map);
@@ -55,8 +52,9 @@ var radarProduct = "bref";
 var radartimerefresher = undefined;
 
 var firstsruse = true;
-var currentMapLayer = map_default;
+var currentMapLayer = map_darkmaterial;
 var alertDataSet = {}
+var alertRefresher;
 
 // User settings
 var watchesEnabled = true;
@@ -102,7 +100,7 @@ const bad_tdwr = L.divIcon({
 
 // Set map
 function setMapType(mapselector, type) {
-    mapselectors = ['defaultmp', 'streetsmp', 'darkmattermp', 'lightmattermp'];
+    mapselectors = ['darkmatmp', 'defaultmp', 'streetsmp'];
     mapselectors.forEach(function(thisobj) {
         document.getElementById(thisobj).checked = false;
     });
@@ -111,10 +109,20 @@ function setMapType(mapselector, type) {
     if (currentMapLayer) { map.removeLayer(currentMapLayer); }
     currentMapLayer = type;
     map.addLayer(currentMapLayer);
-    if (currentMapLayer != map_darkmatter){
+    if (currentMapLayer != map_darkmaterial){
         document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'white';
+        document.getElementById("menu").style.background = "rgba(0, 0, 0, 0.5)";
+        document.getElementById("infop").style.color = "black";
+        document.querySelectorAll(".overlay-object").forEach(function(object) {
+            object.classList.remove("overlay-object-dark");
+        });
     } else {
         document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'black';
+        document.getElementById("menu").style.background = "rgba(255, 255, 255, 0.2)";
+        document.getElementById("infop").style.color = "white";
+        document.querySelectorAll(".overlay-object").forEach(function(object) {
+            object.classList.add("overlay-object-dark");
+        });
     }
 
     // Remove MapTiler attribution
@@ -126,7 +134,7 @@ function setMapType(mapselector, type) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    setMapType('defaultmp', map_default)
+    setMapType('darkmatmp', map_darkmaterial)
 });
 
 
@@ -332,6 +340,9 @@ function buildRadarContent (feature) {
     } else {
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
     }
+
+    construct += '<button class="function-btn" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;">WFO Products</button>'
+
     return construct;
 }
 
@@ -815,7 +826,9 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Tornado")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
+                    if (alert.properties.description.includes("TORNADO EMERGENCY")) {
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: '#c940ff', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TOREPolygon'}).addTo(alerts);
+                    } else if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TORPDSPolygon'}).addTo(alerts);
                     } else {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -845,7 +858,7 @@ function loadAlerts() {
 }
 
 setTimeout(() => loadAlerts(), 100)
-setInterval(() => loadAlerts(), 60000);
+alertRefresher = setInterval(() => loadAlerts(), 60000);
 
 
 
