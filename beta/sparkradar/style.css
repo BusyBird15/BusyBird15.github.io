@@ -163,6 +163,28 @@ b {
     transition-duration: 0.2s;
 }
 
+.menuitemunavailable {
+    background: #89999f;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+    color: white;
+    display: flex;
+    cursor: pointer;
+    font-size: medium;
+    transition-duration: 0.2s;
+}
+
+.menuitemunavailable:hover {
+    background: #89999f;
+    color: white;
+}
+
+.menuitemunavailable i {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
 .menuitem:hover {
     background: #27beffff;
     color: black;
@@ -346,6 +368,16 @@ input:focus::-webkit-input-placeholder {
     50% { stroke: fuchsia; }
 }
 
+.SVRPDSPolygon {
+    animation: svrpdspulse 2s infinite;
+    animation-timing-function: step-start;
+}
+
+@keyframes svrpdspulse {
+    0% { stroke: orange; }
+    50% { stroke: red; }
+}
+
 .TOREPolygon {
     animation: torepulse 2s infinite;
     animation-timing-function: step-start;
@@ -354,6 +386,16 @@ input:focus::-webkit-input-placeholder {
 @keyframes torepulse {
     0% { stroke: #c940ff; }
     50% { stroke: fuchsia; }
+}
+
+.FFEPolygon {
+    animation: ffepulse 2s infinite;
+    animation-timing-function: step-start;
+}
+
+@keyframes ffepulse {
+    0% { stroke: green; }
+    50% { stroke: lime; }
 }
 
 .leaflet-control-attribution {

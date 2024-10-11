@@ -50,6 +50,9 @@ var radarTime = "";
 var radarStation = "conus";
 var radarProduct = "bref";
 var radartimerefresher = undefined;
+var selectedWfoArea = null;
+var selectedLAT = null;
+var selectedLON = null;
 
 var firstsruse = true;
 var currentMapLayer = map_darkmaterial;
@@ -125,12 +128,13 @@ function setMapType(mapselector, type) {
         });
     }
 
-    // Remove MapTiler attribution
-    document.querySelectorAll("a").forEach(function(item) {
-        if (item.href == "https://www.maptiler.com/") {
-            item.style.display = "none";
-        }
-    });
+    // Code to remove MapTiler attribution
+    // I AM NOT RESPONSIBLE FOR YOUR USE OF THIS CODE
+    //document.querySelectorAll("a").forEach(function(item) {
+    //    if (item.href == "https://www.maptiler.com/") {
+    //        item.style.display = "none";
+    //    }
+    //});
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -187,19 +191,146 @@ function menuToggle(toOpen) {
     }
 }
 
-function dialog(toOpen, object=null){
-    const objects = ['settings', 'appinfo', 'alertinfo', 'about'];
+function soundingTime() {
+    const now = new Date();
+    const year = now.getUTCFullYear().toString().slice(-2);
+    const month = ('0' + (now.getUTCMonth() + 1)).slice(-2);
+    const day = ('0' + (now.getUTCDate() - 1)).slice(-2);  //ur prob here
+    let hour = now.getUTCHours();
+    hour = hour >= 12 ? '12' : '00';
+
+    return year + month + day + hour;
+}
+
+function scrape(url) {
+    return fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } })
+        .then(response => response.text())
+        .catch(error => {
+            console.error('Error fetching the website:', error);
+        });
+}
+
+function loadProd(producttoview) {
+    document.getElementById("produc").innerHTML = "Loading..."
+    if (producttoview == "RDA") {
+        fetch('https://api.weather.gov/products/types/FTM/locations/' + selectedWfoArea.toLowerCase().replace("k", ""), { headers: { 'User-Agent': 'Spark Radar, https://busybird15.github.io/beta/sparkradar', 'Accept': 'Application/geo+json' } })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data['@graph'][0]['@id']) {
+                fetch(String(data['@graph'][0]['@id']), { headers: { 'User-Agent': 'Spark Radar, https://busybird15.github.io/beta/sparkradar', 'Accept': 'Application/geo+json' } })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById("produc").innerHTML = "<b>Issued: </b>" + formatTimestamp(data.issuanceTime) + "<br><b>Concerning: </b>" + data.issuingOffice + "<br>" + String(data.productText).replace(/\n/g, "<br>");
+                })
+                .catch(error => {
+                    console.error('loadProd() > fetch() > fetch() > ', error);
+                    document.getElementById("produc").innerHTML = "No status messages have been issued for this radar recently.";
+                });
+            } else {
+                document.getElementById("produc").innerHTML = "No status messages have been issued for this radar recently.";
+            }
+        })
+        .catch(error => {
+            console.error('loadProd() > fetch() > ', error);
+            document.getElementById("produc").innerHTML = "No status messages have been issued for this radar recently.";
+        });
+    } else if (producttoview == "AFD") {
+        document.getElementById("produc").innerHTML = "Loading...";
+        fetch('https://forecast.weather.gov/MapClick.php?lon=' + selectedLON + '&lat=' + selectedLAT + '&FcstType=json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.location.wfo) {
+                scrape("https://forecast.weather.gov/product.php?site=" + data.location.wfo.toUpperCase().replace("K", "") + "&product=AFD&issuedby=" + data.location.wfo.toLowerCase().replace("k", ""))
+                .then(rawdoc => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(rawdoc, 'text/html');
+                    console.log(doc);
+                    const preElement = doc.querySelector('pre');
+                    document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>");
+                })
+                .error(error => {
+                    console.error('loadProd() > fetch() > ', error);
+                    document.getElementById("produc").innerHTML = "The AFD for this station could not be obtained.";
+                });
+            } else {
+                document.getElementById("produc").innerHTML = "The AFD for this station could not be obtained.";
+            }
+        })
+        .catch(error => {
+            console.error('loadProd() > fetch() > ', error);
+            document.getElementById("produc").innerHTML = "The AFD for this station could not be obtained.";
+        });
+    } else if (producttoview == "PNS") {
+        document.getElementById("produc").innerHTML = "Loading...";
+        fetch('https://forecast.weather.gov/MapClick.php?lon=' + selectedLON + '&lat=' + selectedLAT + '&FcstType=json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.location.wfo) {
+                scrape("https://forecast.weather.gov/product.php?site=" + data.location.wfo.toUpperCase().replace("K", "") + "&product=PNS&issuedby=" + data.location.wfo.toLowerCase().replace("k", ""))
+                .then(rawdoc => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(rawdoc, 'text/html');
+                    console.log(doc);
+                    const preElement = doc.querySelector('pre');
+                    document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>");
+                })
+                .error(error => {
+                    console.error('loadProd() > fetch() > ', error);
+                    document.getElementById("produc").innerHTML = "The PNS for this statio could not be obtained.";
+                });
+            } else {
+                document.getElementById("produc").innerHTML = "The PNS for this statio could not be obtained.";
+            }
+        })
+        .catch(error => {
+            console.error('loadProd() > fetch() > ', error);
+            document.getElementById("produc").innerHTML = "The PNS for this statio could not be obtained.";
+        });
+    }
+}
+
+
+function dialog(toOpen, object=null, producttoview){
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer'];
     if (toOpen) {
         document.getElementById("dialog").style.display = 'flex';
         if (object) {
-            menuToggle(false);
             document.getElementById(object).style.display = 'flex';
             objects.forEach(function(obj) {
                 if (obj != object) { document.getElementById(obj).style.display = 'none'; }
             })
+            if (object == 'prodviewer') { loadProd(producttoview); }
         }
     } else {
         document.getElementById("dialog").style.display = 'none';
+    }
+}
+
+function wfodialog(toOpen){
+    if (toOpen) {
+        document.getElementById("wfodialog").style.display = 'flex';
+    } else {
+        document.getElementById("wfodialog").style.display = 'none';
     }
 }
 
@@ -306,6 +437,62 @@ function openAlertProduct(alertInfoId) {
 }
 
 
+function loadSounding (lat, lon) {
+    document.getElementById("infop").innerHTML = "Loading sounding...";
+
+    document.getElementById("soundingpick").classList.add("menuitemunavailable");
+    document.getElementById("soundingpick").classList.remove("menuitem");
+    document.getElementById("soundingpick").onclick = "";
+    document.getElementById("soundingpick").innerHTML = '<i class="fa-solid fa-chart-line"></i><b>Sounding (Loading...)</b>';
+
+
+    fetch('https://forecast.weather.gov/MapClick.php?lon=' + lon + '&lat=' + lat + '&FcstType=json')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        var timestamp = new Date().getTime();
+
+        fetch("https://www.spc.noaa.gov/exper/soundings/" + soundingTime() + "_OBS/" + data.location.wfo.toUpperCase() + ".gif?t=" + timestamp)
+        .then(resp => {
+            if (resp.status != 200) {
+                document.getElementById("soundingpick").classList.add("menuitemunavailable");
+                document.getElementById("soundingpick").classList.remove("menuitem");
+                document.getElementById("soundingpick").onclick = "";
+                document.getElementById("soundingpick").innerHTML = '<i class="fa-solid fa-chart-line"></i><b>Sounding (Unavailable)</b>';
+            } else {
+                document.getElementById("soundingpick").classList.remove('menuitemunavailable');
+                document.getElementById("soundingpick").classList.add("menuitem");
+                document.getElementById("soundingpick").onclick = function() { dialog(true, 'soundingviewer') };
+                document.getElementById("soundingpick").innerHTML = '<i class="fa-solid fa-chart-line"></i><b>Sounding</b>';
+            }
+        })
+        .catch(error => {
+            document.getElementById("soundingpick").classList.add("menuitemunavailable");
+            document.getElementById("soundingpick").classList.remove("menuitem");
+            document.getElementById("soundingpick").onclick = "";
+            document.getElementById("soundingpick").innerHTML = '<i class="fa-solid fa-chart-line"></i><b>Sounding (Unavailable)</b>';
+            document.getElementById("infop").innerHTML = "";
+        });
+
+        document.getElementById("sounding").src = "https://www.spc.noaa.gov/exper/soundings/" + soundingTime() + "_OBS/" + data.location.wfo.toUpperCase() + ".gif?t=" + timestamp;
+
+        document.getElementById("infop").innerHTML = "";
+    })
+    .catch(error => {
+        document.getElementById("soundingpick").classList.add("menuitemunavailable");
+        document.getElementById("soundingpick").classList.remove("menuitem");
+        document.getElementById("soundingpick").onclick = "";
+        document.getElementById("soundingpick").innerHTML = '<i class="fa-solid fa-chart-line"></i><b>Sounding (Unavailable)</b>';
+
+        console.error('loadSounding() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
+    });
+}
+
 
 function buildRadarContent (feature) {
     try { var stus = feature.properties.rda.properties.status; }
@@ -341,7 +528,7 @@ function buildRadarContent (feature) {
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
     }
 
-    construct += '<button class="function-btn" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;">WFO Products</button>'
+    if (feature.properties.id.startsWith("K")) { construct += '<button class="function-btn" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" onclick="selectedWfoArea = \'' + feature.properties.id + '\'; selectedLAT = ' + feature.geometry.coordinates[1] + '; selectedLON = ' + feature.geometry.coordinates[0] + '; loadSounding(' + feature.geometry.coordinates[1] + ', ' + feature.geometry.coordinates[0] + '); wfodialog(true);">WFO Products</button>' }
 
     return construct;
 }
@@ -780,7 +967,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flash Flood")){
+                if (alert.properties.event.includes("Flash Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
@@ -798,7 +985,18 @@ function loadAlerts() {
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
-        // SW Statements - medium importance
+        // Flash Flood Emergencies - medium importance
+        data.features.forEach(function(alert) {
+            try {
+                var thisItem = alert.geometry.coordinates[0];
+                if (alert.properties.event.includes("Flash Flood Emergency")){
+                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+        });
+        // SW Statements - high importance
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
@@ -809,18 +1007,22 @@ function loadAlerts() {
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
-        // SVR - high importance
+        // SVR - higher importance
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Severe Thunderstorm")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (!alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'SVRPDSPolygon'}).addTo(alerts);
+                    } else {
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
-        // TOR - high importance
+        // TOR - near highest importance
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
@@ -837,7 +1039,7 @@ function loadAlerts() {
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
-        // Extreme Wind Warning - higher importance
+        // Extreme Wind Warning - highest importance
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];

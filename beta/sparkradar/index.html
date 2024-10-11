@@ -190,11 +190,35 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.5</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 10, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.6</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 11, 2024</p>
             </div>
 
             <div id="alertinfo" style="font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+            </div>
+
+            <div id="soundingviewer" style="overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+                <img id="sounding" style="background: white; border-radius: 5px; margin-top: 10px;">
+            </div>
+
+            <div id="prodviewer" style="overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+                <p id="produc" style="color: white; font-family: Consolas; font-size: medium;"></p>
+            </div>
+        </div>
+    </div>
+
+    <!--WFO Products dialog-->
+    <div id="wfodialog" style="width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+        <div style="overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+            <button id="wfo-dialog-closer" onclick="wfodialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
+                <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
+            </button><br>
+
+            <div id="prodchooser" style="display: flex; flex-direction: column;">
+                <div onclick="dialog(true, 'soundingviewer');" style="margin-top: 20px;" class="menuitem" id="soundingpick"><i class="fa-solid fa-chart-line"></i><b>Sounding</b></div>
+                <div onclick="dialog(true, 'prodviewer', 'RDA');" class="menuitem"><i class="fa-solid fa-satellite-dish"></i><b>Radar Status Message</b></div>
+                <div onclick="dialog(true, 'prodviewer', 'AFD');" class="menuitem"><i class="fa-solid fa-comments"></i><b>AFD (Area Forecast Discussion)</b></div>
+                <div onclick="dialog(true, 'prodviewer', 'PNS');" class="menuitem"><i class="fa-solid fa-message"></i><b>PNS (Public Information Statement)</b></div>
             </div>
         </div>
     </div>
