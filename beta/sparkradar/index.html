@@ -19,6 +19,10 @@ Programming of the Spark Radar project began in September 2024.
     <!--Links to the Leaflet CSS/JS-->
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <link href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" rel="stylesheet"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
 
     <!--Font links-->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,18 +40,21 @@ Programming of the Spark Radar project began in September 2024.
     <link href="https://cdn.maptiler.com/maptiler-sdk-js/v2.0.3/maptiler-sdk.css" rel="stylesheet" />
     <script src="https://cdn.maptiler.com/leaflet-maptilersdk/v2.0.0/leaflet-maptilersdk.js"></script>
 
+    <!--ESRI SDK-->
+    <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
+
 </head>
 <body>
     <!--Leaflet map-->
     <div id="map"></div>
 
     <!--Info-->
-    <div id="attrib" class="overlay-object hidden" style="">
+    <div id="attrib" class="overlay-object" style="">
 
     </div>
 
     <!--Menu opener-->
-    <button id="menu-opener" onclick="menuToggle(true);" class="hidden nav-btn overlay-object" style="background-color: rgba(0, 0, 0, 0.5); color: white; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <button id="menu-opener" onclick="menuToggle(true);" class="nav-btn overlay-object" style="background-color: rgba(0, 0, 0, 0.5); color: white; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
         <i class="fa-solid fa-bars" style="font-size: 22px; color: white;"></i>
     </button>
 
@@ -61,7 +68,7 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Menu-->
-    <div id="menu" class="hidden" style="z-index: 10; position: absolute; display: none !important; padding: 10px; flex-direction: column; left: 10px; top: 10px; width: calc(100% - 40px); max-width: 350px; height: calc(100% - 40px); border-radius: 10px; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <div id="menu">
         <button id="menu-closer" onclick="menuToggle(false);" class="nav-btn" style="border-radius: 10px; background: #ff2121ff;">
             <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
         </button>
@@ -76,7 +83,7 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Dialog-->
-    <div id="dialog" style="width: 100%; height: 100%; display: none; position: absolute; z-index: 15; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <div id="dialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 15; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
         <div style="overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <button id="dialog-closer" onclick="dialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
@@ -147,6 +154,16 @@ Programming of the Spark Radar project began in September 2024.
                      <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
                      <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher opacity value means a less transparent radar.</p>
                      <input style="width: calc(100% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
+                     <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bolt setticon" style="font-size: 16px; color: white;"></i><b>Lightning</b></p>
+                     <p style="margin: 5px 5px 10px 5px; font-size: medium;">Choose at what zoom lightning strikes appear on the map. Lightning strikes are accumulated over the last 60 minutes.</p>
+                     <select id="light" onchange="setLightningLevel();">
+                        <option value="4">Maximum (Level 4, Extremely laggy)</option>
+                        <option value="6">More (Level 6, Laggy)</option>
+                        <option value="9" selected="selected">Regular (Level 9, Recommended, Minimal lag)</option>
+                        <option value="10">Less (Level 10, No lag)</option>
+                        <option value="11">Least (Level 11, No lag)</option>
+                        <option value="20">Never show lightning</option>
+                     </select>
                  </div>
 
                 <div id="settmenu-alerts" style="flex-direction: column; display: none;">
@@ -190,8 +207,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.6</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 11, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.7</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 16, 2024</p>
             </div>
 
             <div id="alertinfo" style="font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
@@ -202,13 +219,13 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="prodviewer" style="overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
-                <p id="produc" style="color: white; font-family: Consolas; font-size: medium;"></p>
+                <p id="produc" style="color: white; font-family: Consolas, monospace, 'Cabin', sans-serif; font-size: medium;"></p>
             </div>
         </div>
     </div>
 
     <!--WFO Products dialog-->
-    <div id="wfodialog" style="width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <div id="wfodialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
         <div style="overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <button id="wfo-dialog-closer" onclick="wfodialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>

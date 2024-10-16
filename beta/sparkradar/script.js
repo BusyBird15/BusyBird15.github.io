@@ -1,6 +1,6 @@
 
 // Make the map
-var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0}).setView([38.0, -100.4], 4);
+var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 18}).setView([38.0, -100.4], 4);
 
 // Maps
 map_default = L.maptilerLayer({
@@ -26,6 +26,7 @@ map.createPane('watches');
 map.createPane('alerts');
 map.createPane('radars');
 map.createPane('reports');
+map.createPane('lightning');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 300;
@@ -33,6 +34,7 @@ map.getPane('watches').style.zIndex = 400;
 map.getPane('alerts').style.zIndex = 500;
 map.getPane('radars').style.zIndex = 600;
 map.getPane('reports').style.zIndex = 700;
+map.getPane('lightning').style.zIndex = 800;
 
 var outlook = L.layerGroup().addTo(map);
 var radar = L.layerGroup().addTo(map);
@@ -40,6 +42,7 @@ var watches = L.layerGroup().addTo(map);
 var alerts = L.layerGroup().addTo(map);
 var radars = L.layerGroup().addTo(map);
 var reports = L.layerGroup().addTo(map);
+var lightningdata = L.layerGroup().addTo(map);
 
 
 // Variables
@@ -58,6 +61,7 @@ var firstsruse = true;
 var currentMapLayer = map_darkmaterial;
 var alertDataSet = {}
 var alertRefresher;
+var lightningzoomlevel = 9;
 
 // User settings
 var watchesEnabled = true;
@@ -99,6 +103,22 @@ const bad_tdwr = L.divIcon({
     iconAnchor: [10, 10],
     className: ''
 });
+
+const lightningicon = L.icon({
+    iconUrl: 'https://raw.githubusercontent.com/BusyBird15/BusyBird15.github.io/refs/heads/main/assets/Lightning.png',
+    iconSize: [20, 20],
+    iconAnchor: [10, 10],
+});
+
+function fadeIn(elementID){
+    document.getElementById(elementID).style.display = "flex";
+    setTimeout(() => document.getElementById(elementID).classList.add("show"), 10);
+}
+
+function fadeOut(elementID){
+    document.getElementById(elementID).classList.remove("show");
+    setTimeout(() => document.getElementById(elementID).style.display = "none", 500);
+}
 
 
 // Set map
@@ -176,18 +196,17 @@ function visibility(type, elemID, needsFlex) {
 }
   
 // Set the visibility of all necessarry elements
-visibility("show", "map", false);
-visibility("show", "attrib", true);
-visibility("show", "menu-opener", true);
+fadeIn("attrib");
+fadeIn("menu-opener");
+fadeIn("info");
+fadeOut("menu");
 //setInterval(() => visibility("toggle", "attrib", true), 2000);
 
 function menuToggle(toOpen) {
     if (toOpen) {
-        visibility("show", "menu", false);
-        document.getElementById("menu").style.display = 'flex';
+        fadeIn("menu");
     } else {
-        visibility("hide", "menu", false);
-        document.getElementById("menu").style.display = 'none';
+        fadeOut("menu");
     }
 }
 
@@ -261,7 +280,7 @@ function loadProd(producttoview) {
                     const doc = parser.parseFromString(rawdoc, 'text/html');
                     console.log(doc);
                     const preElement = doc.querySelector('pre');
-                    document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>");
+                    document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n/g, "<br>");
                 })
                 .error(error => {
                     console.error('loadProd() > fetch() > ', error);
@@ -292,19 +311,19 @@ function loadProd(producttoview) {
                     const doc = parser.parseFromString(rawdoc, 'text/html');
                     console.log(doc);
                     const preElement = doc.querySelector('pre');
-                    document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>");
+                    document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n/g, "<br>");
                 })
                 .error(error => {
                     console.error('loadProd() > fetch() > ', error);
-                    document.getElementById("produc").innerHTML = "The PNS for this statio could not be obtained.";
+                    document.getElementById("produc").innerHTML = "The PNS for this station could not be obtained.";
                 });
             } else {
-                document.getElementById("produc").innerHTML = "The PNS for this statio could not be obtained.";
+                document.getElementById("produc").innerHTML = "The PNS for this station could not be obtained.";
             }
         })
         .catch(error => {
             console.error('loadProd() > fetch() > ', error);
-            document.getElementById("produc").innerHTML = "The PNS for this statio could not be obtained.";
+            document.getElementById("produc").innerHTML = "The PNS for this station could not be obtained.";
         });
     }
 }
@@ -313,7 +332,7 @@ function loadProd(producttoview) {
 function dialog(toOpen, object=null, producttoview){
     const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer'];
     if (toOpen) {
-        document.getElementById("dialog").style.display = 'flex';
+        fadeIn("dialog");
         if (object) {
             document.getElementById(object).style.display = 'flex';
             objects.forEach(function(obj) {
@@ -322,15 +341,15 @@ function dialog(toOpen, object=null, producttoview){
             if (object == 'prodviewer') { loadProd(producttoview); }
         }
     } else {
-        document.getElementById("dialog").style.display = 'none';
+        fadeOut("dialog");
     }
 }
 
 function wfodialog(toOpen){
     if (toOpen) {
-        document.getElementById("wfodialog").style.display = 'flex';
+        fadeIn("wfodialog");
     } else {
-        document.getElementById("wfodialog").style.display = 'none';
+        fadeOut("wfodialog");
     }
 }
 
@@ -679,15 +698,9 @@ function addRadarToMap (station="conus") {
     };
 }
 
-function onMapEvent(e) {
-    addRadarToMap(radarStation);
-}
-
 // Add the radar to map and update it when the user moves the map and every 30 seconds
 setTimeout(() => addRadarToMap(), 100);
 setInterval(() => addRadarToMap(radarStation), 30000);
-map.on('moveend', onMapEvent);
-map.on('zoomend', onMapEvent);
 
 function setResolution() {
     var e = document.getElementById('res');
@@ -1212,7 +1225,7 @@ function doLocSearch(query) {
 }
 
 function showSearchedLocation(lat, lon){
-    document.getElementById('results').style.display = "none";
+    fadeIn('results');
     document.getElementById('textbox').value = "";
     map.setView([lat, lon], 13);
 }
@@ -1237,6 +1250,12 @@ function setProduct() {
     var e = document.getElementById('prod');
     radarProduct = e.options[e.selectedIndex].value;
     addRadarToMap(radarStation);
+}
+
+function setLightningLevel() {
+    var e = document.getElementById('light');
+    lightningzoomlevel = e.options[e.selectedIndex].value;
+    loadLightning();
 }
 
 function loadOutlook() {
@@ -1292,3 +1311,44 @@ function settingsmode(thisobj, button) {
         if (btn != button) { document.getElementById(btn).style.background = '#89999f'; }
     })
 }
+
+var lightningLayer = L.esri.featureLayer({
+  url: 'https://utility.arcgis.com/usrsvcs/servers/a99a3d10fbf64f13897c8165d5393fca/rest/services/Severe/Lightning_CONUS/MapServer/0',
+  onEachFeature: function (feature, layer) {
+    layer.setIcon(lightningicon);
+    layer.options.pane = 'lightning';
+  }
+});
+
+function loadLightning() {
+  lightningdata.clearLayers();
+
+  if (map.getZoom() < lightningzoomlevel) {
+    return;
+  }
+
+  lightningLayer.query().within(map.getBounds()).run(function (error, featureCollection) {
+    if (error) {
+      console.error('Error fetching data:', error);
+      return;
+    }
+
+    featureCollection.features.forEach(function (feature) {
+      var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
+        icon: lightningicon,
+        pane: 'lightning'
+      });
+
+      lightningdata.addLayer(marker);
+    });
+  });
+}
+
+
+function onMapEvent(e) {
+    addRadarToMap(radarStation);
+    loadLightning();
+}
+
+map.on('moveend', onMapEvent);
+map.on('zoomend', onMapEvent);

@@ -35,8 +35,8 @@ body {
 }
   
 .overlay-object {
-    transform: translateY(0);
-    transition: opacity 0.5s, transform 0.5s !important;
+    opacity: 0;
+    transition: opacity 0.5s !important;
     border-radius: 10px;
     position: absolute;
     top: 10px;
@@ -45,13 +45,37 @@ body {
     box-shadow: #0000008c 3px 3px 9px 0px;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(5px);
     transition-duration: 0.5s;
+    -webkit-backdrop-filter: blur(5px);
+    display: none;
 }
 
 .overlay-object-dark {
     background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.show {
+    display: flex !important;
+    opacity: 1 !important;
+}
+
+#menu {
+    transition: opacity 0.5s !important;
+    z-index: 10;
+    opacity: 0;
+    position: absolute;
+    padding: 10px;
+    flex-direction: column;
+    left: 10px;
+    top: 10px;
+    width: calc(100% - 40px);
+    max-width: 350px;
+    height: calc(100% - 40px);
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .nav-btn {
@@ -90,9 +114,10 @@ button {
 }
 
 .popup .leaflet-popup-content-wrapper {
+    transition-duration: 0.5s;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
     color: #fff;
     font-size: medium;
     font-family: "Cabin", sans-serif;
@@ -108,6 +133,9 @@ button {
 .leaflet-popup {
     width: max-content !important;
     height: max-content !important;
+    transition: opacity 0.5s, backdrop-filter 0.5s !important;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .leaflet-popup-content {
@@ -117,8 +145,8 @@ button {
 
 .popup .leaflet-popup-tip {
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
-    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
 }
 
 .leaflet-popup-content p {
@@ -232,6 +260,7 @@ input:focus::-webkit-input-placeholder {
 }
 
 .searchbuttons {
+    transition-duration: 0.5s;
     background: none;
     color: rgb(200, 200, 200);
     border: none;
@@ -283,6 +312,7 @@ input:focus::-webkit-input-placeholder {
 }
 
 .setticon {
+    transition-duration: 0.5s;
     background: #27beffff;
     border-radius: 100%;
     padding: 8px;
