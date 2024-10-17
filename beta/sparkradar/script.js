@@ -5,7 +5,7 @@ var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap:
 // Maps
 map_default = L.maptilerLayer({
     apiKey: "UMONrX6MjViuKZoR882u",
-    style: L.MaptilerStyle.BASIC,
+    style: '96084695-6598-45c9-8f28-a3e091d9275c',
 });
 
 map_streets = L.maptilerLayer({
@@ -30,11 +30,11 @@ map.createPane('lightning');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 300;
-map.getPane('watches').style.zIndex = 400;
-map.getPane('alerts').style.zIndex = 500;
-map.getPane('radars').style.zIndex = 600;
+map.getPane('lightning').style.zIndex = 400;
+map.getPane('watches').style.zIndex = 500;
+map.getPane('alerts').style.zIndex = 600;
+map.getPane('radars').style.zIndex = 650;
 map.getPane('reports').style.zIndex = 700;
-map.getPane('lightning').style.zIndex = 800;
 
 var outlook = L.layerGroup().addTo(map);
 var radar = L.layerGroup().addTo(map);
@@ -333,6 +333,8 @@ function dialog(toOpen, object=null, producttoview){
     const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer'];
     if (toOpen) {
         fadeIn("dialog");
+        fadeIn("innerdialog");
+        document.getElementById("innerdialog").style.display = "revert !important";
         if (object) {
             document.getElementById(object).style.display = 'flex';
             objects.forEach(function(obj) {
@@ -342,14 +344,19 @@ function dialog(toOpen, object=null, producttoview){
         }
     } else {
         fadeOut("dialog");
+        fadeOut("innerdialog");
+        document.getElementById("innerdialog").style.scale = "50%";
     }
 }
 
 function wfodialog(toOpen){
     if (toOpen) {
         fadeIn("wfodialog");
+        fadeIn("innerwfodialog");
     } else {
         fadeOut("wfodialog");
+        fadeOut("innerwfodialog");
+        document.getElementById("innerdialog").style.scale = "50%";
     }
 }
 
@@ -1202,7 +1209,7 @@ document.getElementById('textbox').addEventListener('keypress', function (e) {
 var searchedLocationMarker = undefined;
 
 function doLocSearch(query) {
-    console.info("Getting watches");
+    console.info("Getting a location");
     var xhr = new XMLHttpRequest();
 
     // Yes I know this is not a secure way to store an API key, but I am on a free plan. Please do not use my key, get your own at geocode.maps.co
@@ -1213,7 +1220,8 @@ function doLocSearch(query) {
             var results = JSON.parse(xhr.responseText);
             var reslist = document.getElementById('results');
             const rect = document.getElementById('searchbtn').getBoundingClientRect();
-            reslist.style.display = 'unset';
+            reslist.style.display = "block";
+            setTimeout(() => reslist.style.opacity = 1, 10);
             var construct = "";
             results.forEach(function(result) {
                 construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ')" class="resultitem" style="margin-bottom: 3px; background-color: rgba(255, 255, 255, 0.2); padding: 4px; border-radius: 10px; cursor: pointer;" title="Pan to ' + result.display_name + '">' + result.display_name + '</div>';
@@ -1225,7 +1233,8 @@ function doLocSearch(query) {
 }
 
 function showSearchedLocation(lat, lon){
-    fadeIn('results');
+    document.getElementById('results').style.opacity = 0;
+    setTimeout(() => document.getElementById('results').style.display = "none", 500);
     document.getElementById('textbox').value = "";
     map.setView([lat, lon], 13);
 }
@@ -1234,9 +1243,9 @@ function sizing(){
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 
     if (vw > 600) {
-        document.getElementById("searchbox").style.display = 'flex';
+        fadeIn("searchbox");
     } else {
-        document.getElementById("searchbox").style.display = 'none';
+        fadeOut("searchbox");
     }
 }
 
@@ -1313,35 +1322,35 @@ function settingsmode(thisobj, button) {
 }
 
 var lightningLayer = L.esri.featureLayer({
-  url: 'https://utility.arcgis.com/usrsvcs/servers/a99a3d10fbf64f13897c8165d5393fca/rest/services/Severe/Lightning_CONUS/MapServer/0',
-  onEachFeature: function (feature, layer) {
-    layer.setIcon(lightningicon);
-    layer.options.pane = 'lightning';
-  }
+    url: 'https://utility.arcgis.com/usrsvcs/servers/a99a3d10fbf64f13897c8165d5393fca/rest/services/Severe/Lightning_CONUS/MapServer/0',
+    onEachFeature: function (feature, layer) {
+      layer.setIcon(lightningicon);
+      layer.options.pane = 'lightning';
+    }
 });
 
 function loadLightning() {
-  lightningdata.clearLayers();
+    lightningdata.clearLayers();
 
-  if (map.getZoom() < lightningzoomlevel) {
+    if (map.getZoom() < lightningzoomlevel) {
     return;
-  }
+    }
 
-  lightningLayer.query().within(map.getBounds()).run(function (error, featureCollection) {
+    lightningLayer.query().within(map.getBounds()).run(function (error, featureCollection) {
     if (error) {
-      console.error('Error fetching data:', error);
-      return;
+        console.error('Error fetching data:', error);
+        return;
     }
 
     featureCollection.features.forEach(function (feature) {
-      var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-        icon: lightningicon,
-        pane: 'lightning'
-      });
+    var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
+            icon: lightningicon,
+            pane: 'lightning'
+        });
 
-      lightningdata.addLayer(marker);
+        lightningdata.addLayer(marker);
+        });
     });
-  });
 }
 
 

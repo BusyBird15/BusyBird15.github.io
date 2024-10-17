@@ -68,7 +68,7 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Menu-->
-    <div id="menu">
+    <div id="menu" style="transition: opacity 0.5s, transform 0.5s !important; transform: translateX(-300px); opacity: 0; ">
         <button id="menu-closer" onclick="menuToggle(false);" class="nav-btn" style="border-radius: 10px; background: #ff2121ff;">
             <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
         </button>
@@ -84,7 +84,7 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--Dialog-->
     <div id="dialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 15; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
-        <div style="overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+        <div id="innerdialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 50%; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <button id="dialog-closer" onclick="dialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
             </button><br>
@@ -226,7 +226,7 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--WFO Products dialog-->
     <div id="wfodialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
-        <div style="overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+        <div id="innerwfodialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 50%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <button id="wfo-dialog-closer" onclick="wfodialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
             </button><br>
@@ -242,11 +242,11 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--Location Finder-->
     <div class="overlay-object" id="searchbox" style="padding: 0px; display: flex; top: 10px; left: 70px; width: calc(100% - 500px); max-width: 350px; min-width: 200px; z-index: 4;">
-        <button onclick="document.getElementById('results').style.display = 'none'; document.getElementById('textbox').value = '';" class="searchbuttons" style="padding: 5px 0px 5px 5px;"><i class="fa-solid fa-xmark" style="font-size: 16px; margin: 5px; color: white;"></i></button>
+        <button onclick="document.getElementById('results').style.opacity = 0; setTimeout(() => document.getElementById('results').style.display = 'none', 500); document.getElementById('textbox').value = '';" class="searchbuttons" style="padding: 5px 0px 5px 5px;"><i class="fa-solid fa-xmark" style="font-size: 16px; margin: 5px; color: white;"></i></button>
         <input type="text" placeholder="Find a place" id="textbox" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
         <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doLocSearch(document.getElementById('textbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px; color: white;"></i></button>
     </div>
-    <div id="results" class="overlay-object" style="width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px;"></div>
+    <div id="results" class="overlay-object" style="transition: opacity 0.5s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
     <p id="infop" style="display: none; transition-duration: 0.2s; z-index: 100; margin: 0px; text-size: large; bottom: 10px; left: 10px; position: absolute; color: black;">Loading radar...</p>
 </body>

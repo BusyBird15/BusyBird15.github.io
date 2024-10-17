@@ -58,6 +58,8 @@ body {
 .show {
     display: flex !important;
     opacity: 1 !important;
+    scale: 100% !important;
+    transform: translateX(0px) !important;
 }
 
 #menu {
@@ -136,6 +138,7 @@ button {
     transition: opacity 0.5s, backdrop-filter 0.5s !important;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
+    z-index: 99999 !important;
 }
 
 .leaflet-popup-content {
