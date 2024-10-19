@@ -1033,7 +1033,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Severe Thunderstorm")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    if (!alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
+                    if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'SVRPDSPolygon'}).addTo(alerts);
                     } else {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
