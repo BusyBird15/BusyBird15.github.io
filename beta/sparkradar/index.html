@@ -59,7 +59,7 @@ Programming of the Spark Radar project began in September 2024.
     </button>
 
     <!--Radar state info-->
-    <div id="info" class="overlay-object" style="flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 100px); max-width: 300px;">
+    <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 100px); max-width: 300px;">
         <p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST</b></p>
         <select id="prod" style="margin-top: 10px; font-size: medium;" onchange="setProduct();">
             <option value="conus_cref">Composite Reflectivity</option>
@@ -84,8 +84,8 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--Dialog-->
     <div id="dialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 15; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
-        <div id="innerdialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 50%; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
-            <button id="dialog-closer" onclick="dialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
+        <div id="innerdialog" style="flex-direction: column; transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+            <button id="dialog-closer" onclick="dialog(false); saveSettings();" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
             </button><br>
 
@@ -104,6 +104,9 @@ Programming of the Spark Radar project began in September 2024.
                     <button id="settings-alerts" onclick="settingsmode('settmenu-alerts', 'settings-alerts');" class="set-btn" style="background: #89999f; border-radius: 10px;">
                         <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
                     </button>
+                    <!--<button id="settings-stream" onclick="settingsmode('settmenu-streaming', 'settings-stream');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                        <i class="fa-brands fa-youtube" style="font-size: 16px;"></i>
+                    </button>-->
                 </div>
                 <hr style="margin-bottom: 10px; width: 100%;">
 
@@ -115,6 +118,9 @@ Programming of the Spark Radar project began in September 2024.
                         <span class="checkmark" style="margin-right: 10px;"></span>
                         Show debugger
                     </label>
+                    <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-rotate setticon" style="font-size: 16px; color: white;"></i><b>Restore Settings</b></p>
+                    <p style="margin: 5px 5px 10px 5px; font-size: medium;">Reset all settings to their defaults, including custom alert colors.</p>
+                    <button style="width: max-content; font-weight: bold; margin-left: 20px; font-size: medium; background: #ff2121ff" class="function-btn" onclick="if (confirm('Reset all settings to default?')) { localStorage.removeItem('SparkRadar_settings'); window.location.reload(); }"><i class="fa-solid fa-rotate" style="font-size: 16px; margin-right: 5px;"></i>Reset to defaults</button>
                 </div>
 
                 <div id="settmenu-map" style="flex-direction: column; display: none;">
@@ -146,7 +152,7 @@ Programming of the Spark Radar project began in September 2024.
                      <select id="res" onchange="setResolution();">
                         <option value="1">Maximum</option>
                         <option value="1.5">Great</option>
-                        <option value="2">Good (Recommended)</option>
+                        <option value="2" selected="selected">Good (Recommended)</option>
                         <option value="3">Fair</option>
                         <option value="4">Data saver</option>
                         <option value="5">Minimum</option>
@@ -184,10 +190,28 @@ Programming of the Spark Radar project began in September 2024.
                         <span class="checkmark" style="margin-right: 10px;"></span>
                         Show watches
                     </label>
+                    <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-triangle-exclamation setticon" style="font-size: 16px; color: white;"></i><b>Alert Colors</b></p>
+                    <p style="margin: 5px 5px 10px 5px; font-size: medium;">Make the radar yours by defining your own alert polygon colors. If there is more than one color option, the alert will flash between the two colors.</p>
+                    <div style="margin: 5px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Extreme Wind Warning</p> <input type="color" id="ewwcolor" onchange="changeAlertColors('EWW', document.getElementById('ewwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Tornado Emergency</p> <div><input type="color" id="torecolor" onchange="changeAlertColors('TORE', document.getElementById('torecolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#c940ff"><input type="color" id="torecolor2" onchange="changeAlertColors('TORE2', document.getElementById('torecolor2').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">PDS Tornado Warning</p> <div><input type="color" id="pdstorcolor" onchange="changeAlertColors('PDSTOR', document.getElementById('pdstorcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#ff0000"><input type="color" id="pdstorcolor2" onchange="changeAlertColors('PDSTOR2', document.getElementById('pdstorcolor2').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Tornado Warning</p> <input type="color" id="torcolor" onchange="changeAlertColors('TOR', document.getElementById('torcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff0000"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">PDS Severe Tstorm Warning</p> <div><input type="color" id="pdssvrcolor" onchange="changeAlertColors('PDSSVR', document.getElementById('pdssvrcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#ff0000"><input type="color" id="pdssvrcolor2" onchange="changeAlertColors('PDSSVR2', document.getElementById('pdssvrcolor2').value)"style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#FFA500"></div></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Severe Tstorm Warning</p> <input type="color" id="svrcolor" onchange="changeAlertColors('SVR', document.getElementById('svrcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#FFA500"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Special Weather Statement</p> <input type="color" id="swscolor" onchange="changeAlertColors('SWS', document.getElementById('swscolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#FFFF00"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flash Flood Emergency</p> <div><input type="color" id="ffecolor" onchange="changeAlertColors('FFE', document.getElementById('ffecolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#00ff00"><input type="color" id="ffecolor2" onchange="changeAlertColors('FFE2', document.getElementById('ffecolor2').value)"style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#008000"></div></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flash Flood Warning</p> <input type="color" id="ffwcolor" onchange="changeAlertColors('FFW', document.getElementById('ffwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#008000"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Special Marine Warning</p> <input type="color" id="smwcolor" onchange="changeAlertColors('SMW', document.getElementById('smwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#A52A2A"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flood Warning</p> <input type="color" id="fwcolor" onchange="changeAlertColors('FW', document.getElementById('fwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#0000FF"></div>
+                    <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flood Advisory</p> <input type="color" id="facolor" onchange="changeAlertColors('FA', document.getElementById('facolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#6A5ACD"></div>
+                </div>
+
+                <div id="settmenu-streaming" style="flex-direction: column; display: none;">
+                    <p style="margin: 5px 5px 10px 5px; font-size: medium;">Streaming settings coming soon!</p>
                  </div>
             </div>
 
-            <div id="appinfo" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+            <div id="appinfo" style="flex-direction: column; align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
                 <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>👋 Hi there!</b></p>
                 <p style="margin: 5px 5px 10px 5px; font-size: medium;">Thanks for checking out my radar. Spark Radar was a project I started in 2024 because I love tracking the weather and programming. I made the entire thing open source because finding the radar data was really hard to do. You can check out the source code in <a class="credit" href="https://github.com/BusyBird15/busybird15.github.io/">this repo</a>.</p>
                 <p style="margin: 20px 5px 5px 5px; font-size: large;"><b>How does it work?</b></p>
@@ -206,19 +230,19 @@ Programming of the Spark Radar project began in September 2024.
                 <p style="margin: 5px 5px 10px 15px; font-size: medium; width: calc(100% - 40px); text-align: left;"><b>SteepAtticStairs</b> (Creator of AtticRadar)<br><b>Dan Paulat</b> (Creator of SupercellWX)<br><b>Wxtership</b> (Owner of Xtreme Weather Discord)</p>
             </div>
 
-            <div id="about" style="align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+            <div id="about" style="flex-direction: column; align-items: center; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
                 <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.8</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 17, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 22, 2024</p>
             </div>
 
-            <div id="alertinfo" style="font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+            <div id="alertinfo" style="flex-direction: column; font-family: Consolas; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
             </div>
 
-            <div id="soundingviewer" style="overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+            <div id="soundingviewer" style="flex-direction: column; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
                 <img id="sounding" style="background: white; border-radius: 5px; margin-top: 10px;">
             </div>
 
-            <div id="prodviewer" style="overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
+            <div id="prodviewer" style="flex-direction: column; overflow-y: hidden; display: none; scrollbar-width: narrow; flex-direction: column;">
                 <p id="produc" style="color: white; font-family: Consolas, monospace, 'Cabin', sans-serif; font-size: medium;"></p>
             </div>
         </div>
@@ -226,7 +250,7 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--WFO Products dialog-->
     <div id="wfodialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
-        <div id="innerwfodialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 50%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+        <div id="innerwfodialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: 100%; max-width: 500px; max-height: 500px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <button id="wfo-dialog-closer" onclick="wfodialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; color: white;"></i>
             </button><br>
@@ -249,6 +273,16 @@ Programming of the Spark Radar project began in September 2024.
     <div id="results" class="overlay-object" style="transition: opacity 0.5s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
     <p id="infop" style="display: none; transition-duration: 0.2s; z-index: 100; margin: 0px; text-size: large; bottom: 10px; left: 10px; position: absolute; color: black;">Loading radar...</p>
+
+    <!--Map alert notifier-->
+    <div class="overlay-object" style="display: flex; right: 10px; bottom: 30px; z-index: 999;">
+        <div id="alertcontent" style="padding: 10px;">
+            <div style="display: flex; background: magenta; color: black; padding: 5px; border-radius: 5px;"><b>PDS Severe Thunderstorm Warning</b></div>
+        </div>
+    </div>
+
+    <!--Map text attribution-->
+    <p style="position: absolute; bottom: 5px; right: 5px; z-index: 999; color: white; margin: 0px;">&copy;<a href="https:/www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
 </body>
 
 <!--Add JS after elements are added-->

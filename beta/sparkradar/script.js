@@ -63,6 +63,156 @@ var alertDataSet = {}
 var alertRefresher;
 var lightningzoomlevel = 9;
 
+// Database of alert colors
+var alertcolors = {
+    'EWW': '#ff00ff',
+    'TORE': '#c940ff',
+    'TORE2': '#ff00ff',
+    'PDSTOR': '#ff0000',
+    'PDSTOR2': '#ff00ff',
+    'TOR': '#ff0000',
+    'PDSSVR': '#ff0000',
+    'PDSSVR2': '#ffa500',
+    'SVR': '#ffa500',
+    'SWS': '#ffff00',
+    'FFE': '#00ff00',
+    'FFE2': '#008000',
+    'FFW': '#008000',
+    'SMW': '#a52a2a',
+    'FW': '#0000ff',
+    'FA': '#6a5acd'
+}
+
+
+// Set map
+function setMapType(mapselector, type) {
+    mapselectors = ['darkmatmp', 'defaultmp', 'streetsmp'];
+    mapselectors.forEach(function(thisobj) {
+        document.getElementById(thisobj).checked = false;
+    });
+    document.getElementById(mapselector).checked = true;
+
+    if (currentMapLayer) { map.removeLayer(currentMapLayer); }
+    currentMapLayer = type;
+    map.addLayer(currentMapLayer);
+    if (currentMapLayer != map_darkmaterial){
+        document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'white';
+        document.getElementById("menu").style.background = "rgba(0, 0, 0, 0.5)";
+        document.getElementById("infop").style.color = "black";
+        document.querySelectorAll(".overlay-object").forEach(function(object) {
+            object.classList.remove("overlay-object-dark");
+        });
+    } else {
+        document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'black';
+        document.getElementById("menu").style.background = "rgba(255, 255, 255, 0.2)";
+        document.getElementById("infop").style.color = "white";
+        document.querySelectorAll(".overlay-object").forEach(function(object) {
+            object.classList.add("overlay-object-dark");
+        });
+    }
+
+    // Code to remove MapTiler attribution
+    // I AM NOT RESPONSIBLE FOR YOUR USE OF THIS CODE
+    //document.querySelectorAll("a").forEach(function(item) {
+    //    if (item.href == "https://www.maptiler.com/") {
+    //        item.style.display = "none";
+    //    }
+    //});
+}
+
+// Flashing polygon stylesheet
+function updateflashes() {
+    flashingstyles.innerHTML = `
+        @keyframes ffepulse {
+            0% { stroke: ${alertcolors.FFE}; }
+            50% { stroke: ${alertcolors.FFE2}; }
+        }
+        @keyframes torepulse {
+            0% { stroke: ${alertcolors.TORE}; }
+            50% { stroke: ${alertcolors.TORE2}; }
+        }
+        @keyframes svrpdspulse {
+            0% { stroke: ${alertcolors.PDSSVR}; }
+            50% { stroke: ${alertcolors.PDSSVR2}; }
+        }@keyframes torpdspulse {
+            0% { stroke: ${alertcolors.PDSTOR}; }
+            50% { stroke: ${alertcolors.PDSTOR2}; }
+        }
+    `;
+}
+
+const flashingstyles = document.createElement('style');
+flashingstyles.type = 'text/css';
+updateflashes();
+document.head.appendChild(flashingstyles);
+
+
+// Stored settings management
+function saveSettings() {
+    var mapMode = 0;
+    if (document.getElementById("darkmatmp").checked) { mapMode = 1; }
+    if (document.getElementById("defaultmp").checked) { mapMode = 2; }
+    if (document.getElementById("streetsmp").checked) { mapMode = 3; }
+
+    const settingsToSave = {
+        'res': resolutionFactor,
+        'rop': radarOpacity,
+        'ltz': lightningzoomlevel,
+        'alc': alertcolors,
+        'dbg': document.getElementById('debugger').checked,
+        'wch': document.getElementById('wwtoggle').checked,
+        'mpm': mapMode,
+    };
+    localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
+    console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
+}
+
+// Load user settings if available
+const settings = JSON.parse(localStorage.getItem('SparkRadar_settings'));
+if (settings){
+    resolutionFactor = settings.res;
+    document.getElementById('res').value = resolutionFactor;
+
+    lightningzoomlevel = settings.ltz;
+    document.getElementById('light').value = lightningzoomlevel;
+
+    radarOpacity = settings.rop;
+    document.getElementById('radop').value = radarOpacity * 100;
+
+    document.getElementById('debugger').checked = settings.dbg;
+    if (document.getElementById('debugger').checked) {
+        document.getElementById('infop').style.display = 'flex'
+    } else {
+        document.getElementById('infop').style.display = 'none'
+    }
+
+    document.getElementById('debugger').checked = settings.dbg;
+    watchesEnabled = document.getElementById('wwtoggle').checked;
+    if (watchesEnabled) { loadWatches(); }
+    else { watches.clearLayers(); }
+
+    document.getElementById("darkmatmp").checked = false;
+    document.getElementById("defaultmp").checked = false;
+    document.getElementById("streetsmp").checked = false;
+    if (settings.mpm == 1) { setMapType('darkmatmp', map_darkmaterial) }
+    else if (settings.mpm == 2) { setMapType('defaultmp', map_default) }
+    else if (settings.mpm == 3) { setMapType('streetsmp', map_streets) }
+
+    alertcolors = settings.alc;
+    updateflashes();
+
+    var colorSelectors = ['ewwcolor', 'torecolor', 'pdstorcolor', 'torcolor', 'pdssvrcolor', 'svrcolor', 'swscolor', 'ffecolor', 'ffwcolor', 'smwcolor', 'fwcolor', 'facolor', 'torecolor2', 'pdstorcolor2', 'pdssvrcolor2', 'ffecolor2'];
+    var coloritem = ['EWW', 'TORE', 'PDSTOR', 'TOR', 'PDSSVR', 'SVR', 'SWS', 'FFE', 'FFW', 'SMW', 'FW', 'FA', 'TORE2', 'PDSTOR2', 'PDSSVR2', 'FFE2'];
+    colorSelectors.forEach(function(item, index) {
+        document.getElementById(item).value = alertcolors[coloritem[index]];
+    });
+
+    console.log("Settings restored successfully.")
+} else {
+    setMapType('darkmatmp', map_darkmaterial)
+}
+
+
 // User settings
 var watchesEnabled = true;
 
@@ -108,6 +258,7 @@ const lightningicon = L.icon({
     iconUrl: 'https://raw.githubusercontent.com/BusyBird15/BusyBird15.github.io/refs/heads/main/assets/Lightning.png',
     iconSize: [20, 20],
     iconAnchor: [10, 10],
+    className: 'lightningicon',
 });
 
 function fadeIn(elementID){
@@ -121,45 +272,21 @@ function fadeOut(elementID){
 }
 
 
-// Set map
-function setMapType(mapselector, type) {
-    mapselectors = ['darkmatmp', 'defaultmp', 'streetsmp'];
-    mapselectors.forEach(function(thisobj) {
-        document.getElementById(thisobj).checked = false;
-    });
-    document.getElementById(mapselector).checked = true;
+// Contrast formula
+function getContrastYIQ(hexcolor) {
+    hexcolor = hexcolor.replace('#', '');
 
-    if (currentMapLayer) { map.removeLayer(currentMapLayer); }
-    currentMapLayer = type;
-    map.addLayer(currentMapLayer);
-    if (currentMapLayer != map_darkmaterial){
-        document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'white';
-        document.getElementById("menu").style.background = "rgba(0, 0, 0, 0.5)";
-        document.getElementById("infop").style.color = "black";
-        document.querySelectorAll(".overlay-object").forEach(function(object) {
-            object.classList.remove("overlay-object-dark");
-        });
-    } else {
-        document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'black';
-        document.getElementById("menu").style.background = "rgba(255, 255, 255, 0.2)";
-        document.getElementById("infop").style.color = "white";
-        document.querySelectorAll(".overlay-object").forEach(function(object) {
-            object.classList.add("overlay-object-dark");
-        });
-    }
+    // Convert the hex color to RGB values
+    const r = parseInt(hexcolor.substr(0, 2), 16);
+    const g = parseInt(hexcolor.substr(2, 2), 16);
+    const b = parseInt(hexcolor.substr(4, 2), 16);
 
-    // Code to remove MapTiler attribution
-    // I AM NOT RESPONSIBLE FOR YOUR USE OF THIS CODE
-    //document.querySelectorAll("a").forEach(function(item) {
-    //    if (item.href == "https://www.maptiler.com/") {
-    //        item.style.display = "none";
-    //    }
-    //});
+    // Calculate the YIQ value
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+
+    // Return black or white based on the YIQ value
+    return yiq >= 128 ? 'black' : 'white';
 }
-
-document.addEventListener('DOMContentLoaded', function() {
-    setMapType('darkmatmp', map_darkmaterial)
-});
 
 
 // Function to ensure the user isn't reading something
@@ -228,6 +355,26 @@ function scrape(url) {
             console.error('Error fetching the website:', error);
         });
 }
+
+// Doesn't work on all messages
+function radarStatusMessageTimeFix(text) {
+    return text.replace(/\d{4}Z/g, match => {
+        // Extract hours and minutes from the match
+        const hours = parseInt(match.slice(0, 2));
+        const minutes = parseInt(match.slice(2, 4));
+
+        // Create a UTC date object for the time today
+        const date = new Date();
+        date.setUTCHours(hours, minutes, 0, 0);
+
+        // Convert to local time and format
+        const options = { hour: '2-digit', minute: '2-digit', hour12: true, timeZoneName: 'short' };
+        const localTimeString = date.toLocaleTimeString('en-US', options);
+
+        return localTimeString;
+    });
+}
+
 
 function loadProd(producttoview) {
     document.getElementById("produc").innerHTML = "Loading..."
@@ -345,7 +492,7 @@ function dialog(toOpen, object=null, producttoview){
     } else {
         fadeOut("dialog");
         fadeOut("innerdialog");
-        document.getElementById("innerdialog").style.scale = "50%";
+        document.getElementById("innerdialog").style.scale = "70%";
     }
 }
 
@@ -356,7 +503,7 @@ function wfodialog(toOpen){
     } else {
         fadeOut("wfodialog");
         fadeOut("innerwfodialog");
-        document.getElementById("innerdialog").style.scale = "50%";
+        document.getElementById("innerdialog").style.scale = "70%";
     }
 }
 
@@ -368,25 +515,25 @@ function openAlertProduct(alertInfoId) {
     var alertTitlebackgroundColor = "white";
 
     if (alertInfo.properties.event.includes("Severe Thunderstorm")){
-        alertTitlecolor = 'black';
-        alertTitlebackgroundColor = "orange";
+        alertTitlebackgroundColor = alertcolors.SVR;
     } else if (alertInfo.properties.event.includes("Tornado")){
-        alertTitlebackgroundColor = "red";
+        alertTitlebackgroundColor = alertcolors.TOR;
     } else if (alertInfo.properties.event.includes("Flood Advisory")){
-        alertTitlebackgroundColor = "slateblue";
+        alertTitlebackgroundColor = alertcolors.FA;
     } else if (alertInfo.properties.event.includes("Flash Flood")){
-        alertTitlebackgroundColor = "green";
+        alertTitlebackgroundColor = alertcolors.FFW;
     } else if (alertInfo.properties.event.includes("Flood Warning")){
-        alertTitlebackgroundColor = "blue";
+        alertTitlebackgroundColor = alertcolors.FW;
     } else if (alertInfo.properties.event.includes("Special Weather")){
-        alertTitlebackgroundColor = "yellow";
-        alertTitlecolor = 'black';
+        alertTitlebackgroundColor = alertcolors.SWS;
     } else if (alertInfo.properties.event.includes("Extreme Wind")){
-        alertTitlebackgroundColor = "fuchsia";
-        alertTitlecolor = 'black';
+        alertTitlebackgroundColor = alertcolors.EWW;
     } else if (alertInfo.properties.event.includes("Special Marine")){
-        alertTitlebackgroundColor = "brown";
+        alertTitlebackgroundColor = alertcolors.SMW;
     }
+
+    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
+
     if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
          alertInfo.properties.event = "Flash Flood Emergency"
     }
@@ -450,6 +597,7 @@ function openAlertProduct(alertInfoId) {
     construct = construct + '<hr style="color: white;"><p style="margin: 0px; background: black; margin-bottom: 20px; margin-top: 20px; font-family: Consolas, monospace, sans-serif !important;">' + alertInfo.properties.description.replace(/\n\n/g, "<br><br>") + '</p><hr style="color: white; margin-bottom: 20px;">'
 
     if (wmoidentifier) {construct = construct + '<p style="margin: 0px;"><b>WMO Identifier:</b> ' + wmoidentifier + '</p>';}
+    if (vtec) {construct = construct + '<p style="margin: 0px;"><b>VTEC:</b> ' + vtec + '</p>';}
     if (maxwind) {construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + maxwind + '</p>';}
     if (windthreat) {construct = construct + '<p style="margin: 0px;"><b>Wind Detection:</b> ' + windthreat + '</p>';}
     if (maxhail) {construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + maxhail + '</p>';}
@@ -856,25 +1004,25 @@ function buildAlertPopup(alertInfo, lat, lng) {
         var alertTitlebackgroundColor = "white";
 
         if (alertInfo.properties.event.includes("Severe Thunderstorm")){
-            alertTitlecolor = 'black';
-            alertTitlebackgroundColor = "orange";
+            alertTitlebackgroundColor = alertcolors.SVR;
         } else if (alertInfo.properties.event.includes("Tornado")){
-            alertTitlebackgroundColor = "red";
+            alertTitlebackgroundColor = alertcolors.TOR;
         } else if (alertInfo.properties.event.includes("Flood Advisory")){
-            alertTitlebackgroundColor = "slateblue";
+            alertTitlebackgroundColor = alertcolors.FA;
         } else if (alertInfo.properties.event.includes("Flash Flood")){
-            alertTitlebackgroundColor = "green";
+            alertTitlebackgroundColor = alertcolors.FFW;
         } else if (alertInfo.properties.event.includes("Flood Warning")){
-            alertTitlebackgroundColor = "blue";
+            alertTitlebackgroundColor = alertcolors.FW;
         } else if (alertInfo.properties.event.includes("Special Weather")){
-            alertTitlebackgroundColor = "yellow";
-            alertTitlecolor = 'black';
+            alertTitlebackgroundColor = alertcolors.SWS;
         } else if (alertInfo.properties.event.includes("Extreme Wind")){
-            alertTitlebackgroundColor = "fuchsia";
-            alertTitlecolor = 'black';
+            alertTitlebackgroundColor = alertcolors.EWW;
         } else if (alertInfo.properties.event.includes("Special Marine")){
-            alertTitlebackgroundColor = "brown";
+            alertTitlebackgroundColor = alertcolors.SMW;
         }
+
+        alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
+
         if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
              alertInfo.properties.event = "Flash Flood Emergency"
         }
@@ -948,6 +1096,7 @@ function openNearestRadarFromAlert(lat, lon) {
     }
 }
 
+
 function loadAlerts() {
     document.getElementById("infop").innerHTML = "Loading alerts...";
     console.info("Getting alerts");
@@ -967,7 +1116,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flood Advisory")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'slateblue', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FA, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -978,7 +1127,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'blue', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -989,7 +1138,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flash Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -1000,7 +1149,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Special Marine")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'brown', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SMW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -1011,7 +1160,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Flash Flood Emergency")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'green', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFE, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -1022,7 +1171,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Special Weather")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'yellow', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SWS, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -1034,9 +1183,9 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Severe Thunderstorm")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'SVRPDSPolygon'}).addTo(alerts);
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SVR, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'SVRPDSPolygon'}).addTo(alerts);
                     } else {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'orange', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SVR, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
@@ -1049,11 +1198,11 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Tornado")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     if (alert.properties.description.includes("TORNADO EMERGENCY")) {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: '#c940ff', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TOREPolygon'}).addTo(alerts);
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TORE, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TOREPolygon'}).addTo(alerts);
                     } else if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TORPDSPolygon'}).addTo(alerts);
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TORPDSPolygon'}).addTo(alerts);
                     } else {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'red', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
@@ -1065,7 +1214,7 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Extreme Wind")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: 'fuchsia', weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.EWW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
                 }
 
@@ -1188,7 +1337,9 @@ function loadWatches() {
         });
     })
     .catch(error => {
-        console.error('loadWatches() > fetch() > ', error)
+        if (!String(error).includes("SyntaxError: Unexpected token")){
+            console.error('loadWatches() > fetch() > ', error)
+        }
         document.getElementById("infop").innerHTML = "";
     });
 }
@@ -1309,8 +1460,8 @@ setInterval(() => loadOutlook(), 300000);
 
 
 function settingsmode(thisobj, button) {
-    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar'];
-    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar'];
+    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar'];//, 'settings-stream'];
+    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar'];//, 'settmenu-streaming'];
     document.getElementById(button).style.background = '#27beffff';
     document.getElementById(thisobj).style.display = 'flex';
     objects.forEach(function(obj) {
@@ -1361,3 +1512,20 @@ function onMapEvent(e) {
 
 map.on('moveend', onMapEvent);
 map.on('zoomend', onMapEvent);
+
+
+function changeAlertColors(alert, color){
+    alertcolors[alert] = color;
+    updateflashes();
+    loadAlerts();
+    console.log("Polygon color for " + alert + " updated to " + color);
+}
+
+
+// Map radar bound circle - 150mi
+// Draw the circle
+//var circle = L.circle([yourLatitude, yourLongitude], {
+//    radius: 241401,
+//    stroke: 2,
+//    fillOpacity: 0,
+//}).addTo(map)
