@@ -375,6 +375,21 @@ function radarStatusMessageTimeFix(text) {
     });
 }
 
+function isoTimeAgo(isoTimestamp) {
+  const now = new Date();
+  const then = new Date(isoTimestamp);
+  const diffMs = now - then;
+
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (diffDays > 0) {
+    return `${diffDays}d ${diffHours}h ago`;
+  } else {
+    return `${diffHours}h ${diffMinutes}m ago`;
+  }
+}
 
 function loadProd(producttoview) {
     document.getElementById("produc").innerHTML = "Loading..."
@@ -396,7 +411,7 @@ function loadProd(producttoview) {
                     return response.json();
                 })
                 .then(data => {
-                    document.getElementById("produc").innerHTML = "<b>Issued: </b>" + formatTimestamp(data.issuanceTime) + "<br><b>Concerning: </b>" + data.issuingOffice + "<br>" + String(data.productText).replace(/\n/g, "<br>");
+                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + String(data.productText).replace(/\n/g, "<br>");
                 })
                 .catch(error => {
                     console.error('loadProd() > fetch() > fetch() > ', error);
@@ -1519,6 +1534,53 @@ function changeAlertColors(alert, color){
     updateflashes();
     loadAlerts();
     console.log("Polygon color for " + alert + " updated to " + color);
+}
+
+
+// Save/restore settings
+function settingsManagement(funct) {
+    if (funct == "upload"){
+        if (confirm('The uploaded settings will overwrite all existing settings. Proceed?')) {
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.addEventListener('change', function(event) {
+                const selectedFile = event.target.files[0];
+                if (selectedFile) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const fileContent = event.target.result;
+                        try {
+                            const jsonContent = JSON.parse(fileContent); // Parse the string into a JSON object
+                            localStorage.setItem('SparkRadar_settings', JSON.stringify(jsonContent)); // Store it as JSON
+                            window.location.reload();
+                        } catch (e) {
+                            window.alert("The JSON data could not be processed. The JSON file may not be a valid Spark Radar database.")
+                        }
+                    };
+                    reader.readAsText(selectedFile);
+                }
+            });
+            fileInput.click();
+        }
+    } else if (funct == 'download'){
+        saveSettings();
+        const settings = localStorage.getItem('SparkRadar_settings');
+        if (settings) {
+            const content = JSON.stringify(JSON.parse(settings), null, 2); // Format JSON nicely
+            const element = document.createElement('a');
+            const blob = new Blob([content], { type: 'application/json' }); // More suitable MIME type
+            const fileUrl = URL.createObjectURL(blob);
+            element.setAttribute('href', fileUrl);
+            element.setAttribute('download', 'SparkRadar_settings.json');
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        } else {
+            console.error('No settings found in localStorage.');
+        }
+
+    }
 }
 
 
