@@ -43,6 +43,15 @@ Programming of the Spark Radar project began in September 2024.
     <!--ESRI SDK-->
     <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
 
+    <!--GTAG-->
+    <script async src="https://googletagmanager.com/gtag/js?id=G-63D08PM675"></script>
+    <script>
+        window.datalayer = window.datalayer || [];
+        function gtag(){datalayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-63D08PM675');
+    </script>
+
 </head>
 <body>
     <!--Leaflet map-->
@@ -123,10 +132,10 @@ Programming of the Spark Radar project began in September 2024.
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-download setticon" style="font-size: 16px; color: white;"></i><b>Settings Database</b></p>
                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">Download your settings as a backup, or upload an existing backup.</p>
                         <div style="diplay: flex; flex-direction: row;">
-                            <button style="width: max-content; font-weight: bold; margin-left: 20px; font-size: medium;" class="function-btn" onclick="settingsManagement('download');"><i class="fa-solid fa-download" style="font-size: 16px; margin-right: 5px;"></i>Download settings</button>
-                            <button style="width: max-content; font-weight: bold; margin-left: 20px; font-size: medium;" class="function-btn" onclick="settingsManagement('upload');"><i class="fa-solid fa-upload" style="font-size: 16px; margin-right: 5px;"></i>Upload settings</button>
+                            <button style="width: max-content; font-weight: bold; margin-left: 20px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="settingsManagement('download');"><i class="fa-solid fa-download" style="font-size: 16px; margin-right: 5px;"></i>Download settings</button>
+                            <button style="width: max-content; font-weight: bold; margin-left: 20px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="settingsManagement('upload');"><i class="fa-solid fa-upload" style="font-size: 16px; margin-right: 5px;"></i>Upload settings</button>
                         </div>
-                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-rotate setticon" style="font-size: 16px; color: white;"></i><b>Restore Settings</b></p>
+                        <p style="margin: 25px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-rotate setticon" style="font-size: 16px; color: white;"></i><b>Restore Settings</b></p>
                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">Reset all settings to their defaults, including custom alert colors.</p>
                         <button style="width: max-content; font-weight: bold; margin-left: 20px; font-size: medium; background: #ff2121ff" class="function-btn" onclick="if (confirm('Reset all settings to default?')) { localStorage.removeItem('SparkRadar_settings'); window.location.reload(); }"><i class="fa-solid fa-rotate" style="font-size: 16px; margin-right: 5px;"></i>Reset to defaults</button>
                     </div>
@@ -240,8 +249,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.10</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 22, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.11</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 31, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">

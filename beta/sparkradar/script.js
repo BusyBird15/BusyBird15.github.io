@@ -168,48 +168,73 @@ function saveSettings() {
 }
 
 // Load user settings if available
-const settings = JSON.parse(localStorage.getItem('SparkRadar_settings'));
-if (settings){
-    resolutionFactor = settings.res;
-    document.getElementById('res').value = resolutionFactor;
+try {
+    const settings = JSON.parse(localStorage.getItem('SparkRadar_settings'));
 
-    lightningzoomlevel = settings.ltz;
-    document.getElementById('light').value = lightningzoomlevel;
+    if (settings){
+        resolutionFactor = settings.res;
+        document.getElementById('res').value = resolutionFactor;
 
-    radarOpacity = settings.rop;
-    document.getElementById('radop').value = radarOpacity * 100;
+        lightningzoomlevel = settings.ltz;
+        document.getElementById('light').value = lightningzoomlevel;
 
-    document.getElementById('debugger').checked = settings.dbg;
-    if (document.getElementById('debugger').checked) {
-        document.getElementById('infop').style.display = 'flex'
+        radarOpacity = settings.rop;
+        document.getElementById('radop').value = radarOpacity * 100;
+
+        document.getElementById('debugger').checked = settings.dbg;
+        if (document.getElementById('debugger').checked) {
+            document.getElementById('infop').style.display = 'flex'
+        } else {
+            document.getElementById('infop').style.display = 'none'
+        }
+
+        document.getElementById('debugger').checked = settings.dbg;
+        watchesEnabled = document.getElementById('wwtoggle').checked;
+        if (watchesEnabled) { loadWatches(); }
+        else { watches.clearLayers(); }
+
+        document.getElementById("darkmatmp").checked = false;
+        document.getElementById("defaultmp").checked = false;
+        document.getElementById("streetsmp").checked = false;
+        if (settings.mpm == 1) { setMapType('darkmatmp', map_darkmaterial) }
+        else if (settings.mpm == 2) { setMapType('defaultmp', map_default) }
+        else if (settings.mpm == 3) { setMapType('streetsmp', map_streets) }
+
+        alertcolors = settings.alc;
+        updateflashes();
+
+        var colorSelectors = ['ewwcolor', 'torecolor', 'pdstorcolor', 'torcolor', 'pdssvrcolor', 'svrcolor', 'swscolor', 'ffecolor', 'ffwcolor', 'smwcolor', 'fwcolor', 'facolor', 'torecolor2', 'pdstorcolor2', 'pdssvrcolor2', 'ffecolor2'];
+        var coloritem = ['EWW', 'TORE', 'PDSTOR', 'TOR', 'PDSSVR', 'SVR', 'SWS', 'FFE', 'FFW', 'SMW', 'FW', 'FA', 'TORE2', 'PDSTOR2', 'PDSSVR2', 'FFE2'];
+        colorSelectors.forEach(function(item, index) {
+            document.getElementById(item).value = alertcolors[coloritem[index]];
+        });
+
+        console.log("Settings restored successfully.")
     } else {
-        document.getElementById('infop').style.display = 'none'
+        setMapType('darkmatmp', map_darkmaterial)
     }
+} catch (error) {
+    console.error("CRITICAL LOAD ERROR: " + error)
+    // Corrupt settings recovery
+    const recovery = document.createElement('div');
+    recovery.style.display = "flex";
+    recovery.style.flexDirection = "column";
+    recovery.style.zIndex = "9999";
+    recovery.style.position = "absolute";
+    recovery.style.background = "#730021";
+    recovery.style.color = "white";
+    recovery.style.width = "100%";
+    recovery.style.height = "100%";
+    recovery.style.fontFamily = "Consolas, monospace, sans-serif";
 
-    document.getElementById('debugger').checked = settings.dbg;
-    watchesEnabled = document.getElementById('wwtoggle').checked;
-    if (watchesEnabled) { loadWatches(); }
-    else { watches.clearLayers(); }
+    var construct = '<h2 style="margin: 5px;">There was a critical error loading the radar because the settings are corrupted.</h2><br><p style="margin: 5px;">See the console for more info.<br>To fix the radar, simply reset your settings or upload a different backup.</p>';
+    construct = construct + '<div style="display: block"><button onclick="localStorage.removeItem(\'SparkRadar_settings\'); window.location.reload();">Reset settings</button>';
+    construct = construct + '<button onclick="settingsManagement(\'upload\')">Upload new settings</button><br><br><p>Still not working? Paste this in the console:<br> localStorage.clear("SparkRadar_settings")<br><br>If the radar continues to fail, please email me at busybird15@mail.com.</div>';
 
-    document.getElementById("darkmatmp").checked = false;
-    document.getElementById("defaultmp").checked = false;
-    document.getElementById("streetsmp").checked = false;
-    if (settings.mpm == 1) { setMapType('darkmatmp', map_darkmaterial) }
-    else if (settings.mpm == 2) { setMapType('defaultmp', map_default) }
-    else if (settings.mpm == 3) { setMapType('streetsmp', map_streets) }
+    recovery.innerHTML = construct;
+    document.body.appendChild(recovery);
 
-    alertcolors = settings.alc;
-    updateflashes();
-
-    var colorSelectors = ['ewwcolor', 'torecolor', 'pdstorcolor', 'torcolor', 'pdssvrcolor', 'svrcolor', 'swscolor', 'ffecolor', 'ffwcolor', 'smwcolor', 'fwcolor', 'facolor', 'torecolor2', 'pdstorcolor2', 'pdssvrcolor2', 'ffecolor2'];
-    var coloritem = ['EWW', 'TORE', 'PDSTOR', 'TOR', 'PDSSVR', 'SVR', 'SWS', 'FFE', 'FFW', 'SMW', 'FW', 'FA', 'TORE2', 'PDSTOR2', 'PDSSVR2', 'FFE2'];
-    colorSelectors.forEach(function(item, index) {
-        document.getElementById(item).value = alertcolors[coloritem[index]];
-    });
-
-    console.log("Settings restored successfully.")
-} else {
-    setMapType('darkmatmp', map_darkmaterial)
+    window.stop();
 }
 
 
@@ -1266,7 +1291,7 @@ function isWatchValid(timestamp) {
     return (dateUTC > nowUTC);
 }
 
-function formatWatchDate (timestamp) {
+function formatWatchDate(timestamp) {
     // Parse the timestamp
     const year = parseInt(timestamp.slice(0, 4), 10);
     const month = parseInt(timestamp.slice(4, 6), 10) - 1;
@@ -1277,12 +1302,13 @@ function formatWatchDate (timestamp) {
     // Create a Date object in UTC
     const dateUTC = new Date(Date.UTC(year, month, day, hours, minutes));
 
-    // Convert to EST (Eastern Standard Time)
-    const options = { timeZone: 'America/New_York', hour12: true, month: '2-digit', day: '2-digit', hour: 'numeric', minute: 'numeric' };
-    const dateEST = dateUTC.toLocaleString('en-US', options);
+    // Get current time in UTC
+    const nowUTC = new Date();
 
-    return dateEST;
+    // Compare the parsed date with the current UTC time
+    return dateUTC > nowUTC;
 }
+
 
 function buildWatchPopup(alertInfo, lat, lng) {
     try {
