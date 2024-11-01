@@ -83,6 +83,11 @@ var alertcolors = {
     'FA': '#6a5acd'
 }
 
+var watchcolors = {
+    'SVA': '#516BFF',
+    'TOA': '#FE5859'
+}
+
 
 // Set map
 function setMapType(mapselector, type) {
@@ -159,6 +164,7 @@ function saveSettings() {
         'rop': radarOpacity,
         'ltz': lightningzoomlevel,
         'alc': alertcolors,
+        'wat': watchcolors,
         'dbg': document.getElementById('debugger').checked,
         'wch': document.getElementById('wwtoggle').checked,
         'mpm': mapMode,
@@ -208,6 +214,15 @@ try {
         colorSelectors.forEach(function(item, index) {
             document.getElementById(item).value = alertcolors[coloritem[index]];
         });
+
+        try {
+            watchcolors = settings.wat;
+            var colorSelectors = ['toacolor', 'svacolor'];
+            var coloritem = ['TOA', 'SVA'];
+            colorSelectors.forEach(function(item, index) {
+                document.getElementById(item).value = watchcolors[coloritem[index]];
+            });
+        } catch {}
 
         console.log("Settings restored successfully.")
     } else {
@@ -825,6 +840,13 @@ function getCurrentISOTime() {
     return now.toISOString();
 }
 
+/*function getCurrentISOTime() {
+    const now = new Date();
+    now.setHours(now.getHours() - 4); // Subtract 4 hours
+    return now.toISOString();
+}*/
+
+
 // Function to return the map's BBOX for the radar server
 function getBoundingBox(forParams) {
     var bounds = map.getBounds();
@@ -841,6 +863,9 @@ function getBoundingBox(forParams) {
 
     return `${sw.x},${sw.y},${ne.x},${ne.y}`;
 }
+
+var mapEvents = 1;
+var canRefresh = true;
 
 function addRadarToMap (station="conus") {
     var stattype = ""
@@ -879,12 +904,19 @@ function addRadarToMap (station="conus") {
     var img = new Image();
     img.src = imageUrl
     img.onload = function() {
-        radar.clearLayers();
-        L.imageOverlay(imageUrl, getBoundingBox(false), { opacity: radarOpacity, pane: 'radar' }).addTo(radar);
-        if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
-        radarStation = station;
-        updateRadarInfo(station);
-        document.getElementById("infop").innerHTML = "";
+        if (mapEvents == 1 && canRefresh) {
+            radar.clearLayers();
+            L.imageOverlay(imageUrl, getBoundingBox(false), { opacity: radarOpacity, pane: 'radar' }).addTo(radar);
+            if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
+            radarStation = station;
+            updateRadarInfo(station);
+            document.getElementById("infop").innerHTML = "";
+            mapEvents -= 1;
+            console.log(mapEvents.toString() + " " + canRefresh);
+        } else {
+            mapEvents -= 1;
+            console.log(mapEvents.toString() + " " + canRefresh);
+        }
     };
     img.onerror = function() {
         console.error("Failed to load radar tile.");
@@ -895,7 +927,24 @@ function addRadarToMap (station="conus") {
 
 // Add the radar to map and update it when the user moves the map and every 30 seconds
 setTimeout(() => addRadarToMap(), 100);
-setInterval(() => addRadarToMap(radarStation), 30000);
+setInterval(() => function() {
+    addRadarToMap(radarStation)
+    mapEvents += 1;
+    console.log(mapEvents.toString() + " " + canRefresh);
+}, 30000);
+
+function onMapEvent(e) {
+    mapEvents += 1;
+    canRefresh = true;
+    console.log(mapEvents.toString() + " " + canRefresh);
+    addRadarToMap(radarStation);
+    loadLightning();
+}
+
+function holdRadar () {
+    canRefresh = false;
+    console.log(mapEvents.toString() + " " + canRefresh);
+}
 
 function setResolution() {
     var e = document.getElementById('res');
@@ -1315,9 +1364,9 @@ function buildWatchPopup(alertInfo, lat, lng) {
         var alertTitlecolor = 'black';
         var alertTitlebackgroundColor = "white";
         if (alertInfo.properties.TYPE == "SVR"){
-            alertTitlebackgroundColor = "#516BFF";
+            alertTitlebackgroundColor = watchcolors.SVA;
         } else if (alertInfo.properties.TYPE == "TOR"){
-            alertTitlebackgroundColor = "#FE5859";
+            alertTitlebackgroundColor = watchcolors.TOA;
         }
 
         var alertTitle = "";
@@ -1367,12 +1416,12 @@ function loadWatches() {
         data.features.forEach(function(watch) {
             var thisItem = reverseSubarrays(watch.geometry.coordinates[0][0]);
             if (isWatchValid(watch.properties.EXPIRE) && watch.properties.TYPE == "SVR"){
-                var border = L.polygon(thisItem, {color: 'white', weight: 6, fillOpacity: 0, pane: 'watches'}).addTo(watches);
-                var polygon = L.polygon(thisItem, {color: '#516BFF', weight: 4, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                var border = L.polygon(thisItem, {color: 'darkgray', weight: 6, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                var polygon = L.polygon(thisItem, {color: watchcolors.SVA, weight: 4, fillOpacity: 0, pane: 'watches'}).addTo(watches);
                 polygon.bindPopup(buildWatchPopup(watch, thisItem[0], thisItem[1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
             } else if (isWatchValid(watch.properties.EXPIRE) && watch.properties.TYPE == "TOR"){
-                var border = L.polygon(thisItem, {color: 'white', weight: 6, fillOpacity: 0, pane: 'watches'}).addTo(watches);
-                var polygon = L.polygon(thisItem, {color: '#FE5859', weight: 4, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                var border = L.polygon(thisItem, {color: 'darkgray', weight: 6, fillOpacity: 0, pane: 'watches'}).addTo(watches);
+                var polygon = L.polygon(thisItem, {color: watchcolors.TOA, weight: 4, fillOpacity: 0, pane: 'watches'}).addTo(watches);
                 polygon.bindPopup(buildWatchPopup(watch, thisItem[0], thisItem[1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
             }
         });
@@ -1546,19 +1595,23 @@ function loadLightning() {
 }
 
 
-function onMapEvent(e) {
-    addRadarToMap(radarStation);
-    loadLightning();
-}
-
 map.on('moveend', onMapEvent);
 map.on('zoomend', onMapEvent);
+map.on('movestart', holdRadar);
+map.on('zoomstart', holdRadar);
 
 
 function changeAlertColors(alert, color){
     alertcolors[alert] = color;
     updateflashes();
     loadAlerts();
+    console.log("Polygon color for " + alert + " updated to " + color);
+}
+
+function changeWatchColors(alert, color){
+    watchcolors[alert] = color;
+    updateflashes();
+    loadWatches();
     console.log("Polygon color for " + alert + " updated to " + color);
 }
 

@@ -200,14 +200,8 @@ Programming of the Spark Radar project began in September 2024.
                             <option value="15000">15 Seconds (Recommended)</option>
                             <option value="10000">10 Seconds</option>
                         </select>-->
-                        <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>SPC Watches</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show or hide severe thunderstorm and tornado watches issued by the SPC.</p>
-                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
-                            <input type="checkbox" checked="true" id="wwtoggle" onchange="watchesEnabled = document.getElementById('wwtoggle').checked; if (watchesEnabled) { loadWatches(); } else { watches.clearLayers(); }">
-                            <span class="checkmark" style="margin-right: 10px;"></span>
-                            Show watches
-                        </label>
-                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-triangle-exclamation setticon" style="font-size: 16px; color: white;"></i><b>Alert Colors</b></p>
+
+                        <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-triangle-exclamation setticon" style="font-size: 16px; color: white;"></i><b>Alert Colors</b></p>
                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">Make the radar yours by defining your own alert polygon colors. If there is more than one color option, the alert will flash between the two colors.</p>
                         <div style="margin: 5px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Extreme Wind Warning</p> <input type="color" id="ewwcolor" onchange="changeAlertColors('EWW', document.getElementById('ewwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div>
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Tornado Emergency</p> <div style="display: flex; flex-direction: row;"><input type="color" id="torecolor" onchange="changeAlertColors('TORE', document.getElementById('torecolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#c940ff"><input type="color" id="torecolor2" onchange="changeAlertColors('TORE2', document.getElementById('torecolor2').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div></div>
@@ -221,6 +215,20 @@ Programming of the Spark Radar project began in September 2024.
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Special Marine Warning</p> <input type="color" id="smwcolor" onchange="changeAlertColors('SMW', document.getElementById('smwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#A52A2A"></div>
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flood Warning</p> <input type="color" id="fwcolor" onchange="changeAlertColors('FW', document.getElementById('fwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#0000FF"></div>
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flood Advisory</p> <input type="color" id="facolor" onchange="changeAlertColors('FA', document.getElementById('facolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#6A5ACD"></div>
+
+                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>SPC Watches</b></p>
+                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show or hide severe thunderstorm and tornado watches issued by the SPC.</p>
+                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                            <input type="checkbox" checked="true" id="wwtoggle" onchange="watchesEnabled = document.getElementById('wwtoggle').checked; if (watchesEnabled) { loadWatches(); } else { watches.clearLayers(); }">
+                            <span class="checkmark" style="margin-right: 10px;"></span>
+                            Show watches
+                        </label>
+
+                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-circle-exclamation setticon" style="font-size: 16px; color: white;"></i><b>Watch Colors</b></p>
+                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">As you can change alert colors, you can also change the colors of SPC watches.</p>
+                        <div style="margin: 5px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Tornado Watch</p> <input type="color" id="toacolor" onchange="changeAlertColors('TOA', document.getElementById('toacolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#FE5859"></div>
+                        <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Severe Tstorm Watch</p> <input type="color" id="svacolor" onchange="changeAlertColors('SVA', document.getElementById('svacolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#516BFF"></div>
+
                     </div>
 
                     <div id="settmenu-streaming" style="flex-direction: column; display: none;">
@@ -249,8 +257,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.11</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Oct. 31, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.12</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 1, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
