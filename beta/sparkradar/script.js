@@ -240,6 +240,8 @@ try {
     recovery.style.color = "white";
     recovery.style.width = "100%";
     recovery.style.height = "100%";
+    recovery.style.top = "0px";
+    recovery.style.left = "0px";
     recovery.style.fontFamily = "Consolas, monospace, sans-serif";
 
     var construct = '<h2 style="margin: 5px;">There was a critical error loading the radar because the settings are corrupted.</h2><br><p style="margin: 5px;">See the console for more info.<br>To fix the radar, simply reset your settings or upload a different backup.</p>';
@@ -752,7 +754,7 @@ function buildRadarContent (feature) {
     if (stus == "Offline"){
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
     } else if (stus == "Operate" && timediff < 10){
-        construct += '<button onclick="addRadarToMap(\'' + feature.properties.id + '\'.toUpperCase()); map.closePopup();" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" class="function-btn">Select Station</button>'
+        construct += '<button onclick="mapEvents += 1; canRefresh = true; addRadarToMap(\'' + feature.properties.id + '\'.toUpperCase()); map.closePopup();" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" class="function-btn">Select Station</button>'
     } else {
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
     }
@@ -912,10 +914,8 @@ function addRadarToMap (station="conus") {
             updateRadarInfo(station);
             document.getElementById("infop").innerHTML = "";
             mapEvents -= 1;
-            console.log(mapEvents.toString() + " " + canRefresh);
         } else {
             mapEvents -= 1;
-            console.log(mapEvents.toString() + " " + canRefresh);
         }
     };
     img.onerror = function() {
@@ -930,25 +930,24 @@ setTimeout(() => addRadarToMap(), 100);
 setInterval(() => function() {
     addRadarToMap(radarStation)
     mapEvents += 1;
-    console.log(mapEvents.toString() + " " + canRefresh);
 }, 30000);
 
 function onMapEvent(e) {
     mapEvents += 1;
     canRefresh = true;
-    console.log(mapEvents.toString() + " " + canRefresh);
     addRadarToMap(radarStation);
     loadLightning();
 }
 
 function holdRadar () {
     canRefresh = false;
-    console.log(mapEvents.toString() + " " + canRefresh);
 }
 
 function setResolution() {
     var e = document.getElementById('res');
     resolutionFactor = e.options[e.selectedIndex].value;
+    mapEvents += 1;
+    canRefresh = true;
     addRadarToMap(radarStation);
 }
 
@@ -1006,6 +1005,8 @@ function updateRadarInfo(stat="conus") {
 
 function radarOpacityChange() {
     radarOpacity = document.getElementById('radop').value / 100;
+    mapEvents += 1;
+    canRefresh = true;
     addRadarToMap(radarStation);
 }
 
@@ -1499,6 +1500,8 @@ window.addEventListener('resize', function(event){
 function setProduct() {
     var e = document.getElementById('prod');
     radarProduct = e.options[e.selectedIndex].value;
+    mapEvents += 1;
+    canRefresh = true;
     addRadarToMap(radarStation);
 }
 
