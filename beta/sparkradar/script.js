@@ -60,8 +60,10 @@ var selectedLON = null;
 var firstsruse = true;
 var currentMapLayer = map_darkmaterial;
 var alertDataSet = {}
+var watchdata = [];
 var alertRefresher;
 var lightningzoomlevel = 9;
+var spcEnabled = true;
 
 // Database of alert colors
 var alertcolors = {
@@ -102,6 +104,7 @@ function setMapType(mapselector, type) {
     map.addLayer(currentMapLayer);
     if (currentMapLayer != map_darkmaterial){
         document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'white';
+        document.getElementById("textattr").style.color = 'black';
         document.getElementById("menu").style.background = "rgba(0, 0, 0, 0.5)";
         document.getElementById("infop").style.color = "black";
         document.querySelectorAll(".overlay-object").forEach(function(object) {
@@ -109,6 +112,7 @@ function setMapType(mapselector, type) {
         });
     } else {
         document.getElementsByClassName("leaflet-container")[0].style.backgroundColor = 'black';
+        document.getElementById("textattr").style.color = 'white';
         document.getElementById("menu").style.background = "rgba(255, 255, 255, 0.2)";
         document.getElementById("infop").style.color = "white";
         document.querySelectorAll(".overlay-object").forEach(function(object) {
@@ -164,10 +168,12 @@ function saveSettings() {
         'rop': radarOpacity,
         'ltz': lightningzoomlevel,
         'alc': alertcolors,
+        'swa': watchesEnabled,
         'wat': watchcolors,
         'dbg': document.getElementById('debugger').checked,
         'wch': document.getElementById('wwtoggle').checked,
         'mpm': mapMode,
+        'out': spcEnabled,
     };
     localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
     console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
@@ -187,6 +193,14 @@ try {
         radarOpacity = settings.rop;
         document.getElementById('radop').value = radarOpacity * 100;
 
+        try {
+            document.getElementById('spctoggle').checked = settings.out;
+            spcEnabled = document.getElementById('spctoggle').checked;
+            if (spcEnabled) { loadOutlook(); }
+            else { outlook.clearLayers(); }
+        } catch {}
+
+
         document.getElementById('debugger').checked = settings.dbg;
         if (document.getElementById('debugger').checked) {
             document.getElementById('infop').style.display = 'flex'
@@ -194,10 +208,12 @@ try {
             document.getElementById('infop').style.display = 'none'
         }
 
-        document.getElementById('debugger').checked = settings.dbg;
-        watchesEnabled = document.getElementById('wwtoggle').checked;
-        if (watchesEnabled) { loadWatches(); }
-        else { watches.clearLayers(); }
+        try {
+            document.getElementById('wwtoggle').checked = settings.swa;
+            watchesEnabled = document.getElementById('wwtoggle').checked;
+            if (watchesEnabled) { loadWatches(); }
+            else { watches.clearLayers(); }
+        } catch {}
 
         document.getElementById("darkmatmp").checked = false;
         document.getElementById("defaultmp").checked = false;
@@ -433,6 +449,78 @@ function isoTimeAgo(isoTimestamp) {
   }
 }
 
+function isoTimeUntil(isoTimestamp) {
+    const now = new Date();
+    const then = new Date(isoTimestamp);
+    const diffMs = then - now;
+
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const diffHours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (diffDays > 0) {
+        return `${diffDays} d ${diffHours} hr`;
+    } else if (diffHours > 0) {
+        return `${diffHours} hr ${diffMinutes} min`;
+    } else {
+        return `${diffMinutes} min`;
+    }
+}
+
+function convertToMillibars(pressureString) {
+    let pressureInHg = parseFloat(pressureString);
+    let conversionFactor = 33.8639;
+    let pressureInMb = pressureInHg * conversionFactor;
+    let roundedPressureInMb = Math.round(pressureInMb);
+    return roundedPressureInMb + 'mb';
+}
+
+function fahrenheitToCelsius(fahrenheit) {
+    let celsius = (fahrenheit - 32) * 5 / 9;
+    return Math.round(celsius.toFixed(2)) + '°C';
+}
+
+function loadWeatherConditions(lat, lon){
+    document.getElementById("infop").innerHTML = "Loading weather conditions...";
+    document.getElementById("weathersimg").src = "logo-only.png";
+    document.getElementById("tempsbox").innerHTML = "--°F";
+    document.getElementById("conditionsbox").innerHTML = "Loading";
+
+    fetch('https://forecast.weather.gov/MapClick.php?lon=' + lon + '&lat=' + lat + '&FcstType=json')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById("weathersimg").src = "https://forecast.weather.gov/newimages/large/" + data.currentobservation.Weatherimage;
+        document.getElementById("tempsbox").innerHTML = data.currentobservation.Temp + "°F";
+        document.getElementById("conditionsbox").innerHTML = data.currentobservation.Weather.replace("Fog/Mist", "");
+
+        const location = data.location;
+        var timestamp = new Date().getTime();
+
+        var content = '<div style="overflow-y: auto;"> <div style="display: flex; justify-content: center; text-align: center; width: auto; padding: 5px; margin-bottom: 10px; border-radius: 5px; font-size: large; font-weight: bolder; color: white; flex-direction: column; align-items: center;">';
+        content = content + '<p style="margin:0px; text-align:left; width:100%;"><b>Temperature: </b>' + data.currentobservation.Temp + '°F / ' + fahrenheitToCelsius(parseInt(data.currentobservation.Temp)) + '</p>';
+        content = content + '<p style="margin:0px; text-align:left; width:100%;"><b>Humidity: </b>' + data.currentobservation.Relh + '%</p>';
+        content = content + '<p style="margin:0px; text-align:left; width:100%;"><b>Dew Point: </b>' + data.currentobservation.Dewp + '°F / ' + fahrenheitToCelsius(parseInt(data.currentobservation.Dewp)) + '</p>';
+        content = content + '<p style="margin:0px; text-align:left; width:100%;"><b>Pressure (SLP): </b>' + data.currentobservation.SLP + 'inHg / ' + convertToMillibars(data.currentobservation.SLP) + '</p>';
+        content = content + '<p style="text-align:left; width:100%;"><b>Forecast: </b>' + data.data.text[0] + '</p>';
+
+        content = content + '<p style="margin: 0px; margin-top: 20px; text-align:left; width:100%;"><b>Location: </b> ' + location.areaDescription + ' (' + lat + ', ' + lon + ')</p>';
+        content = content + '<p style="margin: 0px; text-align:left; width:100%;"><b>Forecast Office: </b><a target="_blank" href="' + data.credit + '">' + location.wfo + '</a></p>';
+        content = content + '<p style="margin: 0px; text-align:left; width:100%;"><b>Details: </b><a target="_blank" href="https://busybird15.github.io/weather?lat=' + lat + '&lon=' + lon + '">See more</a></p>';
+
+        document.getElementById("more").innerHTML = content;
+        document.getElementById("infop").innerHTML = "";
+    })
+    .catch(error => {
+        console.error('loadWeatherConditions() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
+    });
+}
+
 function loadProd(producttoview) {
     document.getElementById("produc").innerHTML = "Loading..."
     if (producttoview == "RDA") {
@@ -534,7 +622,7 @@ function loadProd(producttoview) {
 
 
 function dialog(toOpen, object=null, producttoview){
-    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer'];
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions'];
     if (toOpen) {
         fadeIn("dialog");
         fadeIn("innerdialog");
@@ -669,6 +757,10 @@ function openAlertProduct(alertInfoId) {
 
 
 function loadSounding (lat, lon) {
+    document.getElementById("weatherimg").src = "logo-only.png";
+    document.getElementById("tempbox").innerHTML = "--°F";
+    document.getElementById("conditionbox").innerHTML = "Loading";
+
     document.getElementById("infop").innerHTML = "Loading sounding...";
 
     document.getElementById("soundingpick").classList.add("menuitemunavailable");
@@ -685,6 +777,10 @@ function loadSounding (lat, lon) {
         return response.json();
     })
     .then(data => {
+        document.getElementById("weatherimg").src = "https://forecast.weather.gov/newimages/large/" + data.currentobservation.Weatherimage;
+        document.getElementById("tempbox").innerHTML = data.currentobservation.Temp + "°F";
+        document.getElementById("conditionbox").innerHTML = data.currentobservation.Weather.replace("Fog/Mist", "");
+
         var timestamp = new Date().getTime();
 
         fetch("https://www.spc.noaa.gov/exper/soundings/" + soundingTime() + "_OBS/" + data.location.wfo.toUpperCase() + ".gif?t=" + timestamp)
@@ -1149,7 +1245,7 @@ function buildAlertPopup(alertInfo, lat, lng) {
 
         construct = construct + '<div style="overflow-y: auto; overflow-x: clip;">'
 
-        construct = construct + '<p style="margin: 0px;"><b>Expires:</b> ' + formatTimestamp(alertInfo.properties.expires) + '</p>';
+        construct = construct + '<p style="margin: 0px;"><b>Expires in:</b> ' + isoTimeUntil(alertInfo.properties.expires) + '</p>';
         construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
 
         if (maxwind || maxhail || fflooddamage) {
@@ -1172,7 +1268,7 @@ function buildAlertPopup(alertInfo, lat, lng) {
         construct = construct + '</div><div style="display: flex; justify-content: space-around;">'
         construct = construct + '<button class="function-btn" title="Find the nearest radar" onclick="openNearestRadarFromAlert(' + lat + ', ' + lng + ');"><i class="fa-solid fa-satellite-dish" style="font-size: 18px;"></i></button>'
         construct = construct + '<button class="function-btn" title="View the alert text product" onclick="openAlertProduct(\'' + alertInfoId + '\');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
-        construct = construct + '<button class="function-btn" title="Get the weather conditions for this area"><i class="fa-solid fa-cloud-sun-rain" style="font-size: 18px;"></i></button>'
+        construct = construct + '<button class="function-btn" title="Get the weather conditions for this area" onclick="dialog(true, \'conditions\'); loadWeatherConditions(' + String(lat) + ', ' + String(lng) + ')"><i class="fa-solid fa-cloud-sun-rain" style="font-size: 18px;"></i></button>'
         construct = construct + "</div></div>";
 
         return construct;
@@ -1207,7 +1303,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flood Advisory")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FA, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1218,7 +1314,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1229,7 +1325,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flash Flood Warning")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1240,7 +1336,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Marine")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SMW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1251,7 +1347,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flash Flood Emergency")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFE, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1262,7 +1358,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Weather")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SWS, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1277,7 +1373,7 @@ function loadAlerts() {
                     } else {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SVR, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     }
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1294,7 +1390,7 @@ function loadAlerts() {
                     } else {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     }
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -1305,7 +1401,7 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Extreme Wind")){
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.EWW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                    polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
 
             } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -1359,6 +1455,117 @@ function formatWatchDate(timestamp) {
     return dateUTC > nowUTC;
 }
 
+function convertToIso(timestamp) {
+    if (typeof timestamp !== 'string') {
+        throw new Error('Timestamp should be a string');
+    }
+
+    if (!/^\d{12}$/.test(timestamp)) {
+        throw new Error('Invalid timestamp format');
+    }
+
+    const year = timestamp.slice(0, 4);
+    const month = timestamp.slice(4, 6);
+    const day = timestamp.slice(6, 8);
+    const hour = timestamp.slice(8, 10);
+    const minute = timestamp.slice(10, 12);
+
+    const utcDateString = `${year}-${month}-${day}T${hour}:${minute}:00.000Z`;
+    const utcDate = new Date(utcDateString);
+
+    if (isNaN(utcDate)) {
+        throw new Error('Invalid date');
+    }
+    return utcDate.toISOString();
+}
+
+function FormatNumberLength(num, length) {
+    var r = "" + num;
+    while (r.length < length) {
+        r = "0" + r;
+    }
+    return r;
+}
+
+function scrape(url) {
+    return fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } })
+        .then(response => response.text())
+        .catch(error => {
+            console.error('Error fetching the website:', error);
+        });
+}
+
+function averageNumerical(numerical) {
+    if (numerical < 6){
+        return '<span class="risk-level" title="' + numerical + '% probability" style="background-color: beige; color: black;">Very low</span>'
+    } else if (numerical < 25){
+        return '<span class="risk-level" title="' + numerical + '% probability" style="background-color: yellow; color: black;">Low</span>'
+    } else if (numerical < 65){
+        return '<span class="risk-level" title="' + numerical + '% probability" style="background-color: orange; color: white;">Moderate</span>'
+    } else if (numerical < 85){
+        return '<span class="risk-level" title="' + numerical + '% probability" style="background-color: red; color: white;">High</span>'
+    } else {
+        return '<span class="risk-level" title="' + numerical + '% probability" style="background-color: magenta; color: black;">Very High</span>'
+    }
+}
+
+
+function openWatchProduct(id) {
+    alertInfo = watchdata[id];
+
+    const url = 'https://www.spc.noaa.gov/products/watch/ww' + FormatNumberLength(alertInfo.properties.NUM, 4) + '.html';
+    scrape(url)
+    .then(rawdoc => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(rawdoc, 'text/html');
+        const preElement = doc.querySelector('pre');
+
+        var alertTitlecolor = 'black';
+        var alertTitlebackgroundColor = "white";
+        if (alertInfo.properties.TYPE == "SVR"){
+            alertTitlebackgroundColor = watchcolors.SVA;
+        } else if (alertInfo.properties.TYPE == "TOR"){
+            alertTitlebackgroundColor = watchcolors.TOA;
+        }
+
+        var alertTitle = "";
+        if (alertInfo.properties.IS_PDS){
+            alertTitle = alertTitle + "PDS ";
+        }
+
+        if (alertInfo.properties.TYPE == "TOR"){
+            alertTitle = alertTitle + "Tornado Watch ";
+        } else {
+            alertTitle = alertTitle + "Severe Tstorm Watch ";
+        }
+
+        alertTitle = alertTitle + alertInfo.properties.NUM;
+
+        var timestamp = new Date().getTime();
+
+        var construct = '<div style=""> <div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertTitle + '</div><br>';
+        construct = construct + '<img style="width: 100%; height: auto; border-radius: 10px;" src="https://www.spc.noaa.gov/products/watch/ww' + FormatNumberLength(alertInfo.properties.NUM, 4) + '_radar_big.gif?t=' + timestamp + '"><br>'
+        construct = construct + '<p style="margin: 0px;"><b>Issued:</b> ' + formatTimestamp(convertToIso(alertInfo.properties.ISSUE)) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Expires:</b> ' + formatTimestamp(convertToIso(alertInfo.properties.EXPIRE)) + '</p>';
+        construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + alertInfo.properties.MAX_HAIL + '"</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Max Wind Gusts:</b> ' + Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945) + 'mph</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>See more: </b><a href="https://www.spc.noaa.gov/products/watch/ww' + FormatNumberLength(alertInfo.properties.NUM, 4) + '.html" target="_blank">SPC page</a></p><br>'
+        construct = construct + '<h3><b>Probability of...</b></h3>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Tornadoes: </b> ' + averageNumerical(alertInfo.properties.P_TORTWO) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Strong tornadoes: </b> ' + averageNumerical(alertInfo.properties.P_TOREF2) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Severe wind: </b> ' + averageNumerical(alertInfo.properties.P_WIND10) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Significant severe wind: </b> ' + averageNumerical(alertInfo.properties.P_WIND65) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Severe hail: </b> ' + averageNumerical(alertInfo.properties.P_HAIL10) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Significant severe hail: </b> ' + averageNumerical(alertInfo.properties.P_HAIL2I) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 5px;"><b>Severe wind + hail: </b> ' + averageNumerical(alertInfo.properties.P_HAILWND) + '</p>';
+        construct = construct + '<br><hr>';
+        construct = construct + '<p style="margin: 0px; font-family: Consolas, monospace, sans-serif;">' + preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>") + '</p>';
+        construct = construct + '</div>';
+
+        dialog(true, "alertinfo");
+        document.getElementById("alertinfo").innerHTML = construct;
+    });
+}
 
 function buildWatchPopup(alertInfo, lat, lng) {
     try {
@@ -1382,15 +1589,18 @@ function buildWatchPopup(alertInfo, lat, lng) {
         }
 
         alertTitle = alertTitle + "#" + alertInfo.properties.NUM;
-
         var timestamp = new Date().getTime();
         var construct = '<div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: medium; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';"><b>' + alertTitle + '</b></div><br>';
-        construct = construct + '<p style="margin: 0px; margin-bottom: 10px;"><b>Expires:</b> ' + formatWatchDate(alertInfo.properties.EXPIRE) + '</p>';
+        construct = construct + '<p style="margin: 0px; margin-bottom: 10px;"><b>Expires in:</b> ' + isoTimeUntil(convertToIso(String(alertInfo.properties.EXPIRE))) + '</p>';
         construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + alertInfo.properties.MAX_HAIL + '"</p>';
         construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945) + 'mph</p><br>';
 
         construct = construct + '</div><div style="display: flex; justify-content: space-around;">'
-        construct = construct + '<button class="function-btn" title="View the watch text product" onclick="openAlertProduct();"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
+
+        var identifier = Math.random();
+        watchdata[identifier] = alertInfo;
+
+        construct = construct + '<button class="function-btn" title="View the watch text product" onclick="openWatchProduct(' + identifier + ');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
         construct = construct + "</div></div>";
 
         return construct;
@@ -1414,6 +1624,7 @@ function loadWatches() {
     })
     .then(data => {
         watches.clearLayers();
+        watchdata = [];
         data.features.forEach(function(watch) {
             var thisItem = reverseSubarrays(watch.geometry.coordinates[0][0]);
             if (isWatchValid(watch.properties.EXPIRE) && watch.properties.TYPE == "SVR"){
@@ -1512,38 +1723,40 @@ function setLightningLevel() {
 }
 
 function loadOutlook() {
-    document.getElementById("infop").innerHTML = "Loading outlook...";
-    fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson', {headers: {'Accept': 'Application/geo+json'} })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok: ' + response.statusText);
-        }
-        return response.json();
-    })
-    .then(data => {
-        outlook.clearLayers();
-        data.features.forEach(function(feature) {
-            // Polylines to avoid clicking them
-            try {
-                feature.geometry.coordinates.forEach(function(object){
-                    var polygon = L.polyline(reverseSubarrays(object[0]), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect', pane: 'outlook' }).addTo(outlook);
-                });
-            } catch {
-                feature.geometry.coordinates.forEach(function(object){
-                    var polygon = L.polyline(reverseSubarrays(object), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect', pane: 'outlook' }).addTo(outlook);
-                });
+    if (spcEnabled){
+        document.getElementById("infop").innerHTML = "Loading outlook...";
+        fetch('https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson', {headers: {'Accept': 'Application/geo+json'} })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
             }
+            return response.json();
+        })
+        .then(data => {
+            outlook.clearLayers();
+            data.features.forEach(function(feature) {
+                // Polylines to avoid clicking them
+                try {
+                    feature.geometry.coordinates.forEach(function(object){
+                        var polygon = L.polyline(reverseSubarrays(object[0]), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect', pane: 'outlook' }).addTo(outlook);
+                    });
+                } catch {
+                    feature.geometry.coordinates.forEach(function(object){
+                        var polygon = L.polyline(reverseSubarrays(object), { 'color': feature.properties.stroke, 'fillOpacity': 0, 'fillColor': feature.properties.fill, 'className': 'noselect', pane: 'outlook' }).addTo(outlook);
+                    });
+                }
+            });
+            document.getElementById("infop").innerHTML = "";
+        })
+        .catch(error => {
+            console.error('loadOutlook() > fetch() > ', error);
+            document.getElementById("infop").innerHTML = "";
         });
-        document.getElementById("infop").innerHTML = "";
-    })
-    .catch(error => {
-        console.error('loadOutlook() > fetch() > ', error);
-        document.getElementById("infop").innerHTML = "";
-    });
+    }
 }
 
 // Load the SPC outlook and update it every 5 minutes
-loadOutlook();
+if (spcEnabled) { loadOutlook(); }
 setInterval(() => loadOutlook(), 300000);
 
 

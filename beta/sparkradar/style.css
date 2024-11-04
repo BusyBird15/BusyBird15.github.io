@@ -357,7 +357,7 @@ input:focus::-webkit-input-placeholder {
 }
 
 .checkbox-container:hover input ~ .checkmark {
-  background-color: #ccc;
+  background-color: #747474;
 }
 
 .checkbox-container input:checked ~ .checkmark {
@@ -412,3 +412,8 @@ input:focus::-webkit-input-placeholder {
     opacity: 0.5;
 }
 
+.risk-level {
+    padding: 2px 5px;
+    border-radius: 5px;
+    font-weight: bold;
+}
