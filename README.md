@@ -11,6 +11,11 @@
 **Simple Academic Assignment Calendar:** https://busybird15.github.io/assignments
 
 
+## BETA pages
+
+**Spark Radar:** https://busybird15.github.io/beta/sparkradar/
+
+
 ## Outdated pages
 
 **The Weather Team Radar for Mobile:** https://busybird15.github.io/m-radar (Due to /radar page new mobile optomization)
