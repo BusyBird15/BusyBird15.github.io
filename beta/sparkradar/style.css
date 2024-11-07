@@ -115,7 +115,6 @@ button {
 
 .popup .leaflet-popup-content-wrapper {
     transition-duration: 0.5s;
-    background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     color: #fff;
@@ -126,26 +125,10 @@ button {
     overflow-x: hidden;
     scrollbar-width: none;
     max-height: 300px;
-    max-width: 330px;
-    border: 2px solid black;
-}
-
-.leaflet-popup {
-    width: max-content !important;
-    height: max-content !important;
-    transition: opacity 0.5s, backdrop-filter 0.5s !important;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    z-index: 99999 !important;
-}
-
-.leaflet-popup-content {
-    width: auto !important;
-    padding: 0px !important;
+    width: 310px;
 }
 
 .popup .leaflet-popup-tip {
-    background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
 }
@@ -156,6 +139,7 @@ button {
 
 .leaflet-popup-content {
     padding: 5px;
+    width: unset !important;
 }
 
 b {
@@ -417,3 +401,108 @@ input:focus::-webkit-input-placeholder {
     border-radius: 5px;
     font-weight: bold;
 }
+
+
+/* Loading CSS - from loading.io */
+.lds-ripple-mini,
+.lds-ripple-mini div {
+  box-sizing: border-box;
+}
+.lds-ripple-mini {
+  display: inline-block;
+  position: relative;
+  width: 20px;
+  height: 20px;
+}
+.lds-ripple-mini div {
+  position: absolute;
+  border: 2px solid currentColor;
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple-mini 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple-mini div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+@keyframes lds-ripple-mini {
+  0% {
+    top: 9px;
+    left: 9px;
+    width: 2px;
+    height: 2px;
+    opacity: 0;
+  }
+  4.9% {
+    top: 9px;
+    left: 9px;
+    width: 2px;
+    height: 2px;
+    opacity: 0;
+  }
+  5% {
+    top: 9px;
+    left: 9px;
+    width: 2px;
+    height: 2px;
+    opacity: 1;
+  }
+  100% {
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    opacity: 0;
+  }
+}
+
+.lds-ripple,
+.lds-ripple div {
+  box-sizing: border-box;
+}
+.lds-ripple {
+  display: inline-block;
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+.lds-ripple div {
+  position: absolute;
+  border: 4px solid currentColor;
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+@keyframes lds-ripple {
+  0% {
+    top: 36px;
+    left: 36px;
+    width: 8px;
+    height: 8px;
+    opacity: 0;
+  }
+  4.9% {
+    top: 36px;
+    left: 36px;
+    width: 8px;
+    height: 8px;
+    opacity: 0;
+  }
+  5% {
+    top: 36px;
+    left: 36px;
+    width: 8px;
+    height: 8px;
+    opacity: 1;
+  }
+  100% {
+    top: 0;
+    left: 0;
+    width: 80px;
+    height: 80px;
+    opacity: 0;
+  }
+}
+

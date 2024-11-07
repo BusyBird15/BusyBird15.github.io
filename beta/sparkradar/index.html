@@ -8,16 +8,6 @@ Programming of the Spark Radar project began in September 2024.
 <!DOCTYPE html>
 <html>
 <head>
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-63D08PM675"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-    
-        gtag('config', 'G-63D08PM675');
-    </script>
-    
     <!--Page title and icon-->
     <title>Spark Radar</title>
     <link rel="icon" type="image/png" href="logo-rounded.png">
@@ -53,10 +43,19 @@ Programming of the Spark Radar project began in September 2024.
     <!--ESRI SDK-->
     <script src="https://unpkg.com/esri-leaflet/dist/esri-leaflet.js"></script>
 
+    <!--GTAG-->
+    <script async src="https://googletagmanager.com/gtag/js?id=G-63D08PM675"></script>
+    <script>
+        window.datalayer = window.datalayer || [];
+        function gtag(){datalayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-63D08PM675');
+    </script>
+
     <!--Open Graph data-->
     <meta property="og:title" content="Spark Radar"/>
     <meta property="og:description" content="Track the weather like a pro for free. Custom colors, watches, soundings, alerts, and so much more."/>
-    <meta property="og:image" content="https://busybird15.github.io/beta/sparkradar/logo.png"/>
+    <meta property="og:image" content="https://busybird15.github.io/beta/sparkradar/logo-rounded.png"/>
     <meta property="og:url" content="https://busybird15.github.io/beta/sparkradar/"/>
 
 </head>
@@ -70,13 +69,13 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Menu opener-->
-    <button id="menu-opener" onclick="menuToggle(true);" class="nav-btn overlay-object" style="background-color: rgba(0, 0, 0, 0.5); color: white; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <button id="menu-opener" onclick="menuToggle(true);" class="nav-btn overlay-object" style="transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); color: white; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
         <i class="fa-solid fa-bars" style="font-size: 22px; color: white;"></i>
     </button>
 
     <!--Radar state info-->
     <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 100px); max-width: 300px;">
-        <p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST</b></p>
+        <div style="display: flex; flex-direction: row;"><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b><div id="radarloader" style="margin-left: 20px;" class="lds-ripple-mini"><div></div><div></div></div></p></div>
         <select id="prod" style="margin-top: 10px; font-size: medium;" onchange="setProduct();">
             <option value="conus_cref">Composite Reflectivity</option>
             <option value="conus_bref">Base Reflectivity</option>
@@ -116,6 +115,10 @@ Programming of the Spark Radar project began in September 2024.
                     </div>
                 </div>
                 <div id="more"></div>
+            </div>
+
+            <div id="loader" style="display: none; justify-content: center; align-items: center; flex-direction: column; overflow-x: clip; scrollbar-width: none; height: calc(100% - 40px);">
+                <div class="lds-ripple"><div></div><div></div></div>
             </div>
 
             <div id="settings" style="display: flex; flex-direction: column; overflow-x: clip; scrollbar-width: none; height: calc(100% - 40px);">
@@ -284,8 +287,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.14</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 4, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.15</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 7, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -331,7 +334,7 @@ Programming of the Spark Radar project began in September 2024.
         <input type="text" placeholder="Find a place" id="textbox" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
         <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doLocSearch(document.getElementById('textbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px; color: white;"></i></button>
     </div>
-    <div id="results" class="overlay-object" style="transition: opacity 0.5s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
+    <div id="results" class="overlay-object" style="transition: opacity 0.2s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
     <p id="infop" style="display: none; transition-duration: 0.2s; z-index: 100; margin: 0px; text-size: large; bottom: 10px; left: 10px; position: absolute; color: black;">Loading radar...</p>
 
@@ -343,7 +346,10 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Map text attribution-->
-    <p id="textattr" style="position: absolute; bottom: 5px; right: 5px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
+    <p id="textattr" style="position: absolute; bottom: 45px; right: 5px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
+
+    <!--Radar Legend-->
+    <img id="radarlegend" style="box-shadow: #0000008c 3px 3px 9px 0px; position: absolute; border-radius: 10px; z-index: 9; right: 5px; bottom: 5px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
 </body>
 
 <!--Add JS after elements are added-->
