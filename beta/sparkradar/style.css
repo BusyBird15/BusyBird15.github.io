@@ -506,3 +506,10 @@ input:focus::-webkit-input-placeholder {
   }
 }
 
+.toolbtn {
+    color: white;
+}
+
+.toolbtn:hover {
+    color: #27beffff;
+}

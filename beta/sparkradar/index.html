@@ -76,7 +76,7 @@ Programming of the Spark Radar project began in September 2024.
     <!--Radar state info-->
     <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 100px); max-width: 300px;">
         <div style="display: flex; flex-direction: row;"><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b><div id="radarloader" style="margin-left: 20px;" class="lds-ripple-mini"><div></div><div></div></div></p></div>
-        <select id="prod" style="margin-top: 10px; font-size: medium;" onchange="setProduct();">
+        <select id="prod" style="font-size: medium;" onchange="setProduct();">
             <option value="conus_cref">Composite Reflectivity</option>
             <option value="conus_bref">Base Reflectivity</option>
         </select>
@@ -287,8 +287,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.15</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 7, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.16</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 8, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -350,6 +350,25 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--Radar Legend-->
     <img id="radarlegend" style="box-shadow: #0000008c 3px 3px 9px 0px; position: absolute; border-radius: 10px; z-index: 9; right: 5px; bottom: 5px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
+
+    <!--Canvas for drawing-->
+    <canvas id="drawing" style="background: none; display: none; cursor: crosshair; position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 101;" style="cursor: crosshair;"></canvas>
+
+    <!--Toolbar-->
+    <div class="overlay-object" id="toolbar" style="border-radius: 10px; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 9; height: auto; width: auto;">
+        <button class="toolbtn" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px 0px 5px 5px; background: none; border: none;" title="Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: none; border: none;" title="Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
+    </div>
+
+    <!--Drawing toolbar-->
+    <div class="overlay-object" id="drawingtoolbar" style="border-radius: 10px; align-items: center; justify-content: center; position: absolute; top: 10px; left: 10px; z-index: 102; height: auto; width: auto;">
+        <button class="toolbtn" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px 0px 5px 5px; background: none; border: none;" title="Close" onclick="toggleDrawing(false)"><i class="fa-solid fa-xmark" style="font-size: 16px;"></i></button>
+        <button class="drawingtoolbtn" id="blue" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #27beffff; border: none;" onclick="setPenColor('#27beffff'); setSelectedColor('blue');"><i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i></button>
+        <button class="drawingtoolbtn" id="red" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #ff2121ff; border: none;" onclick="setPenColor('#ff2121ff'); setSelectedColor('red');"></button>
+        <button class="drawingtoolbtn" id="green" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #00af00ff; border: none;" onclick="setPenColor('#00af00ff'); setSelectedColor('green');"></button>
+        <button class="drawingtoolbtn" id="white" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #ffffffff; border: none;" onclick="setPenColor('#ffffffff'); setSelectedColor('white');"></button>
+        <button class="drawingtoolbtn" id="black" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #000000ff; border: none;" onclick="setPenColor('#000000ff'); setSelectedColor('black');"></button>
+    </div>
 </body>
 
 <!--Add JS after elements are added-->

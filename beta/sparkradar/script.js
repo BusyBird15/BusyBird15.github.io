@@ -112,13 +112,26 @@ function fixSizing () {
     if (checkMobile() || vw < 620) {
         document.getElementById("radarlegend").style.display = "none";
         document.getElementById("textattr").style.bottom = "5px";
+        document.querySelectorAll("a").forEach(function(item) {
+            if (item.href == "https://www.maptiler.com/") {
+                item.style.bottom = "20px";
+                item.style.right = "10px";
+                item.style.left = "unset";
+            }
+        });
     } else {
         document.getElementById("radarlegend").style.display = "block";
         document.getElementById("textattr").style.bottom = "45px";
+        document.querySelectorAll("a").forEach(function(item) {
+            if (item.href == "https://www.maptiler.com/") {
+                    item.style.bottom = "60px";
+                    item.style.right = "10px";
+                    item.style.left = "unset";
+                }
+        });
     }
 }
 
-fixSizing();
 window.addEventListener('resize', function(event){
     fixSizing();
 });
@@ -182,14 +195,7 @@ function setMapType(mapselector, type) {
             object.classList.add("overlay-object-dark");
         });
     }
-
-    // Code to remove MapTiler attribution
-    // I AM NOT RESPONSIBLE FOR YOUR USE OF THIS CODE
-    //document.querySelectorAll("a").forEach(function(item) {
-    //    if (item.href == "https://www.maptiler.com/") {
-    //        item.style.display = "none";
-    //    }
-    //});
+    setTimeout(() => fixSizing(), 100);
 }
 
 // Flashing polygon stylesheet
@@ -448,6 +454,8 @@ fadeIn("attrib");
 fadeIn("menu-opener");
 fadeIn("info");
 fadeOut("menu");
+fadeIn("toolbar");
+fadeOut("drawingtoolbar")
 //setInterval(() => visibility("toggle", "attrib", true), 2000);
 
 function menuToggle(toOpen) {
@@ -1111,10 +1119,13 @@ function addRadarToMap (station="conus") {
         }
     };
     img.onerror = function() {
-        console.error("Failed to load radar tile.");
+        console.error("Failed to load radar tile. Trying again...");
         document.getElementById("radarloader").style.display = "none";
         console.log(imageUrl)
         document.getElementById("infop").innerHTML = "";
+        var mapEvents = 1;
+        var canRefresh = true;
+        addRadarToMap(radarStation);
     };
 }
 
@@ -1808,7 +1819,7 @@ function showSearchedLocation(lat, lon){
 function sizing(){
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 
-    if (vw > 600) {
+    if (vw > 600 && document.getElementById("drawing").style.display == 'none') {
         fadeIn("searchbox");
     } else {
         fadeOut("searchbox");
@@ -1990,6 +2001,78 @@ function settingsManagement(funct) {
 
     }
 }
+
+// Drawing contexts
+var penColor = "#27beffff";
+const canvas = document.getElementById('drawing');
+const ctx = canvas.getContext('2d');
+
+function toggleDrawing(tof){
+    if (tof) {
+        canvas.style.display = "flex";
+        fadeOut('info');
+        fadeOut('toolbar');
+        fadeOut('searchbox');
+        fadeOut('menu-opener');
+        fadeIn("drawingtoolbar")
+    } else {
+        canvas.style.display = "none";
+        fadeIn('info');
+        fadeIn('toolbar');
+        fadeIn('toolbar');
+        fadeIn('menu-opener');
+        fadeOut("drawingtoolbar")
+        sizing();
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+}
+
+// Adjust canvas size for window resize
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+let drawing = false;
+let lastX = 0;
+let lastY = 0;
+
+ctx.lineJoin = 'round';
+ctx.lineCap = 'round';
+
+canvas.addEventListener('mousedown', (e) => {
+    drawing = true;
+    [lastX, lastY] = [e.clientX, e.clientY];
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (!drawing) return;
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(e.clientX, e.clientY);
+    ctx.strokeStyle = penColor;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    [lastX, lastY] = [e.clientX, e.clientY];
+});
+
+function setPenColor(color) {
+    penColor = color;
+}
+
+function setSelectedColor(ID) {
+    document.querySelectorAll('.drawingtoolbtn').forEach(function(item){
+        item.innerHTML = '';
+    });
+    document.getElementById(ID).innerHTML = '<i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i>'
+}
+
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseout', () => drawing = false);
 
 
 // Map radar bound circle - 150mi
