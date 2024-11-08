@@ -2014,16 +2014,14 @@ function toggleDrawing(tof){
         fadeOut('toolbar');
         fadeOut('searchbox');
         fadeOut('menu-opener');
-        fadeIn("drawingtoolbar")
+        fadeIn("drawingtoolbar");
     } else {
         canvas.style.display = "none";
         fadeIn('info');
         fadeIn('toolbar');
-        fadeIn('toolbar');
         fadeIn('menu-opener');
-        fadeOut("drawingtoolbar")
+        fadeOut("drawingtoolbar");
         sizing();
-
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 }
@@ -2044,6 +2042,7 @@ let lastY = 0;
 ctx.lineJoin = 'round';
 ctx.lineCap = 'round';
 
+// Mouse events
 canvas.addEventListener('mousedown', (e) => {
     drawing = true;
     [lastX, lastY] = [e.clientX, e.clientY];
@@ -2060,6 +2059,32 @@ canvas.addEventListener('mousemove', (e) => {
     [lastX, lastY] = [e.clientX, e.clientY];
 });
 
+canvas.addEventListener('mouseup', () => drawing = false);
+canvas.addEventListener('mouseout', () => drawing = false);
+
+// Touch events
+canvas.addEventListener('touchstart', (e) => {
+    drawing = true;
+    const touch = e.touches[0];
+    [lastX, lastY] = [touch.clientX, touch.clientY];
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    if (!drawing) return;
+    e.preventDefault(); // Prevent scrolling
+    const touch = e.touches[0];
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(touch.clientX, touch.clientY);
+    ctx.strokeStyle = penColor;
+    ctx.lineWidth = 5;
+    ctx.stroke();
+    [lastX, lastY] = [touch.clientX, touch.clientY];
+});
+
+canvas.addEventListener('touchend', () => drawing = false);
+canvas.addEventListener('touchcancel', () => drawing = false);
+
 function setPenColor(color) {
     penColor = color;
 }
@@ -2071,8 +2096,6 @@ function setSelectedColor(ID) {
     document.getElementById(ID).innerHTML = '<i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i>'
 }
 
-canvas.addEventListener('mouseup', () => drawing = false);
-canvas.addEventListener('mouseout', () => drawing = false);
 
 
 // Map radar bound circle - 150mi
