@@ -86,11 +86,12 @@ body {
     left: 10px;
     width: fit-content;
     height: fit-content;
-    transition-duration: 0.2s;
+    color: white;
+    transition: background 0.2s !important;
 }
 
 .nav-btn:hover {
-    background: rgb(70, 70, 70) !important;
+    background: #27beffff !important;
 }
 
 .set-btn {
@@ -245,14 +246,14 @@ input:focus::-webkit-input-placeholder {
 }
 
 .searchbuttons {
-    transition-duration: 0.5s;
+    transition-duration: 0.2s;
     background: none;
-    color: rgb(200, 200, 200);
+    color: white;
     border: none;
 }
 
 .searchbuttons:hover {
-    color: white;
+    color: #27beffff !important;
     background: none;
 }
 

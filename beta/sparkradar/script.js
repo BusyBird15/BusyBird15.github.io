@@ -695,9 +695,56 @@ function loadProd(producttoview) {
     }
 }
 
+function loadrisks() {
+    document.getElementById("risktext").innerHTML = "Loading..."
+    const url = 'https://www.spc.noaa.gov/products/outlook/day1otlk.html';
+    scrape(url)
+    .then(rawdoc => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(rawdoc, 'text/html');
+        console.log(doc);
+        const preElement = doc.querySelector('pre');
+        preElement.querySelectorAll('a').forEach(link => {
+            link.removeAttribute('href');
+            link.style.color = "white";
+            link.style.fontFamily = "Consolas, monospace, sans-serif"
+        });
+        const discussionText = preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>");
+
+        document.getElementById("risktext").innerHTML = discussionText;
+
+        // Get the issue time and parse it
+        let timestampMatch = discussionText.match(/SPC AC (\d{6})/);
+        let timestamp = timestampMatch ? timestampMatch[1] : null;
+        let date = new Date();
+        date.setUTCHours(parseInt(timestamp.slice(0, 2)), parseInt(timestamp.slice(2, 4)), parseInt(timestamp.slice(4, 6)));
+        let options = {
+            hour: 'numeric',
+            minute: 'numeric',
+            hour12: true,
+            timeZoneName: 'short',
+            day: 'numeric',
+            month: 'short'
+        };
+        const spcIssuedTime = date.toLocaleString('en-US', options);
+
+        if (discussionText.includes("HIGH RISK")) { var risklevel = "High (5/5)" }
+        else if (discussionText.includes("MODERATE RISK")) { var risklevel = "Moderate (4/5)" }
+        else if (discussionText.includes("ENHANCED RISK")) { var risklevel = "Enhanced (3/5)" }
+        else if (discussionText.includes("SLIGHT RISK")) { var risklevel = "Slight (2/5)" }
+        else if (discussionText.includes("MARGINAL RISK")) { var risklevel = "Marginal (1/5)" }
+        else { var risklevel = "General (no severe storms expected)" }
+
+        var construct = '<p style="margin: 0px 0px 5px 0px;"><b>Level: </b>' + risklevel + '</p>'
+        var construct = construct + '<p style="margin: 0px 0px 0px 0px;"><b>Issued: </b>' + spcIssuedTime + '</p>'
+
+        document.getElementById("risklevelstats").innerHTML = construct;
+    });
+}
+
 
 function dialog(toOpen, object=null, producttoview){
-    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions'];
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook'];
     if (toOpen) {
         fadeIn("dialog");
         fadeIn("innerdialog");
@@ -708,6 +755,14 @@ function dialog(toOpen, object=null, producttoview){
                 if (obj != object) { document.getElementById(obj).style.display = 'none'; }
             })
             if (object == 'prodviewer') { loadProd(producttoview); }
+        }
+        if (object == 'spcoutlook') {
+            var timestamp = new Date().getTime();
+            document.getElementById("swody1").src = "https://www.spc.noaa.gov/partners/outlooks/national/swody1.png?t=" + timestamp;
+            document.getElementById("swody1_TORN").src = "https://www.spc.noaa.gov/partners/outlooks/national/swody1_TORN.png?t=" + timestamp;
+            document.getElementById("swody1_WIND").src = "https://www.spc.noaa.gov/partners/outlooks/national/swody1_WIND.png?t=" + timestamp;
+            document.getElementById("swody1_HAIL").src = "https://www.spc.noaa.gov/partners/outlooks/national/swody1_HAIL.png?t=" + timestamp;
+            loadrisks();
         }
     } else {
         fadeOut("dialog");
@@ -1813,7 +1868,7 @@ function showSearchedLocation(lat, lon){
     document.getElementById('results').style.opacity = 0;
     setTimeout(() => document.getElementById('results').style.display = "none", 500);
     document.getElementById('textbox').value = "";
-    map.setView([lat, lon], 13);
+    map.flyTo([lat, lon], 13, { duration: 1.5 });
 }
 
 function sizing(){
