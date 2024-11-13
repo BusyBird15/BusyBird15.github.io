@@ -52,11 +52,16 @@ Programming of the Spark Radar project began in September 2024.
         gtag('config', 'G-63D08PM675');
     </script>
 
-    <!--Open Graph data-->
+    <!--Open Graph and Twitter Card data-->
     <meta property="og:title" content="Spark Radar"/>
     <meta property="og:description" content="Track the weather like a pro for free. Custom colors, watches, soundings, alerts, and so much more."/>
     <meta property="og:image" content="https://busybird15.github.io/beta/sparkradar/logo-rounded.png"/>
     <meta property="og:url" content="https://busybird15.github.io/beta/sparkradar/"/>
+    <meta property="twitter:card" content="summary_large_image"/>
+    <meta property="twitter:site" content="@busybird150"/>
+    <meta property="twitter:title" content="Spark Radar"/>
+    <meta property="twitter:description" content="Track the weather like a pro for free. Custom colors, watches, soundings, alerts, and so much more."/>
+    <meta property="twitter:image" content="https://busybird15.github.io/beta/sparkradar/logo-small.png"/>
 
 </head>
 <body>
@@ -87,12 +92,30 @@ Programming of the Spark Radar project began in September 2024.
         <button id="menu-closer" onclick="menuToggle(false);" class="nav-btn" style="border-radius: 10px; background: #ff2121ff;">
             <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
         </button>
-        <img src="logo.png" style="width: calc(100% - 20px); height: auto; border-radius: 10px; margin: 10px;">
+        <img id="logo-header" src="logo.png" style="display: flex; width: calc(100% - 20px); height: auto; border-radius: 10px; margin: 10px;">
+        <div id="audio-ctrl" style="margin-top: 10px; color: white; background: rgb(50, 50, 50); border-radius: 10px; display: none; flex-direction: column; width: 100%; height: auto;">
+            <div style="margin-top: 5px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-radio" style="color: white; margin-right: 10px; font-size: 20px; color: #27beffff;"></i>
+                <p id="audio-title" style="font-size: large; margin: 10px;">WXJ58</p>
+            </div>
+            <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+                <p id="audio-info" style="text-align: center; font-size: small; margin-top: 5px; color: lightgray;">144.550 mHz | 2 listeners</p>
+            </div>
+            <div style="margin-bottom: 10px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
+                <button class="function-btn" onclick="stopPlayer();" style="margin-right: 20px; display: flex; align-items: center; padding: 10px;"><i class="fa-solid fa-stop" style="margin-right: 10px; font-size: 16px;"></i> <b>Stop</b></button>
+                <button class="function-btn" id="jumpToLive" style="display: flex; align-items: center; padding: 10px;"><i class="fa-solid fa-forward-fast" style="margin-right: 10px; font-size: 16px;"></i> <b>Jump live</b></button>
+            </div>
+            <div style="margin-bottom: 10px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
+                <i class="fa-solid fa-volume-down" style="margin-right: 5px; margin-left: 10px; font-size: 20px; color: #27beffff;"></i>
+                <input style="width: 100%;" type="range" id="volumeControl" min="0" max="100" value="80">
+                <i class="fa-solid fa-volume-up" style="margin-left: 5px; margin-right: 10px; font-size: 20px; color: #27beffff;"></i>
+            </div>
+        </div>
         <br>
         <div style="overflow-y: auto; scrollbar-width: none;">
             <!--<div onclick="" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-cloud-bolt" style="color: #27bffff;"></i><b>SPC Outlook</b></div>-->
             <div onclick="dialog(true, 'spcoutlook');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-triangle-exclamation" style="color: #27bffff;"></i><b>SPC Outlook</b></div>
-            <div onclick="dialog(true, 'settings');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-gear" style="color: #27bffff;"></i><b>Settings</b></div>
+            <div onclick="dialog(true, 'settings');" class="menuitem"><i class="fa-solid fa-gear" style="color: #27bffff;"></i><b>Settings</b></div>
             <div onclick="dialog(true, 'appinfo');" class="menuitem"><i class="fa-solid fa-circle-info" style="color: #27bffff;"></i><b>About</b></div>
             <div onclick="dialog(true, 'about');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-circle-question" style="color: #27bffff;"></i><b>Technical Info</b></div>
             <a style="text-decoration: none;" target="_blank" href="maito:busybird15@mail.com"><div class="menuitem"><i class="fa-solid fa-envelope" style="color: #27bffff;"></i><b>Contact Me</b></div></a>
@@ -130,10 +153,10 @@ Programming of the Spark Radar project began in September 2024.
                     </div>
                 </div>
                 <hr style="margin-top: 20px; margin-bottom: 10px; color: white; width: 100%;">
-                <div id="risklevelstats">stuff</div>
+                <div id="risklevelstats"></div>
                 <hr style="margin-bottom: 20px; margin-top: 10px; color: white; width: 100%;">
                 <p id="risktext" style="margin-top: 20px; text-events: none; margin: 0px; background: black; margin-bottom: 20px; font-family: Consolas, monospace, sans-serif !important;">
-                    SWODY RISK...
+                    Loading...
                 </p>
             </div>
 
@@ -210,6 +233,14 @@ Programming of the Spark Radar project began in September 2024.
                             <input type="checkbox" checked="true" id="spctoggle" onchange="spcEnabled = document.getElementById('spctoggle').checked; if (spcEnabled) { loadOutlook(); } else { outlook.clearLayers(); }">
                             <span class="checkmark" style="margin-right: 10px;"></span>
                             Show outlook
+                        </label>
+
+                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-radio setticon" style="font-size: 16px; color: white;"></i><b>Weather Radios</b></p>
+                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Turn the weather radio listener on or off. Also shows or hides radio markers on the map.</p>
+                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                            <input type="checkbox" checked="true" id="radiotoggle" onchange="weatherRadioVisible = document.getElementById('radiotoggle').checked; if (weatherRadioVisible) { addWeatherRadios(); } else { stopPlayer(); radios.clearLayers(); }">
+                            <span class="checkmark" style="margin-right: 10px;"></span>
+                            Enable radios
                         </label>
                     </div>
 
@@ -300,15 +331,16 @@ Programming of the Spark Radar project began in September 2024.
                     <b>Watches:</b> <a href="https://www.mesonet.agron.iastate.edu/request/gis/spc_watch.phtml" target="_blank" class="credit">The IEM WW Archive</a><br>
                     <b>SPC Outlooks:</b> <a href="https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson" target="_blank" class="credit">NWS SPC GeoJSON</a><br>
                     <b>Search Results:</b> <a href="https://geocode.maps.co" target="_blank" class="credit">Geocode</a><br>
+                    <b>Weather Radios:</b> <a href="https://weatherradio.org" target="_blank" class="credit">WeatherRadio.org</a><br>
                 </p>
                 <p style="margin: 20px 5px 5px 5px; font-size: large;"><b>Honorable Mentions</b></p>
                 <p style="margin: 5px 5px 10px 5px; font-size: medium;">The following people have helped make the radar or have helped me with finding data:</p>
-                <p style="margin: 5px 5px 10px 15px; font-size: medium; width: calc(100% - 40px); text-align: left;"><b>SteepAtticStairs</b> (Creator of AtticRadar)<br><b>Dan Paulat</b> (Creator of SupercellWX)<br><b>Wxtership</b> (Owner of Xtreme Weather Discord)</p>
+                <p style="margin: 5px 5px 10px 15px; font-size: medium; width: calc(100% - 40px); text-align: left;"><b>Wxtership</b> (Owner of Xtreme Weather Discord) and <a href="https://radar.xtremewx.com" target="_blank" class="credit">his radar</a><br><b>SteepAtticStairs</b> (Creator of <a href="https://atticradar.steepatticstairs.net" target="_blank" class="credit">AtticRadar</a>)<br><b>Dan Paulat</b> (Creator of SupercellWX)</p>
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.17</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 12, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.18</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 13, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">

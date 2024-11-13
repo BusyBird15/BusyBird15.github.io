@@ -9,6 +9,7 @@ map.createPane('cities');
 map.createPane('watches');
 map.createPane('alerts');
 map.createPane('radars');
+map.createPane('radios');
 map.createPane('reports');
 map.createPane('lightning');
 
@@ -19,6 +20,7 @@ map.getPane('lightning').style.zIndex = 400;
 map.getPane('watches').style.zIndex = 500;
 map.getPane('alerts').style.zIndex = 600;
 map.getPane('radars').style.zIndex = 650;
+map.getPane('radios').style.zIndex = 650;
 map.getPane('reports').style.zIndex = 700;
 
 var outlook = L.layerGroup().addTo(map);
@@ -26,6 +28,7 @@ var radar = L.layerGroup().addTo(map);
 var watches = L.layerGroup().addTo(map);
 var alerts = L.layerGroup().addTo(map);
 var radars = L.layerGroup().addTo(map);
+var radios = L.layerGroup().addTo(map);
 var reports = L.layerGroup().addTo(map);
 var lightningdata = L.layerGroup().addTo(map);
 
@@ -74,6 +77,8 @@ var watchdata = [];
 var alertRefresher;
 var lightningzoomlevel = 9;
 var spcEnabled = true;
+let weatherRadioMarkers = [];
+let weatherRadioVisible = true;
 
 // Database of alert colors
 var alertcolors = {
@@ -243,6 +248,7 @@ function saveSettings() {
         'wch': document.getElementById('wwtoggle').checked,
         'mpm': mapMode,
         'out': spcEnabled,
+        'rad': weatherRadioVisible,
     };
     localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
     console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
@@ -307,6 +313,13 @@ try {
             colorSelectors.forEach(function(item, index) {
                 document.getElementById(item).value = watchcolors[coloritem[index]];
             });
+        } catch {}
+
+        try {
+            document.getElementById('radiotoggle').checked = settings.rad;
+            weatherRadioVisible = document.getElementById('radiotoggle').checked;
+            if (weatherRadioVisible) { addWeatherRadios(); }
+            else { radios.clearLayers(); }
         } catch {}
 
         console.log("Settings restored successfully.")
@@ -533,6 +546,8 @@ function isoTimeUntil(isoTimestamp) {
         return `${diffDays} d ${diffHours} hr`;
     } else if (diffHours > 0) {
         return `${diffHours} hr ${diffMinutes} min`;
+    } else if (diffMinutes < 0) {
+        return '-- min';
     } else {
         return `${diffMinutes} min`;
     }
@@ -713,20 +728,34 @@ function loadrisks() {
 
         document.getElementById("risktext").innerHTML = discussionText;
 
-        // Get the issue time and parse it
+        // Get the issuance time and parse it
         let timestampMatch = discussionText.match(/SPC AC (\d{6})/);
         let timestamp = timestampMatch ? timestampMatch[1] : null;
-        let date = new Date();
-        date.setUTCHours(parseInt(timestamp.slice(0, 2)), parseInt(timestamp.slice(2, 4)), parseInt(timestamp.slice(4, 6)));
-        let options = {
-            hour: 'numeric',
-            minute: 'numeric',
-            hour12: true,
-            timeZoneName: 'short',
-            day: 'numeric',
-            month: 'short'
-        };
-        const spcIssuedTime = date.toLocaleString('en-US', options);
+        var spcIssuedTime = "";
+
+        if (timestamp) {
+            // Extract day, hour, and minute from the timestamp
+            let day = parseInt(timestamp.slice(0, 2));
+            let hour = parseInt(timestamp.slice(2, 4));
+            let minute = parseInt(timestamp.slice(4, 6));
+
+            // Create a new date object for the current month and year
+            let date = new Date();
+            date.setUTCDate(day);
+            date.setUTCHours(hour, minute, 0, 0);
+
+            // Convert the date to the user's local time
+            let options = {
+                hour: 'numeric',
+                minute: 'numeric',
+                hour12: true,
+                timeZoneName: 'short'
+            };
+            spcIssuedTime = date.toLocaleString('en-US', options);
+        } else {
+            spcIssuedTime = "Unknown";
+        }
+
 
         if (discussionText.includes("HIGH RISK")) { var risklevel = "High (5/5)" }
         else if (discussionText.includes("MODERATE RISK")) { var risklevel = "Moderate (4/5)" }
@@ -2151,6 +2180,178 @@ function setSelectedColor(ID) {
     document.getElementById(ID).innerHTML = '<i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i>'
 }
 
+// Global player for audio streams
+let globalPlayer = document.createElement('audio');
+globalPlayer.id = 'global-player';
+document.body.appendChild(globalPlayer);
+
+
+async function addWeatherRadios() {
+    if (!weatherRadioVisible) { return; }
+    try {
+        const response = await fetch('https://transmitters.weatherradio.org/');
+        if (!response.ok) throw new Error('addWeatherRadios() > fetch > Request failed.');
+        const transmitterData = await response.json();
+
+        const iceStatsResponse = await fetch('https://icestats.weatherradio.org/');
+        if (!iceStatsResponse.ok) throw new Error('addWeatherRadios() > fetch > Request failed for icestats.');
+        const iceStatsData = await iceStatsResponse.json();
+        const audioSources = iceStatsData.icestats.source;
+
+        const audioStreams = {};
+        for (let source of audioSources) {
+            const serverName = source.server_name;
+            const listenUrl = source.listenurl;
+            const serverDescription = source.server_description;
+            const currentListeners = source.listeners;
+
+            if (serverName && listenUrl) {
+                const callSign = serverName.split('-').pop().trim();
+                audioStreams[callSign] = {
+                    url: listenUrl,
+                    description: serverDescription || "No description available",
+                    listeners: currentListeners || 0
+                };
+            }
+        }
+
+        if (transmitterData.transmitters) {
+            const transmitters = transmitterData.transmitters;
+
+            radios.clearLayers();
+
+            for (let key in transmitters) {
+                if (transmitters.hasOwnProperty(key)) {
+                    const transmitter = transmitters[key];
+                    const { LAT, LON, CALLSIGN, FREQ, SITENAME, STATUS } = transmitter;
+
+                    var radioclasses = ""
+                    if (STATUS == "NORMAL") { radioclasses = 'radio-marker radio-normal' }
+                    else if (STATUS == "DEGRADED") { radioclasses = 'radio-marker radio-degraded' }
+                    else if (STATUS == "OUT OF SERVICE") { radioclasses = 'radio-marker radio-offline' }
+
+                    if (!LAT || !LON) continue;
+
+                    const streamDetails = audioStreams[CALLSIGN] || null;
+
+                    if (streamDetails) {
+                        const customIcon = L.divIcon({
+                            className: radioclasses,
+                            html: `<div></div>`,
+                            iconSize: [12, 12],
+                            iconAnchor: [6, 6]
+                        });
+
+                        const marker = L.marker([parseFloat(LAT), parseFloat(LON)], { icon: customIcon, pane: 'radios' });
+
+                        const popupContent = `
+                            <div style="display: flex; align-items: center; justify-content: space-around; flex-direction: row; margin: 10px;">
+                                <i class="fa-solid fa-radio" style="font-size: 24px; margin-right: 15px; color: #27beffff;"></i>
+                                <p style="margin: 0px; font-size: large;">${CALLSIGN}</p>
+                            </div>
+                            <br>
+                            <div style="font-size: 1em; margin-top: 12px;">
+                                <b>Frequency:</b> ${FREQ} MHz<br>
+                                <b>Location:</b> ${SITENAME}<br>
+                                <b>Status:</b> ${STATUS.replace("NORMAL", "ONLINE")}<br>
+                                <b>Provider:</b> ${streamDetails.description.replace("Stream provided by ", "")}<br>
+                                <div class="audio-controls" style="margin-top: 10px; margin-bottom: 7px;">
+                                    <button onclick="togglePlayPause('${CALLSIGN}', '${streamDetails.url}', '${streamDetails.description}', '${FREQ}')" style="justify-content: center; display: flex; flex-direction: row; align-items: center; margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" class="function-btn"><i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen</button>
+                                </div>
+                            </div>
+                        `;
+                        marker.bindPopup(popupContent, {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+
+                        weatherRadioMarkers.push(marker);
+
+                        if (weatherRadioVisible) {
+                            marker.addTo(radios);
+                        }
+
+                        marker.on('popupopen', function () {
+                            refreshPlayButtonState(CALLSIGN, streamDetails.url, streamDetails.description, FREQ);
+                        });
+                    }
+                }
+            }
+        } else {
+            console.error('Transmitter data format incorrect.');
+        }
+
+    } catch (error) {
+        console.error('Error fetching transmitter data:', error);
+    }
+}
+
+// Function to set up media session metadata and actions
+function setupMediaSession(title, artist, icon) {
+    if ('mediaSession' in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: title,
+            artist: artist
+            //artwork: [{ src: icon, sizes: '96x96', type: 'image/png' }]
+        });
+
+        navigator.mediaSession.setActionHandler('play', () => globalPlayer.play());
+        navigator.mediaSession.setActionHandler('pause', () => globalPlayer.pause());
+    }
+}
+
+// Function to play/pause a specific transmitterâ€™s audio stream
+function togglePlayPause(callSign, url, description, freq) {
+    let player = document.getElementById('global-player');
+    const playButton = document.querySelector(`[onclick="togglePlayPause('${callSign}', '${url}', '${description}', '${freq}')"]`);
+
+    // Remove "Stream provided by" from the author description
+    const author = description.replace(/^Stream provided by\s*/i, "");
+
+    // Reload the stream URL to play from the live position
+    player.src = url;
+    player.load();
+    try {
+        playButton.innerHTML = `<div id="radarloader" style="margin-right: 5px;" class="lds-ripple-mini"><div></div><div></div></div> Loading...`;
+    } catch {}
+    player.play().then(() => {
+        document.getElementById("logo-header").style.display = "none";
+        document.getElementById("audio-ctrl").style.display = "flex";
+        document.getElementById("audio-title").innerHTML = callSign;
+        document.getElementById("jumpToLive").innerHTML = '<i class="fa-solid fa-forward-fast" style="margin-right: 10px; font-size: 16px;"></i> <b>Jump live</b>';
+        document.getElementById("audio-info").innerHTML = freq + ' MHz | by ' + author;
+        document.getElementById("jumpToLive").onclick = function() { document.getElementById("jumpToLive").innerHTML = '<div id="radarloader" style="margin-right: 10px;" class="lds-ripple-mini"><div></div><div></div></div> <b>Loading</b>'; togglePlayPause(callSign, url, description, freq); };
+        try {
+            playButton.innerHTML = `<i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen`;
+        } catch {}
+        setupMediaSession(`${callSign} Weather Radio`, author, "https://i.ibb.co/vw43hWJ/Square-256x-20.png");
+
+    }).catch((error) => {
+        console.error("Playback error: ", error);
+    });
+}
+
+// Function to refresh play button state when the popup is opened
+function refreshPlayButtonState(callSign, url, desc, freq) {
+    const playButton = document.querySelector(`[onclick="togglePlayPause('${callSign}', '${url}', '${desc}', '${freq}')"]`);
+    playButton.innerHTML = `<i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen`;
+}
+
+function stopPlayer() {
+    document.getElementById("logo-header").style.display = "flex";
+    document.getElementById("audio-ctrl").style.display = "none";
+    globalPlayer.pause();
+    globalPlayer.src = '';
+}
+
+globalPlayer.volume = 0.8;
+
+document.getElementById("volumeControl").onchange = function() {
+    globalPlayer.volume = document.getElementById("volumeControl").value / 100;
+};
+
+
+setInterval(() => {
+    if (checkPopups(radios)){ return }
+    addWeatherRadios();
+}, 30000)
 
 
 // Map radar bound circle - 150mi

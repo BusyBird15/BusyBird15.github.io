@@ -70,7 +70,7 @@ body {
     left: 10px;
     top: 10px;
     width: calc(100% - 40px);
-    max-width: 350px;
+    max-width: 300px;
     height: calc(100% - 40px);
     border-radius: 10px;
     background-color: rgba(0, 0, 0, 0.5);
@@ -156,12 +156,37 @@ b {
     transition-duration: 0.2s;
 }
 
+.radio-marker {
+    width: 12px;
+    height: 12px;
+    background-size: cover;
+    border: 1px solid black;
+    border-radius: 50%;
+    transition-duration: 0.2s;
+}
+
 .tdwr {
     border-radius: 0px;
 }
 
 .marker:hover{
     background: #27beffff !important;
+}
+
+.radio-marker:hover{
+    background: #27beffff !important;
+}
+
+.radio-normal {
+    background: #2a7fffff;
+}
+
+.radio-degraded {
+    background: #ffcc00ff;
+}
+
+.radio-offline {
+    background: #ff2121ff;
 }
 
 
