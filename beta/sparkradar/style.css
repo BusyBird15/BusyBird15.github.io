@@ -70,7 +70,7 @@ body {
     left: 10px;
     top: 10px;
     width: calc(100% - 40px);
-    max-width: 300px;
+    max-width: 350px;
     height: calc(100% - 40px);
     border-radius: 10px;
     background-color: rgba(0, 0, 0, 0.5);

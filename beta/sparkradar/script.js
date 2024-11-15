@@ -711,18 +711,24 @@ function loadProd(producttoview) {
 }
 
 function loadrisks() {
-    document.getElementById("risktext").innerHTML = "Loading..."
+    document.getElementById("risktext").innerHTML = "Loading...";
     const url = 'https://www.spc.noaa.gov/products/outlook/day1otlk.html';
-    scrape(url)
+
+    fetch(url)
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+    })
     .then(rawdoc => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(rawdoc, 'text/html');
         console.log(doc);
+
         const preElement = doc.querySelector('pre');
         preElement.querySelectorAll('a').forEach(link => {
             link.removeAttribute('href');
             link.style.color = "white";
-            link.style.fontFamily = "Consolas, monospace, sans-serif"
+            link.style.fontFamily = "Consolas, monospace, sans-serif";
         });
         const discussionText = preElement.innerHTML.toString().replace(/\n\n/g, "<br><br>");
 
@@ -762,12 +768,17 @@ function loadrisks() {
         else if (discussionText.includes("ENHANCED RISK")) { var risklevel = "Enhanced (3/5)" }
         else if (discussionText.includes("SLIGHT RISK")) { var risklevel = "Slight (2/5)" }
         else if (discussionText.includes("MARGINAL RISK")) { var risklevel = "Marginal (1/5)" }
-        else { var risklevel = "General (no severe storms expected)" }
+        else if (discussionText.includes("NO THUNDERSTORM AREAS FORECAST")) { var risklevel = "No storms expected" }
+        else { var risklevel = "General (No severe storms expected)" }
 
         var construct = '<p style="margin: 0px 0px 5px 0px;"><b>Level: </b>' + risklevel + '</p>'
         var construct = construct + '<p style="margin: 0px 0px 0px 0px;"><b>Issued: </b>' + spcIssuedTime + '</p>'
 
         document.getElementById("risklevelstats").innerHTML = construct;
+    })
+    .catch(error => {
+        document.getElementById("risktext").innerHTML = "Failed to load data.";
+        console.error('Error fetching and parsing the document:', error);
     });
 }
 
