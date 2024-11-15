@@ -79,9 +79,9 @@ Programming of the Spark Radar project began in September 2024.
     </button>
 
     <!--Radar state info-->
-    <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 100px); max-width: 300px;">
+    <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 100px); max-width: 270px;">
         <div style="display: flex; flex-direction: row;"><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b><div id="radarloader" style="margin-left: 20px;" class="lds-ripple-mini"><div></div><div></div></div></p></div>
-        <select id="prod" style="font-size: medium;" onchange="setProduct();">
+        <select id="prod" style="width: 100%; font-size: medium;" onchange="setProduct();">
             <option value="conus_cref">Composite Reflectivity</option>
             <option value="conus_bref">Base Reflectivity</option>
         </select>
@@ -105,7 +105,7 @@ Programming of the Spark Radar project began in September 2024.
                 <button class="function-btn" onclick="stopPlayer();" style="margin-right: 20px; display: flex; align-items: center; padding: 10px;"><i class="fa-solid fa-stop" style="margin-right: 10px; font-size: 16px;"></i> <b>Stop</b></button>
                 <button class="function-btn" id="jumpToLive" style="display: flex; align-items: center; padding: 10px;"><i class="fa-solid fa-forward-fast" style="margin-right: 10px; font-size: 16px;"></i> <b>Jump live</b></button>
             </div>
-            <div style="margin-bottom: 10px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
+            <div id="volumectrl" style="margin-bottom: 10px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
                 <i class="fa-solid fa-volume-down" style="margin-right: 5px; margin-left: 10px; font-size: 20px; color: #27beffff;"></i>
                 <input style="width: 100%;" type="range" id="volumeControl" min="0" max="100" value="80">
                 <i class="fa-solid fa-volume-up" style="margin-left: 5px; margin-right: 10px; font-size: 20px; color: #27beffff;"></i>
@@ -128,7 +128,7 @@ Programming of the Spark Radar project began in September 2024.
         <div id="innerdialog" style="flex-direction: column; transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <button id="dialog-closer" onclick="dialog(false); saveSettings();" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
-            </button><br>
+            </button>
 
             <div id="conditions" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
                 <div style="display: flex; margin: 20px; flex-direction: row; align-items: center; justify-content: center;">
@@ -257,7 +257,7 @@ Programming of the Spark Radar project began in September 2024.
                          </select>
                          <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
                          <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher opacity value means a less transparent radar.</p>
-                         <input style="width: calc(100% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
+                         <input style="width: calc(50% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
                          <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bolt setticon" style="font-size: 16px; color: white;"></i><b>Lightning</b></p>
                          <p style="margin: 5px 5px 10px 5px; font-size: medium;">Choose at what zoom lightning strikes appear on the map. Lightning strikes are accumulated over the last 60 minutes.</p>
                          <select id="light" onchange="setLightningLevel();">
@@ -331,7 +331,7 @@ Programming of the Spark Radar project began in September 2024.
                     <b>Watches:</b> <a href="https://www.mesonet.agron.iastate.edu/request/gis/spc_watch.phtml" target="_blank" class="credit">The IEM WW Archive</a><br>
                     <b>SPC Outlooks:</b> <a href="https://www.spc.noaa.gov/products/outlook/day1otlk_cat.nolyr.geojson" target="_blank" class="credit">NWS SPC GeoJSON</a><br>
                     <b>Search Results:</b> <a href="https://geocode.maps.co" target="_blank" class="credit">Geocode</a><br>
-                    <b>Weather Radios:</b> <a href="https://weatherradio.org" target="_blank" class="credit">WeatherRadio.org</a><br>
+                    <b>Weather Radios:</b> <a href="https://weatherradio.org" target="_blank" class="credit">GWES WeatherRadio</a><br>
                 </p>
                 <p style="margin: 20px 5px 5px 5px; font-size: large;"><b>Honorable Mentions</b></p>
                 <p style="margin: 5px 5px 10px 5px; font-size: medium;">The following people have helped make the radar or have helped me with finding data:</p>
@@ -339,8 +339,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.18</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 13, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.19</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Nov. 15, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -381,7 +381,7 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Location Finder-->
-    <div class="overlay-object" id="searchbox" style="padding: 0px; display: flex; top: 10px; left: 70px; width: calc(100% - 500px); max-width: 350px; min-width: 200px; z-index: 4;">
+    <div class="overlay-object" id="searchbox" style="padding: 0px; display: flex; top: 10px; left: 70px; width: calc(100% - 400px); max-width: 350px; min-width: 200px; z-index: 4;">
         <button onclick="document.getElementById('results').style.opacity = 0; setTimeout(() => document.getElementById('results').style.display = 'none', 500); document.getElementById('textbox').value = '';" class="searchbuttons" style="padding: 5px 0px 5px 5px;"><i class="fa-solid fa-xmark" style="font-size: 16px; margin: 5px;"></i></button>
         <input type="text" placeholder="Find a place" id="textbox" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
         <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doLocSearch(document.getElementById('textbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>

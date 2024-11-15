@@ -241,7 +241,7 @@ input, select{
 select {
     background: white;
     padding: 0px;
-    width: 100%;
+    width: 50%;
     cursor: pointer;
     position: relative;
     display: inline-block;
@@ -538,4 +538,10 @@ input:focus::-webkit-input-placeholder {
 
 .toolbtn:hover {
     color: #27beffff;
+}
+
+em {
+    font-style: italic;
+    color: rgb(200, 200, 200);
+    cursor: pointer;
 }

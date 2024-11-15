@@ -79,6 +79,7 @@ var lightningzoomlevel = 9;
 var spcEnabled = true;
 let weatherRadioMarkers = [];
 let weatherRadioVisible = true;
+var definitions = true;
 
 // Database of alert colors
 var alertcolors = {
@@ -249,6 +250,7 @@ function saveSettings() {
         'mpm': mapMode,
         'out': spcEnabled,
         'rad': weatherRadioVisible,
+        'def': definitions,
     };
     localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
     console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
@@ -288,6 +290,11 @@ try {
             watchesEnabled = document.getElementById('wwtoggle').checked;
             if (watchesEnabled) { loadWatches(); }
             else { watches.clearLayers(); }
+        } catch {}
+
+        try {
+            document.getElementById('undertoggle').checked = settings.def;
+            definitions = document.getElementById('undertoggle').checked;
         } catch {}
 
         document.getElementById("darkmatmp").checked = false;
@@ -490,14 +497,6 @@ function soundingTime() {
     return year + month + day + hour;
 }
 
-function scrape(url) {
-    return fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } })
-        .then(response => response.text())
-        .catch(error => {
-            console.error('Error fetching the website:', error);
-        });
-}
-
 // Doesn't work on all messages
 function radarStatusMessageTimeFix(text) {
     return text.replace(/\d{4}Z/g, match => {
@@ -656,7 +655,11 @@ function loadProd(producttoview) {
         })
         .then(data => {
             if (data.location.wfo) {
-                scrape("https://forecast.weather.gov/product.php?site=" + data.location.wfo.toUpperCase().replace("K", "") + "&product=AFD&issuedby=" + data.location.wfo.toLowerCase().replace("k", ""))
+                fetch("https://forecast.weather.gov/product.php?site=" + data.location.wfo.toUpperCase().replace("K", "") + "&product=AFD&issuedby=" + data.location.wfo.toLowerCase().replace("k", ""))
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
                 .then(rawdoc => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(rawdoc, 'text/html');
@@ -664,7 +667,7 @@ function loadProd(producttoview) {
                     const preElement = doc.querySelector('pre');
                     document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n/g, "<br>");
                 })
-                .error(error => {
+                .catch(error => {
                     console.error('loadProd() > fetch() > ', error);
                     document.getElementById("produc").innerHTML = "The AFD for this station could not be obtained.";
                 });
@@ -687,7 +690,11 @@ function loadProd(producttoview) {
         })
         .then(data => {
             if (data.location.wfo) {
-                scrape("https://forecast.weather.gov/product.php?site=" + data.location.wfo.toUpperCase().replace("K", "") + "&product=PNS&issuedby=" + data.location.wfo.toLowerCase().replace("k", ""))
+                fetch("https://forecast.weather.gov/product.php?site=" + data.location.wfo.toUpperCase().replace("K", "") + "&product=PNS&issuedby=" + data.location.wfo.toLowerCase().replace("k", ""))
+                .then(response => {
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    return response.text();
+                })
                 .then(rawdoc => {
                     const parser = new DOMParser();
                     const doc = parser.parseFromString(rawdoc, 'text/html');
@@ -695,7 +702,7 @@ function loadProd(producttoview) {
                     const preElement = doc.querySelector('pre');
                     document.getElementById("produc").innerHTML = preElement.innerHTML.toString().replace(/\n/g, "<br>");
                 })
-                .error(error => {
+                .catch(error => {
                     console.error('loadProd() > fetch() > ', error);
                     document.getElementById("produc").innerHTML = "The PNS for this station could not be obtained.";
                 });
@@ -762,6 +769,12 @@ function loadrisks() {
             spcIssuedTime = "Unknown";
         }
 
+        var forecaster = "Unknown";
+        const nameMatch = discussionText.match(/\.\.(\w+)\.\./g);
+        if (nameMatch) {
+            forecaster = nameMatch[nameMatch.length - 1].replace(/\.\./g, '');
+        }
+
 
         if (discussionText.includes("HIGH RISK")) { var risklevel = "High (5/5)" }
         else if (discussionText.includes("MODERATE RISK")) { var risklevel = "Moderate (4/5)" }
@@ -772,7 +785,8 @@ function loadrisks() {
         else { var risklevel = "General (No severe storms expected)" }
 
         var construct = '<p style="margin: 0px 0px 5px 0px;"><b>Level: </b>' + risklevel + '</p>'
-        var construct = construct + '<p style="margin: 0px 0px 0px 0px;"><b>Issued: </b>' + spcIssuedTime + '</p>'
+        var construct = construct + '<p style="margin: 0px 0px 5px 0px;"><b>Issued: </b>' + spcIssuedTime + '</p>'
+        var construct = construct + '<p style="margin: 0px 0px 0px 0px;"><b>Forecaster: </b>' + forecaster + '</p>'
 
         document.getElementById("risklevelstats").innerHTML = construct;
     })
@@ -924,7 +938,7 @@ function openAlertProduct(alertInfoId) {
         .replace("ADDITIONAL DETAILS", '<b style="font-family: Consolas, monospace, sans-serif !important;">ADDITIONAL DETAILS</b>')
         .replace("Locations impacted include", '<b style="font-family: Consolas, monospace, sans-serif !important;">Locations impacted include</b>')
 
-    construct = construct + '<hr style="color: white;"><p style="margin: 0px; background: black; margin-bottom: 20px; margin-top: 20px; font-family: Consolas, monospace, sans-serif !important;">' + fixedDesc + '</p><hr style="color: white; margin-bottom: 20px;">'
+    construct = construct + '<hr style="color: white;"><p style="margin: 0px; background: black; margin-bottom: 20px; margin-top: 20px; font-family: Consolas, monospace, sans-serif !important;">' + fixedDesc.replace(/www\./g, "") + '</p><hr style="color: white; margin-bottom: 20px;">'
 
     if (wmoidentifier) {construct = construct + '<p style="margin: 0px;"><b>WMO Identifier:</b> ' + wmoidentifier + '</p>';}
     if (vtec) {construct = construct + '<p style="margin: 0px;"><b>VTEC:</b> ' + vtec + '</p>';}
@@ -1703,14 +1717,6 @@ function FormatNumberLength(num, length) {
     return r;
 }
 
-function scrape(url) {
-    return fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36' } })
-        .then(response => response.text())
-        .catch(error => {
-            console.error('Error fetching the website:', error);
-        });
-}
-
 function averageNumerical(numerical) {
     if (numerical < 6){
         return '<span class="risk-level" title="' + numerical + '% probability" style="background-color: beige; color: black;">Very low</span>'
@@ -1730,7 +1736,11 @@ function openWatchProduct(id) {
     alertInfo = watchdata[id];
 
     const url = 'https://www.spc.noaa.gov/products/watch/ww' + FormatNumberLength(alertInfo.properties.NUM, 4) + '.html';
-    scrape(url)
+    fetch(url)
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.text();
+    })
     .then(rawdoc => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(rawdoc, 'text/html');
@@ -1780,6 +1790,9 @@ function openWatchProduct(id) {
 
         dialog(true, "alertinfo");
         document.getElementById("alertinfo").innerHTML = construct;
+    })
+    .catch(error => {
+        console.error('Error fetching and parsing the document:', error);
     });
 }
 
@@ -2195,6 +2208,21 @@ function setSelectedColor(ID) {
 let globalPlayer = document.createElement('audio');
 globalPlayer.id = 'global-player';
 document.body.appendChild(globalPlayer);
+
+// Volume slider doesn't work on Safari. If the user is on Apple, hide the slider
+let userAgent = navigator.userAgent || navigator.vendor || window.opera;
+var isApple = false;
+if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+    isApple = true;
+}
+if (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) {
+    isApple = true;
+}
+
+if (isApple) {
+    document.getElementById("volumectrl").style.display = "none";
+}
+
 
 
 async function addWeatherRadios() {
