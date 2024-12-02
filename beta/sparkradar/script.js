@@ -769,12 +769,12 @@ function loadrisks() {
             spcIssuedTime = "Unknown";
         }
 
-        var forecaster = "Unknown";
-        const nameMatch = discussionText.match(/\.\.(\w+)\.\./g);
-        if (nameMatch) {
-            forecaster = nameMatch[nameMatch.length - 1].replace(/\.\./g, '');
+        const match = discussionText.match(/(?<!\.)\.\.([^\.\n]+)\.\.(?!\.)/g);
+        const nameMatch = match ? match.map(m => m.replace(/\.\./g, '').trim()) : [];
+        if (nameMatch != []) {
+            forecaster = nameMatch[0];
         }
-
+        console.log(nameMatch);
 
         if (discussionText.includes("HIGH RISK")) { var risklevel = "High (5/5)" }
         else if (discussionText.includes("MODERATE RISK")) { var risklevel = "Moderate (4/5)" }
