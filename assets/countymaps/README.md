@@ -1,1 +1,1 @@
-Counties as a GeoJSON. Found from the NWS, converted to GeoJSON with Mapshaper. Documentation: https://www.weather.gov/gis/Counties
+Counties as a GeoJSON. Found from the NWS, converted to GeoJSON and simplified with Mapshaper. MASSIVE THANK YOU TO MAPSHAPER, ESPECIALLY FOR BEING FREE! Documentation: https://www.weather.gov/gis/Counties
