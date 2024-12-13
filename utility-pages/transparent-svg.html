@@ -24,8 +24,6 @@
             left: 0;
         }
         img {
-            max-height: 100%;
-            max-width: 100%;
             object-fit: contain; /* Preserve aspect ratio */
         }
     </style>
@@ -36,16 +34,19 @@
     </div>
 
     <script>
-        function getImageURL() {
+        function getURLParameter(name) {
             const params = new URLSearchParams(window.location.search);
-            return params.get('image');
+            return params.get(name);
         }
 
         function loadImage() {
-            const imageURL = getImageURL();
+            const imageURL = getURLParameter('image');
+            const scale = parseFloat(getURLParameter('scale')) || 1.0;
+            
             if (imageURL) {
                 const svgImage = document.getElementById('svgImage');
                 svgImage.src = imageURL;
+                svgImage.style.transform = `scale(${scale})`;
             }
         }
 
