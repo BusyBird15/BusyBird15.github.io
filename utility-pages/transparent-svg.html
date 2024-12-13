@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Load SVG Image</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            background: transparent;
+            overflow: hidden;
+        }
+        #imageContainer {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        svg {
+            height: 100%;
+            width: 100%;
+            object-fit: fill; /* This will disregard the aspect ratio */
+        }
+    </style>
+</head>
+<body>
+    <div id="imageContainer"></div>
+
+    <script>
+        function getImageURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('image');
+        }
+
+        function loadImage() {
+            const imageURL = getImageURL();
+            if (imageURL) {
+                const imageContainer = document.getElementById('imageContainer');
+                fetch(imageURL)
+                    .then(response => response.text())
+                    .then(svgContent => {
+                        imageContainer.innerHTML = svgContent;
+                    })
+                    .catch(error => console.error('Error loading the SVG:', error));
+            }
+        }
+
+        window.onload = loadImage;
+    </script>
+</body>
+</html>
