@@ -20,17 +20,16 @@
             top: 0;
             left: 0;
         }
-        iframe {
+        img {
             height: 100%;
             width: 100%;
-            border: none;
-            background: transparent;
+            object-fit: fill; /* This will disregard the aspect ratio */
         }
     </style>
 </head>
 <body>
     <div id="imageContainer">
-        <iframe id="imageIframe"></iframe>
+        <img id="svgImage" alt="SVG Image"/>
     </div>
 
     <script>
@@ -42,8 +41,8 @@
         function loadImage() {
             const imageURL = getImageURL();
             if (imageURL) {
-                const imageIframe = document.getElementById('imageIframe');
-                imageIframe.src = imageURL;
+                const svgImage = document.getElementById('svgImage');
+                svgImage.src = imageURL;
             }
         }
 
