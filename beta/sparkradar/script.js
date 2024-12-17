@@ -1,6 +1,19 @@
 
 // Make the map
-var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 18}).setView([38.0, -100.4], 4);
+const url = new URL(window.location.href);
+const params = new URLSearchParams(url.search);
+const maplat = params.get('lat');
+const maplon = params.get('lon');
+const mapz = params.get('z');
+if (maplat && maplon) {
+    if (mapz) {
+        var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([maplat, maplon], mapz);
+    } else {
+        var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([maplat, maplon], 7);
+    }
+} else {
+    var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([38.0, -100.4], 4);
+}
 
 // Setup the layers of the map
 map.createPane('outlook');
@@ -231,6 +244,24 @@ updateflashes();
 document.head.appendChild(flashingstyles);
 
 
+function outlinecolor (enable) {
+    if (enable) {
+        themap = document.getElementById("map");
+        themap.style.width = "calc(100% - 10px)";
+        themap.style.height = "calc(100% - 10px)";
+        themap.style.animation = "alertpulse 1s infinite";
+        themap.style.border = "5px solid red";
+    } else {
+        themap = document.getElementById("map");
+        themap.style.width = "calc(100% - 10px)";
+        themap.style.height = "calc(100% - 10px)";
+        themap.style.animation = "none";
+        themap.style.border = "5px solid black";
+    }
+}
+
+outlinecolor(false);
+
 // Stored settings management
 function saveSettings() {
     var mapMode = 0;
@@ -407,6 +438,22 @@ const lightningicon = L.icon({
     iconAnchor: [10, 10],
     className: 'lightningicon',
 });
+
+const shadowmarker = L.divIcon({
+    html: '<div class="currentlocation_marker"></div>',
+    iconSize: [20, 20], // Match the original size of the marker
+    iconAnchor: [10, 10], // Center the icon correctly
+    className: ''
+});
+
+const currentmarker = L.divIcon({
+    html: '<div class="innermarker"></div>',
+    iconSize: [14, 14], // Match the original size of the marker
+    iconAnchor: [7, 7], // Center the icon correctly
+    className: ''
+});
+
+
 
 function fadeIn(elementID){
     document.getElementById(elementID).style.display = "flex";
@@ -1028,23 +1075,22 @@ function buildRadarContent (feature) {
     const currentDate = new Date();
     const timediff = (currentDate - radarDate) / (1000 * 60);
 
-    var construct = '<div style="display: flex; margin: 10px; justify-content: space-around;">';
+    var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; justify-content: space-around; align-items: center;">';
     construct += '<i class="fa-solid fa-satellite-dish" style="font-size: 24px; margin-right: 15px; color: #27beffff;"></i>';
-    construct += '<p style="font-size: large;">' + feature.properties.id + '</p>';
-    construct += '</div><br>';
+    construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">' + feature.properties.id + '</p>';
 
-    construct += '<p style="font-size: medium;"><b>Station type: </b>' + feature.properties.stationType + '</p>';
-    if ((Math.round(feature.properties.latency.current.value * 100) / 100) > 500){
-        construct += '<p style="font-size: medium;"><b>Status: </b>Offline</p>';
-        stus = "Offline";
-    } else if (timediff > 10){
-        construct += '<p style="font-size: medium;"><b>Status: </b>Outdated</p>';
-    } else if (stus == "Operate") {
-        construct += '<p style="font-size: medium;"><b>Status: </b>Operational</p>';
-    } else {
-        construct += '<p style="font-size: medium;"><b>Status: </b>' + stus + '</p>';
+    try {
+        if (feature.properties.rda.properties.status == "Operate" && timediff < 5){
+            construct += '<p>Online';
+        } else if (feature.properties.rda.properties.status == "Start-Up" || timediff < 10){
+            construct += '<p style="color: #ffcc00ff">Out of date';
+        } else {
+            construct += '<p style="color: #ff2121ff">Offline';
+        }
+    } catch {
+        construct += '<p style="color: #ff2121ff">Offline';
     }
-    construct += '<p style="font-size: medium;"><b>Ping: </b>' + (Math.round(feature.properties.latency.current.value * 100) / 100).toFixed(2) + ' sec</p>';
+    construct += '</p></div></div>';
 
     if (stus == "Offline"){
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 10px;">Select Station</button>'
@@ -1247,6 +1293,15 @@ setInterval(() => {
 }, 20000);
 
 function onMapEvent(e) {
+    const center = map.getCenter();
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams(url.search);
+    params.set('lat', center.lat.toFixed(5));
+    params.set('lon', center.lng.toFixed(5));
+    params.set('z', map.getZoom().toFixed(1));
+    url.search = params.toString();
+    window.history.pushState({}, '', url);
+
     mapEvents += 1;
     canRefresh = true;
     addRadarToMap(radarStation);
@@ -2400,3 +2455,90 @@ setInterval(() => {
 //    stroke: 2,
 //    fillOpacity: 0,
 //}).addTo(map)
+
+
+let currentLocationMarker = null;
+let watchId = null;
+let isLocationOn = false;
+let nowlat = null;
+let nowlon = null;
+
+function startUpdatingLocation() {
+    isLocationOn = document.getElementById("location").checked;
+    if (navigator.geolocation) {
+        if (watchId === null) {
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    nowlat = position.coords.latitude;
+                    nowlon = position.coords.longitude;
+
+                    // Place or update the custom circle marker at the user's location
+                    if (currentLocationMarker) {
+                        currentLocationMarker.setLatLng([nowlat, nowlon]);
+                    } else {
+                    const outermarker = L.marker([lat, lon], { icon: shadowmarker }).addTo(map);
+                    const innermarker = L.marker([lat, lon], { icon: currentmarker }).addTo(map);
+                    if (isLocationOn) {
+                        map.flyTo([lat, lon], 10);
+                    }
+                    document.getElementById("location").checked = true;
+                    }
+                },
+                (error) => {
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            console.log("User denied the request for Geolocation.");
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            alert("Your position is unavailable. GPS is off or signal is too weak.");
+                            console.log("Location information is unavailable.");
+                            break;
+                        case error.TIMEOUT:
+                            alert("Took too long to recieve a location, perhaps GPS is too weak.");
+                            console.log("The request to get user location timed out.");
+                            break;
+                        case error.UNKNOWN_ERROR:
+                            alert("An unknown error occurred while getting your location.");
+                            console.log("An unknown error occurred.");
+                            break;
+                    }
+                    document.getElementById("location").checked = false;
+                    clearCurrentLocationMarker();
+                    isLocationOn = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000
+                }
+            );
+        }
+    } else {
+        alert("Your browser doesn't support location. Try a different browser to use this feature.");
+        document.getElementById("location").checked = false;
+    }
+}
+
+function clearCurrentLocationMarker() {
+    if (currentLocationMarker) {
+        map.removeLayer(outermarker);
+        map.removeLayer(innermarker);
+        currentLocationMarker = null;
+    }
+    if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        watchId = null;
+    }
+}
+
+function showLocation() {
+    isLocationOn = document.getElementById("location").checked;
+
+    if (isLocationOn) {
+        startUpdatingLocation();
+    } else {
+        clearCurrentLocationMarker();
+    }
+}

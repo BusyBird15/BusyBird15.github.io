@@ -17,16 +17,25 @@
 }
 
 body {
-    overflow: hidden;
+    height: 100%;
+    width: 100%;
+}
+
+@keyframes alertpulse {
+    0% { border-color: red; }
+    50% { border-color: magenta; }
 }
 
 #map {
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 10px);
+    height: calc(100% - 10px);
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 1;
+    border: 5px solid red;
+    transition-duration: 0.5s;
+    animation: alertpulse 1s infinite;
 }
   
 .hidden {
@@ -43,9 +52,9 @@ body {
     box-shadow: #0000008c 3px 3px 9px 0px;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
     transition-duration: 0.5s;
-    -webkit-backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(10px);
     display: none;
 }
 
@@ -74,8 +83,8 @@ body {
     height: calc(100% - 40px);
     border-radius: 10px;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .nav-btn {
@@ -116,8 +125,8 @@ button {
 
 .popup .leaflet-popup-content-wrapper {
     transition-duration: 0.5s;
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     color: #fff;
     font-size: medium;
     font-family: "Cabin", sans-serif;
@@ -130,8 +139,8 @@ button {
 }
 
 .popup .leaflet-popup-tip {
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
 }
 
 .leaflet-popup-content p {
@@ -241,7 +250,7 @@ input, select{
 select {
     background: white;
     padding: 0px;
-    width: 50%;
+    width: 100%;
     cursor: pointer;
     position: relative;
     display: inline-block;
@@ -533,15 +542,47 @@ input:focus::-webkit-input-placeholder {
 }
 
 .toolbtn {
-    color: white;
+    background: white;
+    border-radius: 10px;
+    border: 0px;
+    color: black;
 }
 
 .toolbtn:hover {
-    color: #27beffff;
+    background: #27beffff;
 }
 
 em {
     font-style: italic;
     color: rgb(200, 200, 200);
     cursor: pointer;
+}
+
+#outbox {
+    position: relative;
+}
+
+@keyframes locationpulse {
+    0% { transform: scale(1.2); }
+    50% { transform: scale(1.8); }
+    100% { transform: scale(1.2); }
+}
+
+.currentlocation_marker {
+    width: 20px;
+    height: 20px;
+    background: radial-gradient(#999999ff, #ffffff3d);
+    background-size: cover;
+    opacity: 1;
+    border-radius: 50%;
+    animation: locationpulse 2.5s infinite cubic-bezier(0.29, 0.12, 0.58, 1);
+}
+
+.innermarker {
+    width: 14px;
+    height: 14px;
+    background: #27beffff;
+    background-size: cover;
+    border-radius: 50%;
+    animation: none;
 }

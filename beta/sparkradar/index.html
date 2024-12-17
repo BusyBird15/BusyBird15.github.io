@@ -65,6 +65,7 @@ Programming of the Spark Radar project began in September 2024.
 
 </head>
 <body>
+<div>
     <!--Leaflet map-->
     <div id="map"></div>
 
@@ -201,6 +202,13 @@ Programming of the Spark Radar project began in September 2024.
                             <span class="checkmark" style="margin-right: 10px;"></span>
                             Show debugger
                         </label>
+                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-location setticon" style="font-size: 16px; color: white;"></i><b>Current Location</b></p>
+                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show your current location on the radar map. Your location info does not leave your device.</p>
+                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                            <input type="checkbox" id="location" onchange="showLocation();">
+                            <span class="checkmark" style="margin-right: 10px;"></span>
+                            Show my location
+                        </label>
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-download setticon" style="font-size: 16px; color: white;"></i><b>Settings Database</b></p>
                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">Download your settings as a backup, or upload an existing backup.</p>
                         <div style="diplay: flex; flex-direction: row;">
@@ -264,7 +272,7 @@ Programming of the Spark Radar project began in September 2024.
                          </select>
                          <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
                          <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher opacity value means a less transparent radar.</p>
-                         <input style="width: calc(50% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
+                         <input style="width: calc(100% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
                          <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bolt setticon" style="font-size: 16px; color: white;"></i><b>Lightning</b></p>
                          <p style="margin: 5px 5px 10px 5px; font-size: medium;">Choose at what zoom lightning strikes appear on the map. Lightning strikes are accumulated over the last 60 minutes.</p>
                          <select id="light" onchange="setLightningLevel();">
@@ -346,8 +354,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.20</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Dec. 2, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.21</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Dec. 17, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -405,29 +413,31 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Map text attribution-->
-    <p id="textattr" style="position: absolute; bottom: 45px; right: 5px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
+    <p id="textattr" style="position: absolute; bottom: 45px; right: 10px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
 
     <!--Radar Legend-->
-    <img id="radarlegend" style="box-shadow: #0000008c 3px 3px 9px 0px; position: absolute; border-radius: 10px; z-index: 9; right: 5px; bottom: 5px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
+    <img id="radarlegend" style="position: absolute; border-radius: 10px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
 
     <!--Canvas for drawing-->
     <canvas id="drawing" style="background: none; display: none; cursor: crosshair; position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 101;" style="cursor: crosshair;"></canvas>
 
     <!--Toolbar-->
-    <div class="overlay-object" id="toolbar" style="border-radius: 10px; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 9; height: auto; width: auto;">
-        <button class="toolbtn" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px 0px 5px 5px; background: none; border: none;" title="Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
-        <button class="toolbtn" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: none; border: none;" title="Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
+    <div class="overlay-object" id="toolbar" style="border-radius: 10px; flex-direction: column; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 9; height: auto; width: auto;">
+        <button class="toolbtn" style="transition-duration: 0.2s; 10px; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; 10px; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Go to my location" onclick="map.flyTo([nowlat, nowlon], 10);"><i class="fa-solid fa-location" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
     </div>
 
     <!--Drawing toolbar-->
     <div class="overlay-object" id="drawingtoolbar" style="border-radius: 10px; align-items: center; justify-content: center; position: absolute; top: 10px; left: 10px; z-index: 102; height: auto; width: auto;">
-        <button class="toolbtn" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px 0px 5px 5px; background: none; border: none;" title="Close" onclick="toggleDrawing(false)"><i class="fa-solid fa-xmark" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Close" onclick="toggleDrawing(false)"><i class="fa-solid fa-xmark" style="font-size: 16px;"></i></button>
         <button class="drawingtoolbtn" id="blue" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #27beffff; border: none;" onclick="setPenColor('#27beffff'); setSelectedColor('blue');"><i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i></button>
         <button class="drawingtoolbtn" id="red" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #ff2121ff; border: none;" onclick="setPenColor('#ff2121ff'); setSelectedColor('red');"></button>
         <button class="drawingtoolbtn" id="green" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #00af00ff; border: none;" onclick="setPenColor('#00af00ff'); setSelectedColor('green');"></button>
         <button class="drawingtoolbtn" id="white" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #ffffffff; border: none;" onclick="setPenColor('#ffffffff'); setSelectedColor('white');"></button>
         <button class="drawingtoolbtn" id="black" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #000000ff; border: none;" onclick="setPenColor('#000000ff'); setSelectedColor('black');"></button>
     </div>
+</div>
 </body>
 
 <!--Add JS after elements are added-->
