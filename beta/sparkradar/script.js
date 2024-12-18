@@ -15,6 +15,11 @@ if (maplat && maplon) {
     var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([38.0, -100.4], 4);
 }
 
+if (!L.Browser.mobile) { 
+    map.scrollWheelZoom = true;
+    map.options.wheelPxPerZoomLevel = 200; 
+}
+
 // Setup the layers of the map
 map.createPane('outlook');
 map.createPane('radar');
@@ -845,7 +850,7 @@ function loadrisks() {
 
 
 function dialog(toOpen, object=null, producttoview){
-    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook'];
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook', 'dictionary'];
     if (toOpen) {
         fadeIn("dialog");
         fadeIn("innerdialog");
@@ -1076,7 +1081,7 @@ function buildRadarContent (feature) {
     const timediff = (currentDate - radarDate) / (1000 * 60);
 
     var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; justify-content: space-around; align-items: center;">';
-    construct += '<i class="fa-solid fa-satellite-dish" style="font-size: 24px; margin-right: 15px; color: #27beffff;"></i>';
+    construct += '<i class="fa-solid fa-satellite-dish" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>';
     construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">' + feature.properties.id + '</p>';
 
     try {
@@ -1105,11 +1110,24 @@ function buildRadarContent (feature) {
     return construct;
 }
 
+var radarsOn = true;
+
+function toggleRadars() {
+    radarsOn = !radarsOn;
+    putRadarStationsOnMap();
+    if (radarsOn){
+        document.getElementById("radarstogg").classList.add("selected_toolbtn");
+    } else {
+        document.getElementById("radarstogg").classList.remove("selected_toolbtn");
+    }
+}
+
 function putRadarStationsOnMap() {
-    if (checkPopups(radars)){ return }
+    if (!radarsOn) {radars.clearLayers(); return;}
+    if (checkPopups(radars)){ return; }
     console.info("Updating radar stations.")
     document.getElementById("infop").innerHTML = "Loading radars...";
-    fetch('https://api.weather.gov/radar/stations?stationType=WSR-88D') // Add ,TDWR t include them
+    fetch('https://api.weather.gov/radar/stations?stationType=WSR-88D') // Add ,TDWR to include them
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok: ' + response.statusText);
@@ -1209,6 +1227,7 @@ function getBoundingBox(forParams) {
 
 var mapEvents = 1;
 var canRefresh = true;
+var radarbound = null;
 
 function addRadarToMap (station="conus") {
     document.getElementById("radarloader").style.display = "flex";
@@ -1486,7 +1505,7 @@ function buildAlertPopup(alertInfo, lat, lng) {
              alertInfo.properties.event = "Flash Flood Emergency"
         }
 
-        var construct = '<div> <div style="display: flex; width: 100%; border: 2px solid black; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 10px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
+        var construct = '<div> <div style="display: flex; width: 100%; box-shadow: rgb(0, 0, 0, 0.8) 0px 0px 10px; text-align: center; justify-content: center; width: auto; padding: 5px 10px 5px 10px; border-radius: 10px; font-size: large; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';">' + alertInfo.properties.event + '</div><br>';
 
         if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
             construct = construct + '<div style="background-color: #a744a7; border-radius: 10px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px;"><b>THIS IS A TORNADO EMERGENCY</b></p></div><br>';
@@ -1524,15 +1543,15 @@ function buildAlertPopup(alertInfo, lat, lng) {
 
         if (maxwind || maxhail || fflooddamage) {
             construct = construct + '<div style="display: flex; justify-content: space-around; margin-bottom: 20px;">'
-            if (maxwind) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxwind.replace("Up to ", "") + '</p>';}
-            if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-meatball" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
-            if (fflooddamage) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-showers-heavy" style="font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + fflooddamage + '</p>';}
+            if (maxwind) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-wind" style="text-shadow: black 0px 0px 20px; font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxwind.replace("Up to ", "") + '</p>';}
+            if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-meatball" style="text-shadow: black 0px 0px 20px; font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
+            if (fflooddamage) {construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-cloud-showers-heavy" style="text-shadow: black 0px 0px 20px; font-size: 18px; color: #27beffff; margin-right: 5px;"></i> ' + fflooddamage + '</p>';}
             construct = construct + '</div>'
         }
 
         if (tordetection){
             construct = construct + '<div style="display: flex; justify-content: space-around; margin-bottom: 20px;">'
-            construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-tornado" style=" color: #ff2121ff; font-size: 18px; margin-right: 5px;"></i> ' + tordetection + '</p>';
+            construct = construct + '<p style="margin: 0px;"><i class="fa-solid fa-tornado" style="text-shadow: black 0px 0px 20px; color: #ff2121ff; font-size: 18px; margin-right: 5px;"></i> ' + tordetection + '</p>';
             construct = construct + '</div>'
         }
 
@@ -2340,7 +2359,7 @@ async function addWeatherRadios() {
 
                         const popupContent = `
                             <div style="display: flex; align-items: center; justify-content: space-around; flex-direction: row; margin: 10px;">
-                                <i class="fa-solid fa-radio" style="font-size: 24px; margin-right: 15px; color: #27beffff;"></i>
+                                <i class="fa-solid fa-radio" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>
                                 <p style="margin: 0px; font-size: large;">${CALLSIGN}</p>
                             </div>
                             <br>
@@ -2448,16 +2467,8 @@ setInterval(() => {
 }, 30000)
 
 
-// Map radar bound circle - 150mi
-// Draw the circle
-//var circle = L.circle([yourLatitude, yourLongitude], {
-//    radius: 241401,
-//    stroke: 2,
-//    fillOpacity: 0,
-//}).addTo(map)
-
-
-let currentLocationMarker = null;
+let outermarker = null;
+let innermarker = null;
 let watchId = null;
 let isLocationOn = false;
 let nowlat = null;
@@ -2475,38 +2486,41 @@ function startUpdatingLocation() {
                     nowlon = position.coords.longitude;
 
                     // Place or update the custom circle marker at the user's location
-                    if (currentLocationMarker) {
-                        currentLocationMarker.setLatLng([nowlat, nowlon]);
+                    if (outermarker) {
+                        outermarker.setLatLng([nowlat, nowlon]);
+                        innermarker.setLatLng([nowlat, nowlon]);
                     } else {
-                    const outermarker = L.marker([lat, lon], { icon: shadowmarker }).addTo(map);
-                    const innermarker = L.marker([lat, lon], { icon: currentmarker }).addTo(map);
-                    if (isLocationOn) {
-                        map.flyTo([lat, lon], 10);
-                    }
-                    document.getElementById("location").checked = true;
+                        outermarker = L.marker([lat, lon], { icon: shadowmarker }).addTo(map);
+                        innermarker = L.marker([lat, lon], { icon: currentmarker }).addTo(map);
+                        if (isLocationOn) {
+                            map.flyTo([lat, lon], 10);
+                        }
+                        document.getElementById("location").checked = true;
                     }
                 },
                 (error) => {
-                    switch(error.code) {
-                        case error.PERMISSION_DENIED:
-                            console.log("User denied the request for Geolocation.");
-                            break;
-                        case error.POSITION_UNAVAILABLE:
-                            alert("Your position is unavailable. GPS is off or signal is too weak.");
-                            console.log("Location information is unavailable.");
-                            break;
-                        case error.TIMEOUT:
-                            alert("Took too long to recieve a location, perhaps GPS is too weak.");
-                            console.log("The request to get user location timed out.");
-                            break;
-                        case error.UNKNOWN_ERROR:
-                            alert("An unknown error occurred while getting your location.");
-                            console.log("An unknown error occurred.");
-                            break;
+                    if (!outermarker){
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                console.log("User denied the request for Geolocation.");
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                alert("Your position is unavailable. GPS is off or signal is too weak.");
+                                console.log("Location information is unavailable.");
+                                break;
+                            case error.TIMEOUT:
+                                alert("Took too long to recieve a location, perhaps GPS is too weak.");
+                                console.log("The request to get user location timed out.");
+                                break;
+                            case error.UNKNOWN_ERROR:
+                                alert("An unknown error occurred while getting your location.");
+                                console.log("An unknown error occurred.");
+                                break;
+                        }
+                        document.getElementById("location").checked = false;
+                        clearCurrentLocationMarker();
+                        isLocationOn = false;
                     }
-                    document.getElementById("location").checked = false;
-                    clearCurrentLocationMarker();
-                    isLocationOn = false;
                 },
                 {
                     enableHighAccuracy: true,
@@ -2522,10 +2536,11 @@ function startUpdatingLocation() {
 }
 
 function clearCurrentLocationMarker() {
-    if (currentLocationMarker) {
+    if (outermarker) {
         map.removeLayer(outermarker);
         map.removeLayer(innermarker);
-        currentLocationMarker = null;
+        outermarker = null;
+        innermarker = null;
     }
     if (watchId !== null) {
         navigator.geolocation.clearWatch(watchId);
@@ -2542,3 +2557,41 @@ function showLocation() {
         clearCurrentLocationMarker();
     }
 }
+
+document.getElementById("location").checked = false;
+
+
+function doDictSearch(term) {
+    fetch('https://api.weather.gov/glossary')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        var construct = "";
+        data.glossary.push({'term': 'RTS', 'definition': 'Abbreviation for return (or returned) to service.'})
+        data.glossary.forEach(function(thisterm){
+            try{
+                if (thisterm.term.toLowerCase().includes(term.toLowerCase())) {
+                    construct += '<div style="background: rgb(50, 50, 50); border-radius: 10px; padding: 10px; margin: 10px 10px 0px 10px; display: flex; flex-direction: column;"><p style="margin: 0px; font-size: large;"><b>' + thisterm.term + "</b>";
+                    construct += '<p style="margin: 0px; font-size: medium;">' + thisterm.definition.replace("â€™", "'") + '</p></div>'
+                }
+            } catch {}
+        });
+
+        document.getElementById("dictres").innerHTML = construct;
+    })
+    .catch(error => {
+        console.error('doDictSearch() > fetch() > ', error);
+    });
+}
+
+document.getElementById('dictbox').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        doDictSearch(document.getElementById("dictbox").value);
+    }
+});
+
+document.getElementById("dictbox").value = "";

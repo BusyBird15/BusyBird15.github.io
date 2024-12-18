@@ -52,6 +52,7 @@ Programming of the Spark Radar project began in September 2024.
         gtag('config', 'G-63D08PM675');
     </script>
 
+
     <!--Open Graph and Twitter Card data-->
     <meta property="og:title" content="Spark Radar"/>
     <meta property="og:description" content="Track the weather like a pro for free. Custom colors, watches, soundings, alerts, and so much more."/>
@@ -115,7 +116,8 @@ Programming of the Spark Radar project began in September 2024.
         <br>
         <div style="overflow-y: auto; scrollbar-width: none;">
             <!--<div onclick="" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-cloud-bolt" style="color: #27bffff;"></i><b>SPC Outlook</b></div>-->
-            <div onclick="dialog(true, 'spcoutlook');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-triangle-exclamation" style="color: #27bffff;"></i><b>SPC Outlook</b></div>
+            <div onclick="dialog(true, 'spcoutlook');" class="menuitem"><i class="fa-solid fa-triangle-exclamation" style="color: #27bffff;"></i><b>SPC Outlook</b></div>
+            <div onclick="dialog(true, 'dictionary'); document.getElementById('dictbox').value = ''; doDictSearch('');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-book" style="color: #27bffff;"></i><b>Weather Glossary</b></div>
             <div onclick="dialog(true, 'settings');" class="menuitem"><i class="fa-solid fa-gear" style="color: #27bffff;"></i><b>Settings</b></div>
             <div onclick="dialog(true, 'appinfo');" class="menuitem"><i class="fa-solid fa-circle-info" style="color: #27bffff;"></i><b>About</b></div>
             <div onclick="dialog(true, 'about');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-circle-question" style="color: #27bffff;"></i><b>Technical Info</b></div>
@@ -147,6 +149,14 @@ Programming of the Spark Radar project began in September 2024.
                     </div>
                 </div>
                 <div id="more"></div>
+            </div>
+
+            <div id="dictionary" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
+                <div style="margin-top: 10px; display: flex; flex-direction: row;">
+                    <input type="text" placeholder="Search for a term" id="dictbox" style="width: calc(100% - 20px); transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
+                    <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doDictSearch(document.getElementById('dictbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>
+                </div><br>
+                <div id="dictres" style="display: flex; flex-direction: column;"></div>
             </div>
 
             <div id="spcoutlook" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
@@ -205,7 +215,7 @@ Programming of the Spark Radar project began in September 2024.
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-location setticon" style="font-size: 16px; color: white;"></i><b>Current Location</b></p>
                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show your current location on the radar map. Your location info does not leave your device.</p>
                         <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
-                            <input type="checkbox" id="location" onchange="showLocation();">
+                            <input type="checkbox" checked="false" id="location" onchange="showLocation();">
                             <span class="checkmark" style="margin-right: 10px;"></span>
                             Show my location
                         </label>
@@ -354,8 +364,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.21</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Dec. 17, 2024</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.22</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Dec. 18, 2024</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -423,9 +433,10 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--Toolbar-->
     <div class="overlay-object" id="toolbar" style="border-radius: 10px; flex-direction: column; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 9; height: auto; width: auto;">
-        <button class="toolbtn" style="transition-duration: 0.2s; 10px; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
-        <button class="toolbtn" style="transition-duration: 0.2s; 10px; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Go to my location" onclick="map.flyTo([nowlat, nowlon], 10);"><i class="fa-solid fa-location" style="font-size: 16px;"></i></button>
-        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Go to my location" onclick="if(outermarker) {map.flyTo([nowlat, nowlon], 10);}"><i class="fa-solid fa-location" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
+        <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Turn stations on/off" onclick="toggleRadars();"id="radarstogg"><i class="fa-solid fa-satellite-dish" style="font-size: 16px;"></i></button>
     </div>
 
     <!--Drawing toolbar-->

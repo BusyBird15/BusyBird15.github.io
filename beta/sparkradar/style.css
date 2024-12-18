@@ -52,9 +52,9 @@ body {
     box-shadow: #0000008c 3px 3px 9px 0px;
     background-color: rgba(0, 0, 0, 0.5);
     color: white;
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
     transition-duration: 0.5s;
-    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(15px);
     display: none;
 }
 
@@ -83,8 +83,8 @@ body {
     height: calc(100% - 40px);
     border-radius: 10px;
     background-color: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
 .nav-btn {
@@ -97,6 +97,7 @@ body {
     height: fit-content;
     color: white;
     transition: background 0.2s !important;
+    box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 10px;
 }
 
 .nav-btn:hover {
@@ -125,8 +126,8 @@ button {
 
 .popup .leaflet-popup-content-wrapper {
     transition-duration: 0.5s;
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
     color: #fff;
     font-size: medium;
     font-family: "Cabin", sans-serif;
@@ -139,8 +140,8 @@ button {
 }
 
 .popup .leaflet-popup-tip {
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
 }
 
 .leaflet-popup-content p {
@@ -163,6 +164,7 @@ b {
     border: 1px solid black;
     border-radius: 50%;
     transition-duration: 0.2s;
+    box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 10px;
 }
 
 .radio-marker {
@@ -172,6 +174,7 @@ b {
     border: 1px solid black;
     border-radius: 50%;
     transition-duration: 0.2s;
+    box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 10px;
 }
 
 .tdwr {
@@ -295,6 +298,7 @@ input:focus::-webkit-input-placeholder {
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     overflow: hidden;
     text-overflow: ellipsis;
 }
@@ -318,6 +322,7 @@ input:focus::-webkit-input-placeholder {
     border: none;
     border-radius: 10px;
     transition-duration: 0.2s;
+    box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 10px;
 }
 
 .function-btn:hover {
@@ -548,8 +553,14 @@ input:focus::-webkit-input-placeholder {
     color: black;
 }
 
+.selected_toolbtn {
+    background: #2a7fffff !important;
+    color: white !important;
+}
+
 .toolbtn:hover {
-    background: #27beffff;
+    background: #27beffff !important;
+    color: black !important;
 }
 
 em {
