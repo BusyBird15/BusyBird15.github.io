@@ -16,167 +16,217 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
 
-    <!--This for social icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <!--Social icons -->
+    <script src="https://kit.fontawesome.com/3e2fc9ce5a.js" crossorigin="anonymous"></script>
+    
     <style>
         body {
             font-family: 'Poppins', sans-serif;
             color: white;
-            max-width: 500px;
             margin: auto;
             background: linear-gradient(156deg, rgba(33,0,133,1) 0%, rgba(9,42,121,1) 29%, rgba(0,255,169,1) 100%);
             background-repeat: no-repeat;
             background-attachment: fixed;
             background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
         }
 
-        .accordion {
-            background-color: rgb(0, 255, 242);
-            font-family: 'Poppins', sans-serif;
-            color: #131313;
-            cursor: pointer;
-            padding: 18px;
-            width: 100%;
-            text-align: left;
-            border: none;
-            outline: none;
-            transition: 0.4s;
+        p {
+            font-size: medium;
+            margin: 0px;
         }
 
-        .active, .accordion:hover {
-            background-color: rgb(0, 174, 255);
-        }
-
-        .panel {
-            padding: 0 18px;
-            background-color: rgb(255, 255, 255);
-            font-size: small;
-            max-height: 0;
-            color: #131313;
-            overflow: hidden;
-            transition: max-height 0.2s ease-out;
-        }
-        .othera {
-            color: rgb(202, 202, 202);
-        }
-        .fa {
-            padding: 5px;
-            font-size: 30px;
-            width: 30px;
+        .bodysection {
+            background-color: rgb(0, 0, 0, 0.5);
+            width: 40%;
+            min-width: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             text-align: center;
-            text-decoration: none;
-            color: black;
-            transition-duration: 0.3s;
+            align-items: center;
+            border-radius: 30px;
+            background-color: rgba(255, 255, 255, 0.2);
+            margin: 15px;
+            padding: 15px;
         }
 
-        .fa:hover {
-            opacity: 0.7;
+        .socialicon{
+            color: white;
+            font-size: 26px;
+            text-decoration: none;
+            margin: 5px;
+            transition-duration: 0.5s;
+        }
+
+        .socialicon:hover {
+            color: rgba(0, 255, 169);
+            font-size: 36px;
+        }
+
+        h2 {
+            font-size: larger;
+        }
+
+        .sectTitle {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            margin: 5px;
+            margin-bottom: 15px;
+        }
+
+        .titleIcon {
+            font-size: 24px;
+            color: white;
+            margin: 0px;
+            margin-right: 10px;
+        }
+
+        .projectList {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            background-color: rgb(255, 255, 255, 0.2);
+            padding: 5px;
+            border-radius: 10px;
+            
+        }
+
+        .projectItem {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            width: 95%;
+        }
+
+        a {
+            color: rgb(0, 78, 104);
+            transition-duration: 0.5s;
+        }
+
+        a:hover {
+            color: white;
         }
     </style>
 </head>
 <body>
-    <br><br>
-    <div style="display: grid; justify-content: center;">
-        <img width="100px" height="100px" style="border-radius: 50px;" src="https://cdn.discordapp.com/avatars/1061023304862933122/a89b672e442ca4e7f37bf0afa16affa4.webp?size=128">
-    </div><div style="display: grid; justify-content: center;">
-        <h2>Hey! I'm BusyBird15.</h2>
+    <div class="bodysection">
+        <img style="border-radius: 100%; width: 20%; height: auto;" src="https://avatars.githubusercontent.com/u/119532048?v=4">
+        <h2>Hey! I'm BusyBird15</h2>
+        <p>I do cool stuff <b>on</b> the internet and make cooler stuff <b>for</b> the internet. Everything I make is free and has no ads.</p>
     </div>
 
-    <div style="display: grid; justify-content: center;">
-        <p>I make random things for the internet.<p>
-    </div>
-
-    <div style="display: grid; justify-content: center;">
-        <h3>My best stuff</h3>
-    </div>
-
-    <button class="accordion" style="border-radius: 20px 20px 0px 0px;"><b>The Weather Team</b></button>
-    <div class="panel">
-        <p>The Weather Team is a small yet growing Discord server of weather enthusiasts. We hang out,
-            talk about the weather, track storms, and more! I own the server, and have also built a
-            <a href="https://busybird15.github.io/theweatherteam">website</a> for it, along with a
-            <a href="https://busybird15.github.io/radar">weather radar.</a> Lastly, it has a 
-            <a href="https://youtube.com/@theweatherteamofficial">YouTube channel.</a>
-        </p>
-    </div>
-
-    <button id="head-bc" class="accordion" style="border-radius: 0px 0px 20px 20px;"><b>BlockCoin</b></button>
-    <div id="panel-bc" class="panel" style="border-radius: 0px 0px 20px 20px;">
-        <p><a href="https://blockcoin.social">BlockCoin</a> is a new social media based around its own
-        currency! When your posts get liked, someone follows you, or someone buys your post,
-        you get BlockCoin, which you can then buy other posts with, or store up to become rich!
-        I didn't make BlockCoin, but I did make an old version of it and I will be making the
-        mobile app for it!</p>
-    </div>
-
-    <br><br><br>
-
-    <div style="display: grid; justify-content: center;">
-        <h3 style="margin: 0px; padding-bottom: 5px;">Programming languages and platforms I know</h3>
-    </div>
-    <div style="display: grid; justify-content: center;">
-        <p style="margin: 0px; padding-bottom: 5px;"><b>(and how well I know them)</b></p>
-    </div>
-
-    <div style="display: grid; justify-content: center;">
-        <ul>
-            <li>HTML (5/10)</li>
-            <li>CSS (4/10)</li>
-            <li>JavaScript (4/10)</li>
-            <li>Python (9/10)</li>
-            <li>Arduino (C or C++) (6/10)</li>
-            <li>Scratch (6/10)</li>
-            <li>MIT App Inventor (9/10)</li>
-        </ul>
-    </div>
-
-    <br><br><br>
-
-    <div style="display: grid; justify-content: center;">
-        <h3 style="margin: 0px; padding-bottom: 5px;">Other cool stuff I have made</h3>
-    </div>
-
-    <div style="display: grid; justify-content: center;">
-        <ul>
-            <li><a class="othera" href="https://community.appinventor.mit.edu/t/raindrop-a-lightning-fast-weather-app-using-weatherapi/">Raindrop: Weather app</a></li>
-            <li><a class="othera" href="https://community.appinventor.mit.edu/t/a-simple-and-elegant-notes-app/">Notes app</a></li>
-            <li><a class="othera" href="https://github.com/BusyBird15/YTDL"> YTDL (Python script to download YouTube videos)</a></li>
-        </ul>
-    </div>
-
-    <br><br><br>
-
-    <div style="border-radius: 10px; background-color: rgba(255, 255, 255, 0.158);">
-        <div style="display: grid; justify-content: center;">
-            <p style="margin: 10px; padding-bottom: 5px;"><b>Find me elsewhere!</b></p>
-        </div>
-        <div style="display: flex; justify-content: center; flex-wrap: wrap; align-content: center;">
-            <a href="https://x.com/BusyBird150" class="fa fa-twitter"></a>
-            <a href="https://github.com/busybird15" class="fa fa-github"></a>
+    <div class="bodysection">
+        <div style="height: 50px; display: flex; align-items:center; justify-content: center; flex-wrap: wrap; align-content: center;">
+            <a href="https://x.com/BusyBird150"><i class="fa-brands fa-twitter socialicon"></i></a>
+            <a href="https://github.com/busybird15"><i class="fa-brands fa-github socialicon"></i></a>
+            <a href="https://discord.com/users/1061023304862933122"><i class="fa-brands fa-discord socialicon"></i></a>
+            <a href="https://youtube.com/@busybird15"><i class="fa-brands fa-youtube socialicon"></i></a>
         </div>
     </div>
 
-    <br><br>
+    <div class="bodysection">
+        <div class="sectTitle">
+            <i class="fa-brands fa-html5 titleIcon"></i>
+            <h2 style="margin: 0px;">HTML Projects</h2>
+        </div>
+        <div class="projectList">
+            <div class="projectItem">
+                <h2 style="margin: 0px;">Spark Radar</h2>
+                <a href="https://busybird15.github.io/beta/sparkradar/" target="_blank">/beta/sparkradar/</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>Spark Radar is an easy-to-use advanced NEXRAD radar application that runs in our browser. As of the last update to this page, Spark Radar is still in development.</p>
+            </div>
+            <div class="projectItem">
+                <h2 style="margin: 0px;">Weather</h2>
+                <a href="https://busybird15.github.io/weather/" target="_blank">/weather/</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>A simple web weather application to display data from the National Weather Service. <em>This project may not be updated anymore.</em></p>
+            </div>
+            <div class="projectItem">
+                <h2 style="margin: 0px;">Assignments</h2>
+                <a href="https://busybird15.github.io/assignments" target="_blank">/assignments</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>A simple calendar using localStorage to track your school assignments and due dates. <em>This project may not be updated anymore.</em></p>
+            </div>
+            <div class="projectItem">
+                <h2 style="margin: 0px;">SimpleCode</h2>
+                <a href="https://busybird15.github.io/simplecode/" target="_blank">/simplecode/</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>SimpleCode is a lightweight web-based code editor. <em>This project may not be updated anymore.</em></p>
+            </div>
+        </div>
+    </div>
 
-    <script>
-        var acc = document.getElementsByClassName("accordion");
-        var i;
+    <div class="bodysection">
+        <div class="sectTitle">
+            <i class="fa-solid fa-mobile-screen titleIcon"></i>
+            <h2 style="margin: 0px;">Android Apps</h2>
+        </div>
+        <div class="projectList">
+            <div class="projectItem">
+                <h2 style="margin: 0px;">Notes</h2>
+                <a href="https://community.appinventor.mit.edu/t/a-simple-and-elegant-notes-app/" target="_blank">MIT AI2 Community</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>A simple elegant notes app that uses TinyDB.</p>
+            </div>
+            <div class="projectItem">
+                <h2 style="margin: 0px;">Raindrop</h2>
+                <a href="https://community.appinventor.mit.edu/t/raindrop-a-lightning-fast-weather-app-using-weatherapi/" target="_blank">MIT AI2 Community</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>Raindrop is a fast basic weather app. <b>This project is no longer maintained.</b></p>
+            </div>
+            <div class="projectItem">
+                <h2 style="margin: 0px;">Piechart</h2>
+                <a href="https://community.appinventor.mit.edu/t/piechart-simple-android-performance-monitor-demonstration/" target="_blank">MIT AI2 Community</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>A basic app that displays memory, storage, and battery information on pie charts. <b>This project is no longer maintained.</b></p>
+            </div>
+        </div>
+    </div>
 
-        for (i = 0; i < acc.length; i++) {
-        acc[i].addEventListener("click", function() {
-            this.classList.toggle("active");
-            var panel = this.nextElementSibling;
-            if (panel.style.maxHeight) {
-            panel.style.maxHeight = null;
-            } else {
-            panel.style.maxHeight = panel.scrollHeight + "px";
-            }
-            if (document.getElementById("panel-bc").style.maxHeight == panel.scrollHeight + "px"){
-                document.getElementById("head-bc").style.borderRadius = "0px"
-            } else {
-                document.getElementById("head-bc").style.borderRadius = "0px 0px 20px 20px"
-            }
-        });
-        }
-    </script>
+    <div class="bodysection">
+        <div class="sectTitle">
+            <i class="fa-solid fa-terminal titleIcon"></i>
+            <h2 style="margin: 0px;">Terminal / Python Scripts</h2>
+        </div>
+        <div class="projectList">
+            <div class="projectItem">
+                <h2 style="margin: 0px;">16x2 LCD API for RPI Picos</h2>
+                <a href="https://github.com/BusyBird15/RPI-Pico-Libs/wiki/LCD-Display-Module" target="_blank">Documentation</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>The easiest way to use a generic 16x2 LCD display with any Raspberry Pi Pico.</p>
+            </div>
+            <div class="projectItem">
+                <h2 style="margin: 0px;">YTDL</h2>
+                <a href="https://github.com/BusyBird15/YTDL" target="_blank">Github Repository</a>
+            </div>
+            <div class="projectItem" style="justify-content: left; text-align: left; margin-bottom: 20px;">
+                <p>(YouTube DownLoader) An easy-to-use YouTube video downloader Python script. <em>This project may not be updated anymore.</em></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bodysection" style="flex-direction: row;">
+        <p style="margin-right: 5px;"><b>Improve this page: </b></p>
+        <a href="https://github.com/BusyBird15/busybird15.github.io">create a pull request.</a>
+    </div>
 </body>
