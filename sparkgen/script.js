@@ -24,6 +24,23 @@ map_default = L.maptilerLayer({
     style: '96084695-6598-45c9-8f28-a3e091d9275c',
 }).addTo(map);
 
+map_darkmaterial = L.maptilerLayer({
+    apiKey: "UMONrX6MjViuKZoR882u",
+    style: '6203b2a0-063f-44b0-95f7-8c69393a3a46',
+});
+
+var currentMapLayer = map_default;
+
+// Set map
+function changemap() {
+    if (currentMapLayer) { map.removeLayer(currentMapLayer); }
+
+    if (currentMapLayer == map_default) { currentMapLayer = map_darkmaterial }
+    else { currentMapLayer = map_default }
+
+    map.addLayer(currentMapLayer);
+}
+
 var clickColor = 'red';
 var clickOpacity = 0.3;
 var isDrawing = false;
