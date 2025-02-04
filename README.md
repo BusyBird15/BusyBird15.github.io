@@ -2,6 +2,8 @@
 
 **Portfolio / Home:** https://busybird15.github.io
 
+**Spark Radar (stable):** https://busybird15.github.io/sparkradar/
+
 **The Weather Team Main Site:** https://busybird15.github.io/theweatherteam
 
 **The Weather Team Radar:** https://busybird15.github.io/radar
@@ -13,7 +15,7 @@
 
 ## BETA pages
 
-**Spark Radar:** https://busybird15.github.io/beta/sparkradar/
+**Spark Radar BETA:** https://busybird15.github.io/beta/sparkradar/
 
 
 ## Outdated pages
