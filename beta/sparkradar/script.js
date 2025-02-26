@@ -30,9 +30,11 @@ map.createPane('radars');
 map.createPane('radios');
 map.createPane('reports');
 map.createPane('lightning');
+map.createPane('sg');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 250;
+map.getPane('sg').style.zIndex = 275;
 map.getPane('cities').style.zIndex = 300;
 map.getPane('lightning').style.zIndex = 400;
 map.getPane('watches').style.zIndex = 500;
@@ -49,6 +51,7 @@ var radars = L.layerGroup().addTo(map);
 var radios = L.layerGroup().addTo(map);
 var reports = L.layerGroup().addTo(map);
 var lightningdata = L.layerGroup().addTo(map);
+var sg = L.layerGroup().addTo(map);
 
 
 // Maps
@@ -98,6 +101,10 @@ var spcEnabled = true;
 let weatherRadioMarkers = [];
 let weatherRadioVisible = true;
 var definitions = true;
+var sparkgen = false;
+var sg_alertsoff = false;
+var polydrawmode = false;
+var sg_color = 'red';
 
 // Database of alert colors
 var alertcolors = {
@@ -247,25 +254,6 @@ const flashingstyles = document.createElement('style');
 flashingstyles.type = 'text/css';
 updateflashes();
 document.head.appendChild(flashingstyles);
-
-
-function outlinecolor (enable) {
-    if (enable) {
-        themap = document.getElementById("map");
-        themap.style.width = "calc(100% - 10px)";
-        themap.style.height = "calc(100% - 10px)";
-        themap.style.animation = "alertpulse 1s infinite";
-        themap.style.border = "5px solid red";
-    } else {
-        themap = document.getElementById("map");
-        themap.style.width = "calc(100% - 10px)";
-        themap.style.height = "calc(100% - 10px)";
-        themap.style.animation = "none";
-        themap.style.border = "5px solid black";
-    }
-}
-
-outlinecolor(false);
 
 // Stored settings management
 function saveSettings() {
@@ -682,7 +670,7 @@ function loadProd(producttoview) {
                     return response.json();
                 })
                 .then(data => {
-                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + String(data.productText).replace(/\n/g, "<br>");
+                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + String(data.productText)(/\n/g, "<br>");
                 })
                 .catch(error => {
                     console.error('loadProd() > fetch() > fetch() > ', error);
@@ -888,6 +876,43 @@ function wfodialog(toOpen){
     }
 }
 
+function styles() {
+    sgdialog(true, 'styles');
+}
+
+function sgdialog(toOpen, object=null){
+    objects = ['tut-1', 'tut-2', 'tut-3', 'editor', 'styles']
+    if (toOpen) {
+        updatesgsettings();
+        fadeIn("sgdialog");
+        fadeIn("innersgdialog");
+        if (object) {
+            document.getElementById(object).style.display = 'flex';
+            objects.forEach(function(obj) {
+                if (obj != object) { document.getElementById(obj).style.display = 'none'; }
+            })
+        }
+        if (object == 'editor') {
+            document.getElementById('tut-advance').style.display = 'none';
+            document.getElementById('sgdialog-closer').style.display = 'flex';
+            document.getElementById('innersgdialog').style.justifyContent = 'flex-start';
+        } else if (object == 'styles') {
+            document.getElementById('tut-advance').style.display = 'none';
+            document.getElementById('sgdialog-closer').style.display = 'flex';
+            document.getElementById('innersgdialog').style.justifyContent = 'flex-start';
+        } else {
+            document.getElementById('tut-advance').style.display = 'flex';
+            document.getElementById('sgdialog-closer').style.display = 'none';
+            document.getElementById('innersgdialog').style.justifyContent = 'space-between';
+        }
+    } else {
+        fadeOut("sgdialog");
+        fadeOut("innersgdialog");
+        document.getElementById("innerdialog").style.scale = "70%";
+        updatesginfo();
+    }
+}
+
 function openAlertProduct(alertInfoId) {
     dialog(true, 'alertinfo');
     document.getElementById('alertinfo').scrollTo({ top: 0 });
@@ -985,8 +1010,11 @@ function openAlertProduct(alertInfoId) {
         .replace("IMPACTS", '<b style="font-family: Consolas, monospace, sans-serif !important;">IMPACTS</b>')
         .replace("HAZARDS", '<b style="font-family: Consolas, monospace, sans-serif !important;">HAZARDS</b>')
         .replace("SOURCE", '<b style="font-family: Consolas, monospace, sans-serif !important;">SOURCE</b>')
-        .replace("IMPACT", '<b style="font-family: Consolas, monospace, sans-serif !important;">IMPACT</b>')
+        .replace("LOCATIONS IMPACTED INCLUDE", '<b style="font-family: Consolas, monospace, sans-serif !important;">LOCATIONS IMPACTED INCLUDE</b>')
         .replace("HAZARD", '<b style="font-family: Consolas, monospace, sans-serif !important;">HAZARD</b>')
+        .replace("LOCATION AND MOVEMENT", '<b style="font-family: Consolas, monospace, sans-serif !important;">LOCATION AND MOVEMENT</b>')
+        .replace("IMPACT", '<b style="font-family: Consolas, monospace, sans-serif !important;">IMPACT</b>')
+        .replace("SAFETY INFO", '<b style="font-family: Consolas, monospace, sans-serif !important;">SAFETY INFO</b>')
         .replace("ADDITIONAL DETAILS", '<b style="font-family: Consolas, monospace, sans-serif !important;">ADDITIONAL DETAILS</b>')
         .replace("Locations impacted include", '<b style="font-family: Consolas, monospace, sans-serif !important;">Locations impacted include</b>')
 
@@ -1122,6 +1150,16 @@ function toggleRadars() {
     }
 }
 
+function toggleAlerts() {
+    sg_alertsoff = !sg_alertsoff;
+    setTimeout(() => loadAlerts(), 100);
+    if (sg_alertsoff){
+        document.getElementById("alerttoggle").classList.remove("selected_toolbtn");
+    } else {
+        document.getElementById("alerttoggle").classList.add("selected_toolbtn");
+    }
+}
+
 function putRadarStationsOnMap() {
     if (!radarsOn) {radars.clearLayers(); return;}
     if (checkPopups(radars)){ return; }
@@ -1247,6 +1285,9 @@ function addRadarToMap (station="conus") {
         stattype = document.getElementById("prod").value + '_qcd';
     }
 
+    var idx = document.getElementById("prod").selectedIndex;
+    document.getElementById("photo-prod").innerHTML = document.getElementById("prod").options[idx].text;
+
     if (document.getElementById("prod").value == 'bvel') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/SRBVEL_CT.png"
     } else if (document.getElementById("prod").value == 'bdhc') {
@@ -1258,6 +1299,8 @@ function addRadarToMap (station="conus") {
     } else {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BREFQCD_CT.png"
     }
+
+    document.title = "Spark Radar | " + station.toUpperCase();
 
     const params = {
         REQUEST: "GetMap",
@@ -1297,8 +1340,7 @@ function addRadarToMap (station="conus") {
         document.getElementById("radarloader").style.display = "none";
         console.log(imageUrl)
         document.getElementById("infop").innerHTML = "";
-        var mapEvents = 1;
-        var canRefresh = true;
+        mapEvents -= 1;
         addRadarToMap(radarStation);
     };
 }
@@ -1539,7 +1581,7 @@ function buildAlertPopup(alertInfo, lat, lng) {
         construct = construct + '<div style="overflow-y: auto; overflow-x: clip;">'
 
         construct = construct + '<p style="margin: 0px;"><b>Expires in:</b> ' + isoTimeUntil(alertInfo.properties.expires) + '</p>';
-        construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
+        construct = construct + '<p style="margin: 0px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; text-overflow: ellipsis; line-height: 1.5em; max-height: 4.5em;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
 
         if (maxwind || maxhail || fflooddamage) {
             construct = construct + '<div style="display: flex; justify-content: space-around; margin-bottom: 20px;">'
@@ -1587,7 +1629,12 @@ function isAnyPopupOpen(layerGroup) {
 }
 
 function loadAlerts() {
-    if(isAnyPopupOpen(alerts)){ return }
+    if(isAnyPopupOpen(alerts)){ return; }
+    if(sg_alertsoff){
+        alerts.clearLayers();
+        alertDataSet = {};
+        return;
+    }
     console.log("No popup open, refreshing alerts.")
     document.getElementById("infop").innerHTML = "Loading alerts...";
     fetch('https://api.weather.gov/alerts/active', {headers: {'Accept': 'Application/geo+json'} })
@@ -2001,7 +2048,7 @@ function showSearchedLocation(lat, lon){
 function sizing(){
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 
-    if (vw > 600 && document.getElementById("drawing").style.display == 'none') {
+    if (vw > 600 && document.getElementById("drawing").style.display == 'none' && !sparkgen) {
         fadeIn("searchbox");
     } else {
         fadeOut("searchbox");
@@ -2195,13 +2242,13 @@ function toggleDrawing(tof){
         fadeOut('info');
         fadeOut('toolbar');
         fadeOut('searchbox');
-        fadeOut('menu-opener');
+        if(!sparkgen) { fadeOut('menu-opener'); } else { fadeOut('sginfo'); }
         fadeIn("drawingtoolbar");
     } else {
         canvas.style.display = "none";
         fadeIn('info');
         fadeIn('toolbar');
-        fadeIn('menu-opener');
+        if(!sparkgen) { fadeIn('menu-opener'); } else { fadeIn('sginfo'); }
         fadeOut("drawingtoolbar");
         sizing();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2360,13 +2407,15 @@ async function addWeatherRadios() {
                         const popupContent = `
                             <div style="display: flex; align-items: center; justify-content: space-around; flex-direction: row; margin: 10px;">
                                 <i class="fa-solid fa-radio" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>
-                                <p style="margin: 0px; font-size: large;">${CALLSIGN}</p>
+                                <div style="display: flex; align-items: center; flex-direction: column;">
+                                    <p style="margin: 0px; font-weight: bold; margin-bottom: 2px; font-size: large;">${CALLSIGN}</p>
+                                    <p style="margin: 0px; font-size: medium;">${STATUS.replace("NORMAL", "ONLINE")}</p>
+                                </div>
                             </div>
                             <br>
-                            <div style="font-size: 1em; margin-top: 12px;">
+                            <div style="font-size: 1em; margin-top: 0px;">
                                 <b>Frequency:</b> ${FREQ} MHz<br>
                                 <b>Location:</b> ${SITENAME}<br>
-                                <b>Status:</b> ${STATUS.replace("NORMAL", "ONLINE")}<br>
                                 <b>Provider:</b> ${streamDetails.description.replace("Stream provided by ", "")}<br>
                                 <div class="audio-controls" style="margin-top: 10px; margin-bottom: 7px;">
                                     <button onclick="togglePlayPause('${CALLSIGN}', '${streamDetails.url}', '${streamDetails.description}', '${FREQ}')" style="justify-content: center; display: flex; flex-direction: row; align-items: center; margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" class="function-btn"><i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen</button>
@@ -2595,3 +2644,402 @@ document.getElementById('dictbox').addEventListener('keypress', function (e) {
 });
 
 document.getElementById("dictbox").value = "";
+
+counties = undefined;
+
+function convertToSparkgen(toconv) {
+    sparkgen = toconv;
+    showBlackTransition();
+
+    setTimeout(() => {
+        if (toconv) {
+            sizing();
+            document.getElementById("sparkgenexit").style.display = "block";
+            document.getElementById("pmode").style.display = "block";
+            document.getElementById("clearmap").style.display = "block";
+            document.getElementById("polydraw").style.display = "block";
+            document.getElementById("styler").style.display = "block";
+            document.getElementById("insg").style.display = "block";
+            document.getElementById("sparkgenbtn").style.display = "none";
+            document.getElementById('tut-1').style.display = 'flex'
+            document.getElementById('tut-2').style.display = 'none'
+            document.getElementById('tut-3').style.display = 'none'
+            document.getElementById('tut-4').style.display = 'none'
+            document.getElementById('tut-5').style.display = 'none'
+            document.getElementById('editor').style.display = 'none'
+            document.getElementById('styles').style.display = 'none'
+            fadeOut("menu-opener");
+            fadeIn("sginfo");
+            sgdialog(true);
+
+            // Fetch county dataset
+            fetch('https://busybird15.github.io/assets/countymaps/counties-simplified.json')
+            .then(response => response.json())
+            .then(data => {
+                counties = L.geoJSON(data, { pane: 'sg', fillOpacity: 0, color: '#000000', weight: 0 }).addTo(sg);
+
+                // Convert to polygons if necessary
+                counties.eachLayer(function(layer) {
+                    if (layer.feature.geometry.type === 'Polygon' || layer.feature.geometry.type === 'MultiPolygon') {
+                        let polygonLayer = L.polygon(layer.getLatLngs(), { pane: 'sg', fillOpacity: 0, color: 'lightgray', weight: 1 }).addTo(sg);
+                        polygonLayer.customColor = 'no';
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading GeoJSON data:', error);
+            });
+            
+
+        } else {
+            sg.clearLayers();
+            sizing();
+            clearmap();
+            document.getElementById("sparkgenexit").style.display = "none";
+            document.getElementById("pmode").style.display = "none";
+            document.getElementById("polydraw").style.display = "none";
+            document.getElementById("styler").style.display = "none";
+            document.getElementById("clearmap").style.display = "none";
+            document.getElementById("insg").style.display = "none";
+            document.getElementById("sparkgenbtn").style.display = "flex";
+            fadeIn("menu-opener");
+            fadeOut("sginfo");
+        }
+
+    }, 300);
+}
+
+
+
+function updatesginfo() {
+    document.getElementById("alerttitletext").innerHTML = document.getElementById("alerttitle").value;
+    document.getElementById("sub1").innerHTML = document.getElementById("subtext1").value;
+    document.getElementById("sub2").innerHTML = document.getElementById("subtext2").value;
+    document.getElementById("disc").innerHTML = document.getElementById("discussiontext").value.replace(/\n/g, '<br>');
+
+    if (document.getElementById("disc").innerHTML == ''){
+        document.getElementById("disc").style.marginTop = '0px';
+    } else {
+        document.getElementById("disc").style.marginTop = '10px';
+    }
+}
+
+function updatesgsettings () {
+    document.getElementById("alerttitletext").value = document.getElementById("alerttitle").innerHTML;
+    document.getElementById("subtext1").value = document.getElementById("sub1").innerHTML;
+    document.getElementById("subtext2").value = document.getElementById("sub2").innerHTML;
+    document.getElementById("discussiontext").value = document.getElementById("disc").innerHTML.replace(/<br>/g, '\n');;
+}
+
+function showBlackTransition() {
+    const overlay = document.getElementById('black-overlay');
+    overlay.style.pointerEvents = 'auto';
+    overlay.style.opacity = '1';
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.pointerEvents = 'none';
+        }, 500);
+    }, 500);
+}
+
+map.on('click', function(e) {
+    if (sparkgen && !polydrawmode) {
+        var clickedPoint = e.latlng;
+        var clickedPointGeoJSON = turf.point([clickedPoint.lng, clickedPoint.lat]);
+        var fixedAnObject = false;
+
+        var reversedLayers = sg.getLayers().reverse();
+
+        reversedLayers.forEach(function(layer) {
+            if (layer instanceof L.Polygon) {
+                var polygonGeoJSON = layer.toGeoJSON();
+                var isInside = turf.booleanPointInPolygon(clickedPointGeoJSON, polygonGeoJSON);
+                if (isInside) {
+                    fixedAnObject = true;
+                    if (layer.customColor == 'yes') {
+                        layer.setStyle({ fillOpacity: 0, color: 'lightgray' });
+                        layer.customColor = 'no';
+                    } else if (layer.customColor == 'no'){
+                        layer.setStyle({ fillOpacity: 0.2, color: sg_color });
+                        layer.customColor = 'yes';
+                    }
+                }
+            }
+        });
+    }
+});
+
+
+function advanceSgTutorial() {
+    if (document.getElementById('tut-1').style.display == 'flex'){
+        document.getElementById('tut-1').style.display = 'none'
+        document.getElementById('tut-2').style.display = 'flex'
+    } else if (document.getElementById('tut-2').style.display == 'flex'){
+        document.getElementById('tut-2').style.display = 'none'
+        document.getElementById('tut-3').style.display = 'flex'
+    } else if (document.getElementById('tut-3').style.display == 'flex'){
+        document.getElementById('tut-3').style.display = 'none'
+        document.getElementById('tut-4').style.display = 'flex'
+    } else if (document.getElementById('tut-4').style.display == 'flex'){
+        document.getElementById('tut-4').style.display = 'none'
+        document.getElementById('tut-5').style.display = 'flex'
+    } else if (document.getElementById('tut-5').style.display == 'flex'){
+        document.getElementById('tut-5').style.display = 'none'
+        sgdialog(false);
+    }
+}
+
+
+var markers = [];
+var polygons = [];
+var polygon = null;
+var isDragging = false;
+
+
+function updatePolygon() {
+    if (polygon) {
+        map.removeLayer(polygon);
+    }
+    var latlngs = markers.map(m => m.getLatLng());
+    if (latlngs.length >= 3) { 
+        polygon = L.polygon(latlngs, { color: sg_color, pane: 'sg', customColor: 'noCustomColor' }).addTo(sg);
+    }
+}
+
+function createDraggableMarker(latlng) {
+    var marker = L.divIcon({
+      className: 'custom-div-icon',
+      html: "<div style='border-radius: 5px; width:20px; height:20px; background-color: white; box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 10px;'></div>",
+      iconSize: [20, 20]
+    });
+  
+    var newMarker = L.marker(latlng, { icon: marker, draggable: true }).addTo(map);
+  
+    newMarker.on('click', function() {
+        if (polydrawmode){
+            map.removeLayer(newMarker);
+            markers = markers.filter(m => m !== newMarker);
+            updatePolygon();
+        }
+    });
+  
+    newMarker.on('dragstart', function() {
+      isDragging = true;
+    });
+  
+    newMarker.on('dragend', function() {
+      isDragging = false;
+      updatePolygon();
+    });
+  
+    markers.push(newMarker);
+    updatePolygon();
+  }
+  
+
+  map.on('click', function(e) {
+    if (!isDragging && polydrawmode) {
+      createDraggableMarker(e.latlng);
+    }
+  });
+  
+
+function polydraw() {
+    polydrawmode = !polydrawmode
+    if (polydrawmode){
+        document.getElementById("polydraw").classList.add("selected_toolbtn");
+        document.getElementById("polydraw").title = "Finish drawing";
+    } else {
+        document.getElementById("polydraw").classList.remove("selected_toolbtn");
+        document.getElementById("polydraw").title = "Draw a polygon";
+
+        // Delete all markers
+        markers.forEach(function(marker) {
+            map.removeLayer(marker);
+        });
+        markers = [];
+        polygons.push(polygon);
+        polygon = null;
+    }
+}
+
+function clearmap() {
+    var reversedLayers = sg.getLayers().reverse();
+
+    reversedLayers.forEach(function(layer) {
+        if (layer.customColor == 'yes'){
+            layer.setStyle({ fillOpacity: 0, color: 'lightgray' });
+            layer.customColor = 'no';
+        }
+    });
+
+    polygons.forEach(function(poly){
+        map.removeLayer(poly);
+    });
+    polygons = [];
+
+    // Delete all markers
+    markers.forEach(function(marker) {
+        map.removeLayer(marker);
+    });
+    markers = [];
+}
+
+// ~little easter egg~
+var rainbowmode = false;
+var oeea = undefined;
+let clickCount = 0;
+let lastClickTime = 0;
+function createAudioElement() {
+    oeea = document.createElement("audio");
+    oeea.id = "oiia";
+    oeea.src = "https://www.myinstants.com/media/sounds/oiia-oiia-sound.mp3";
+    oeea.loop = true;
+    oeea.style.display = "none";
+}
+function deleteAudioElement() {
+    oeea.src = "";
+    oeea.remove();
+    oeea = undefined;
+}
+const img = document.getElementById("logo-header");
+const easteregg = document.createElement('style');
+easteregg.innerHTML = `
+    .overlay-object{
+        animation: rainbow 3s linear infinite;
+    }
+    .set-btn {
+        animation: rainbow 3s linear infinite;
+    }
+    .menuitem {
+        animation: rainbow 3s linear infinite;
+    }
+    .menuitemunavailable {
+        animation: rainbow 3s linear infinite;
+    }
+    .searchbuttons {
+        animation: rainbow 3s linear infinite;
+    }
+    .toolbtn {
+        animation: rainbow 3s linear infinite;
+    }
+    #radinfo_lna {
+        animation: rainbow 3s linear infinite;
+    }
+
+    @keyframes rainbow {
+        0% { color: red; }
+        14% { color: orange; }
+        28% { color: yellow; }
+        42% { color: green; }
+        57% { color: blue; }
+        71% { color: indigo; }
+        85% { color: violet; }
+        100% { color: red; }
+    }
+`;
+
+img.addEventListener("click", () => {
+    const currentTime = new Date().getTime();
+    if (currentTime - lastClickTime > 500) {
+        clickCount = 0;
+    }
+    clickCount++;
+    lastClickTime = currentTime;
+    if (clickCount === 10) {
+        if (rainbowmode) {
+            document.head.removeChild(easteregg);
+            oeea.pause();
+            oeea.currentTime = 0;
+            deleteAudioElement();
+        } else {
+            document.head.appendChild(easteregg);
+            createAudioElement();
+            document.body.appendChild(oeea);
+            oeea.play();
+        }
+        rainbowmode = !rainbowmode;
+        clickCount = 0;
+    }
+});
+
+function photomode(toConv=null) {
+
+    if (toConv === null || toConv === true) {
+        document.getElementById("photo-prod").style.display = 'block';
+        document.getElementById("prod").style.display = 'none';
+        document.getElementById("sg_editor").style.display = 'none';
+        document.getElementById("sg_menu").style.display = 'none';
+        fadeOut("toolbar");
+    } else {
+        document.getElementById("photo-prod").style.display = 'none';
+        document.getElementById("prod").style.display = 'block';
+        document.getElementById("sg_editor").style.display = 'block';
+        document.getElementById("sg_menu").style.display = 'block';
+        fadeIn("toolbar");
+    }
+}
+
+function legendclick() {
+    photomode(false);
+}
+
+function setStyle(color, title) {
+    document.getElementById("alerttitletext").innerHTML = title;
+    document.getElementById("alerttitle").value = title;
+    sg_color = `#${color}`;
+    var reversedLayers = sg.getLayers().reverse();
+
+    reversedLayers.forEach(function(layer) {
+        if (layer.customColor == 'yes' || layer.customColor == 'noCustomColor'){
+            layer.setStyle({ color: `#${color}` });
+        }
+    });
+    
+    polygons.forEach(function(layer) {
+        layer.setStyle({ color: `#${color}` });
+    });
+}
+
+var sgstyles = JSON.parse(localStorage.getItem('sparkgen_styles'));
+if (sgstyles) {
+    sgstyles.sort(function(a, b) {
+        return a.alert.localeCompare(b.alert);
+    });
+    var construct = '';
+    sgstyles.forEach(function(item) {
+        construct += `
+            <div onclick="setStyle('${item.color.toString()}', '${item.alert.toString()}');" class="presetitem">
+                <h2 style="color: #${item.color}">${item.alert}</h2>
+                <button><i style="font-size: 16px;" class="fa-solid fa-pen-to-square"></i></button>
+            </div>`;
+    });
+    document.getElementById("stylepresets").innerHTML = construct;
+}
+
+
+function uploadstyles() {
+    if (confirm('The uploaded styles will overwrite all existing styles and refresh the page. Proceed?')) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.addEventListener('change', function(event) {
+            const selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileContent = event.target.result;
+                    try {
+                        const jsonContent = JSON.parse(fileContent);
+                        localStorage.setItem('sparkgen_styles', JSON.stringify(jsonContent));
+                        window.location.reload();
+                    } catch (e) {
+                        window.alert("The JSON data could not be processed. The JSON file may not be a valid file.")
+                    }
+                };
+                reader.readAsText(selectedFile);
+            }
+        });
+        fileInput.click();
+    }
+}

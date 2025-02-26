@@ -21,21 +21,13 @@ body {
     width: 100%;
 }
 
-@keyframes alertpulse {
-    0% { border-color: red; }
-    50% { border-color: magenta; }
-}
-
 #map {
-    width: calc(100% - 10px);
-    height: calc(100% - 10px);
+    width: 100%;
+    height: 100%;
     position: absolute;
     top: 0px;
     left: 0px;
     z-index: 1;
-    border: 5px solid red;
-    transition-duration: 0.5s;
-    animation: alertpulse 1s infinite;
 }
   
 .hidden {
@@ -79,7 +71,7 @@ body {
     left: 10px;
     top: 10px;
     width: calc(100% - 40px);
-    max-width: 350px;
+    max-width: 300px;
     height: calc(100% - 40px);
     border-radius: 10px;
     background-color: rgba(0, 0, 0, 0.5);
@@ -102,6 +94,7 @@ body {
 
 .nav-btn:hover {
     background: #27beffff !important;
+    color: white !important;
 }
 
 .set-btn {
@@ -140,8 +133,8 @@ button {
 }
 
 .popup .leaflet-popup-tip {
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
 }
 
 .leaflet-popup-content p {
@@ -328,6 +321,7 @@ input:focus::-webkit-input-placeholder {
 .function-btn:hover {
     background: #2a7fffff;
     color: white !important;
+    box-shadow: rgba(0, 0, 0, 0.5) 0px 0px 2px;
 }
 
 .city-name {
@@ -596,4 +590,66 @@ em {
     background-size: cover;
     border-radius: 50%;
     animation: none;
+}
+
+#black-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: black;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.leaflet-fade-anim .leaflet-popup {
+    opacity: 0;
+    backdrop-filter: blur(15px);
+    -webkit-transition: opacity backdrop-filter 0.2s linear;
+    -moz-transition: opacity backdrop-filter 0.2s linear;
+    transition: opacity backdrop-filter 0.2s linear;
+}
+
+.presetitem {
+    display: flex;
+    margin-bottom: 5px;
+    width: 100%;
+    cursor: pointer;
+    border-radius: 10px;
+    background-color: #ffffff2f;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: row;
+
+}
+
+.presetitem h2 {
+    font-size: large;
+    font-weight: bold;
+    margin: 0px;
+    margin-right: 5px;
+    margin-left: 10px;
+}
+
+.presetitem button {
+    border-radius: 5px;
+    border: none;
+    padding: 5px;
+    margin: 10px;
+    color: white;
+    background: none;
+}
+
+.presetitem button:hover {
+    background-color: #ffffff40;
+}
+
+.presetitem:hover {
+    background-color: #ffffff40;
 }
