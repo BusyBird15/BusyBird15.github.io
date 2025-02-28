@@ -2670,7 +2670,7 @@ function convertToSparkgen(toconv) {
             document.getElementById('styles').style.display = 'none'
             fadeOut("menu-opener");
             fadeIn("sginfo");
-            sgdialog(true);
+            if (!localStorage.getItem("sg_hasbeenused")) { sgdialog(true); localStorage.setItem("sg_hasbeenused", true) }
 
             // Fetch county dataset
             fetch('https://busybird15.github.io/assets/countymaps/counties-simplified.json')
@@ -3043,3 +3043,5 @@ function uploadstyles() {
         fileInput.click();
     }
 }
+
+window.alert("You are using Spark Radar BETA.\nBugs or broken features are not uncommon.\nFor the stable version, visit busybird15.github.io/sparkradar.")
