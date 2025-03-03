@@ -1261,8 +1261,8 @@ function degreeToCompass(degrees) {
 function constructStormCenter(feature){
 
     var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; margin-bottom: 15px; justify-content: space-around; align-items: center;">';
-    if (360 - feature.properties.drct == 360) { var stormmarker = 'stormmarker-norot.png'; } else { var stormmarker = 'stormmarker.png'; }
-    construct += '<img src="' + stormmarker + '" style="rotate: ' + String(360 - feature.properties.drct) + 'deg; width: 40px; height: 40px; text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;">';
+    if (feature.properties.drct == 360) { var stormmarker = 'stormmarker-norot.png'; } else { var stormmarker = 'stormmarker.png'; }
+    construct += '<img src="' + stormmarker + '" style="rotate: ' + String(feature.properties.drct) + 'deg; width: 40px; height: 40px; text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;">';
     construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">Storm ' + feature.properties.storm_id + '</p>';
     if (feature.properties.sknt == 0){
         construct += '<p style="color: white">Motion unknown';
@@ -1316,11 +1316,11 @@ function loadStormCenters() {
         stormCenters.clearLayers();
         data.features.forEach(feature => {
             try {
-                const rotation = 360 - feature.properties.drct;
+                const rotation = feature.properties.drct;
                 var resultiveMarker;
                 if (rotation != 360) { resultiveMarker = "stormmarker.png" } else { resultiveMarker = "stormmarker-norot.png"}
                 const stormcentermarker = L.divIcon({
-                    html: `<img style="width: 30px; height: 30px; opacity: 0.7; rotate:${360 - feature.properties.drct}deg" src="${resultiveMarker}">`,
+                    html: `<img style="width: 30px; height: 30px; opacity: 0.7; rotate:${feature.properties.drct}deg" src="${resultiveMarker}">`,
                     iconSize: [30, 30],
                     iconAnchor: [15, 15],
                     className: ''
