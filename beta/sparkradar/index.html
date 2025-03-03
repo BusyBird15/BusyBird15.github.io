@@ -134,7 +134,8 @@ Programming of the Spark Radar project began in September 2024.
             <div onclick="dialog(true, 'settings');" class="menuitem"><i class="fa-solid fa-gear"></i><b>Settings</b></div>
             <div onclick="dialog(true, 'appinfo');" class="menuitem"><i class="fa-solid fa-circle-info"></i><b>About</b></div>
             <div onclick="dialog(true, 'about');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-circle-question"></i><b>Technical Info</b></div>
-            <a style="text-decoration: none;" target="_blank" href="maito:busybird15@mail.com"><div class="menuitem"><i class="fa-solid fa-envelope"></i><b>Contact Me</b></div></a>
+            <a style="text-decoration: none;" target="_blank" href="https://discord.com/invite/CTyybFMQrM"><div class="menuitem"><i class="fa-brands fa-discord"></i><b>Discord Server</b></div></a>
+            <a style="text-decoration: none;" target="_blank" href="maito:busybird15@mail.com"><div class="menuitem"><i class="fa-solid fa-envelope"></i><b>Email Me</b></div></a>
             <a style="text-decoration: none;" target="_blank" href="https://github.com/BusyBird15/busybird15.github.io"><div class="menuitem"><i class="fa-brands fa-github"></i><b>Github</b></div></a>
         </div>
         <!--<div id="survey" style="margin-top: 10px; color: white; background: rgb(50, 50, 50); border-radius: 10px; display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: center; height: auto;">
@@ -306,6 +307,14 @@ Programming of the Spark Radar project began in September 2024.
                             <option value="11">Least (Level 11, No lag)</option>
                             <option value="20">Never show lightning</option>
                          </select>
+
+                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>Storm Centers</b></p>
+                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Turns storm centers on or off.</p>
+                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                            <input type="checkbox" checked="true" id="stormcentertoggle" onchange="stormCentersOn = document.getElementById('stormcentertoggle').checked; if (stormCentersOn) { loadStormCenters(); } else { stormCenters.clearLayers(); }">
+                            <span class="checkmark" style="margin-right: 10px;"></span>
+                            Enable storm centers
+                        </label>
                      </div>
 
                     <div id="settmenu-alerts" style="flex-direction: column; display: none;">
@@ -377,8 +386,10 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.23</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Feb 5, 2025</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.24</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Mar 3, 2025</p>
+                <br>
+                <p style="margin: 10px 5px 5px 5px; font-size: large; width: 100%; text-align: left;"><b>Release Notes:</b><br>- Added new EAS font for Sparkgen<br>- Added storm centers<br>- Added echo tops and precipitation type radar.</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -390,6 +401,24 @@ Programming of the Spark Radar project began in September 2024.
 
             <div id="prodviewer" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
                 <p id="produc" style="color: white; font-family: Consolas, monospace, 'Cabin', sans-serif; font-size: medium;"></p>
+            </div>
+
+            <div id="radarhelp" style="color: white; height: calc(100% - 50px); margin-top: 10px; flex-direction: column; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
+                <h2 style="margin: 5px; margin-bottom: 15px;">Radar Legend Information</h2>
+                <p style="font-size: large; margin: 0px; font-weight: bold;">National (CONUS) Products</p>
+                <p style="font-size: medium; margin: 5px;"><b>Composite Refletctivity </b><em>(cref): </em>Max reflectivity value found at that point among all radar tilts.</p>
+                <p style="font-size: medium; margin: 5px;"><b>Base Refletctivity </b><em>(bref): </em>Reflectivity value at base tilt (0.5deg). This is your common radar.</p>
+                <p style="font-size: medium; margin: 5px;"><b>Echo Tops </b><em>(neet_v18): </em>Estimated top of a storm, where the precipitation stops in the atmosphere. Can indicate stronger convection.</p>
+                <p style="font-size: medium; margin: 5px; margin-bottom: 25px;"><b>Precipitation Type </b><em>(pcpn_typ): </em>Digital estimation of falling precipitation.<br>WS: Warm Stratiform rain; S: Snow; C: Convective rain; H: Hail; CS: Cool Stratiform rain; ST: Tropical/Stratiform rain mix; CT: Tropical/Convective rain mix</p>
+    
+                <p style="font-size: large; margin: 0px; font-weight: bold;">Station (WSR-88D) Products</p>
+                <p style="font-size: medium; margin: 5px;"><b>Base Refletctivity: </b>Reflectivity value at base tilt (0.5deg). This is your common radar.</p>
+                <p style="font-size: medium; margin: 5px;"><b>Base Velocity: </b>Shows the motion and speed of particles; indicates wind speed and direction. Can identify a tornado.</p>
+                <p style="font-size: medium; margin: 5px;"><b>Digital Hydrometer Classification: </b>Digital estimation of falling precipitation. <br>BI: Biological;  GC: Clutter;  IC: Ice Crystals;  DS: Dry Snow;  WS: Wet Snow;  RA: Rain;  HR: Heavy Rain;  BD: Big Drops;  GR: Graupel;  HA: Hail-Rain;  UK: Unknown</p>
+                <p style="font-size: medium; margin: 5px; margin-bottom: 25px;"><b>Rainfall Accumulation: </b>Digital estimation of how much rain has fallen over the past hour or from a storm system.</p>
+            
+                <p style="font-size: medium; margin: 5px;"><b>More info: </b><a href="https://www.weather.gov/radarfaq">weather.gov/radarfaq</a></p>
+
             </div>
         </div>
     </div>
@@ -524,7 +553,7 @@ Programming of the Spark Radar project began in September 2024.
     <p id="textattr" style="position: absolute; bottom: 45px; right: 10px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
 
     <!--Radar Legend-->
-    <img id="radarlegend" style="position: absolute; border-radius: 10px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
+    <img id="radarlegend" onclick="dialog(true, 'radarhelp')" style="cursor: pointer; position: absolute; border-radius: 10px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
 
     <!--Canvas for drawing-->
     <canvas id="drawing" style="background: none; display: none; cursor: crosshair; position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 101;" style="cursor: crosshair;"></canvas>

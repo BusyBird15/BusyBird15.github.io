@@ -31,6 +31,7 @@ map.createPane('radios');
 map.createPane('reports');
 map.createPane('lightning');
 map.createPane('sg');
+map.createPane('sc');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 250;
@@ -40,6 +41,7 @@ map.getPane('lightning').style.zIndex = 400;
 map.getPane('watches').style.zIndex = 500;
 map.getPane('alerts').style.zIndex = 600;
 map.getPane('radars').style.zIndex = 650;
+map.getPane('sc').style.zIndex = 650;
 map.getPane('radios').style.zIndex = 650;
 map.getPane('reports').style.zIndex = 700;
 
@@ -52,6 +54,7 @@ var radios = L.layerGroup().addTo(map);
 var reports = L.layerGroup().addTo(map);
 var lightningdata = L.layerGroup().addTo(map);
 var sg = L.layerGroup().addTo(map);
+var stormCenters = L.layerGroup().addTo(map);
 
 
 // Maps
@@ -105,6 +108,7 @@ var sparkgen = false;
 var sg_alertsoff = false;
 var polydrawmode = false;
 var sg_color = 'red';
+var stormCentersOn = true;
 
 // Database of alert colors
 var alertcolors = {
@@ -275,6 +279,7 @@ function saveSettings() {
         'out': spcEnabled,
         'rad': weatherRadioVisible,
         'def': definitions,
+        'scs': stormCentersOn,
     };
     localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
     console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
@@ -314,6 +319,13 @@ try {
             watchesEnabled = document.getElementById('wwtoggle').checked;
             if (watchesEnabled) { loadWatches(); }
             else { watches.clearLayers(); }
+        } catch {}
+
+        try {
+            document.getElementById('stormcentertoggle').checked = settings.scs;
+            stormCentersOn = document.getElementById('stormcentertoggle').checked;
+            if (stormCentersOn) { loadStormCenters(); }
+            else { stormCenters.clearLayers(); }
         } catch {}
 
         try {
@@ -838,7 +850,7 @@ function loadrisks() {
 
 
 function dialog(toOpen, object=null, producttoview){
-    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook', 'dictionary'];
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook', 'dictionary', 'radarhelp'];
     if (toOpen) {
         fadeIn("dialog");
         fadeIn("innerdialog");
@@ -1226,6 +1238,118 @@ setTimeout(() => putRadarStationsOnMap(), 100);
 setInterval(() => putRadarStationsOnMap(), 15000);
 
 
+
+function knotsToMph(knots) {
+    return Math.ceil(knots * 1.15078);
+}
+
+function knotsToKph(knots) {
+    return Math.ceil(knots * 1.852);
+}
+
+function kmToM(km) {
+    return Math.ceil(km / 1.609);
+}
+
+function degreeToCompass(degrees) {
+    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const index = Math.round(degrees / 45) % 8;
+    return directions[index];
+}
+
+
+function constructStormCenter(feature){
+
+    var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; margin-bottom: 15px; justify-content: space-around; align-items: center;">';
+    if (360 - feature.properties.drct == 360) { var stormmarker = 'stormmarker-norot.png'; } else { var stormmarker = 'stormmarker.png'; }
+    construct += '<img src="' + stormmarker + '" style="rotate: ' + String(360 - feature.properties.drct) + 'deg; width: 40px; height: 40px; text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;">';
+    construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">Storm ' + feature.properties.storm_id + '</p>';
+    if (feature.properties.sknt == 0){
+        construct += '<p style="color: white">Motion unknown';
+    } else {
+        construct += '<p style="color: white">Moving ' + knotsToMph(feature.properties.sknt) + ' mph ' + degreeToCompass(feature.properties.drct);
+    }
+        construct += '</p></div></div>'
+    
+    if (feature.properties.meso != "NONE") {
+        if (feature.properties.meso == 1){
+            var meso = 'VERY WEAK';
+        } else if (feature.properties.meso == 2){
+            var meso = 'WEAK';
+        } else if (feature.properties.meso == 3){
+            var meso = 'AVERAGE';
+        } else if (feature.properties.meso == 4){
+            var meso = 'STRONG';
+        } else if (feature.properties.meso == 5){
+            var meso = 'VERY STRONG';
+        } else {
+            var meso = String(feature.properties.meso) + '/5';
+        }
+    } else {
+        var meso = feature.properties.meso
+    }
+    construct += '<p style="margin: 5px;"><b>TVS: </b>' + feature.properties.tvs + ' / <b>MESO: </b>' + meso + '</p>'
+    construct += '<p style="margin: 5px;"><b>VIL: </b>' + feature.properties.vil + ' kg/m²</p>'
+    construct += '<p style="margin: 5px;"><b>Storm top: </b>' + kmToM(feature.properties.top) + ' mi ASL</p>'
+    construct += '<p style="margin: 5px;"><b>Hail Odds: </b>' + feature.properties.poh + '% / ' + feature.properties.posh + '% (' + feature.properties.max_size + ' in.)</p>'
+
+    
+    construct += '';
+
+    return construct;
+}
+
+// Storm centers
+function loadStormCenters() {
+    if (!stormCentersOn) {sc.clearLayers(); return;}
+    if (checkPopups(stormCenters)){ return; }
+    console.info("Updating storm centers.")
+    document.getElementById("infop").innerHTML = "Loading storm centers...";
+    fetch('https://mesonet.agron.iastate.edu/geojson/nexrad_attr.py')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        stormCenters.clearLayers();
+        data.features.forEach(feature => {
+            try {
+                const rotation = 360 - feature.properties.drct;
+                var resultiveMarker;
+                if (rotation != 360) { resultiveMarker = "stormmarker.png" } else { resultiveMarker = "stormmarker-norot.png"}
+                const stormcentermarker = L.divIcon({
+                    html: `<img style="width: 30px; height: 30px; opacity: 0.7; rotate:${360 - feature.properties.drct}deg" src="${resultiveMarker}">`,
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15],
+                    className: ''
+                });
+                var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: stormcentermarker, pane: 'sc' }).addTo(stormCenters);
+            
+            } catch (error) {console.error(error);}
+
+            marker.bindPopup(constructStormCenter(feature), {
+                "autoPan": true,
+                "maxHeight": 500,
+                "maxWidth": 500,
+                "className": "popup",
+                "autoPanPadding": [10, 110],
+            });
+            document.getElementById("infop").innerHTML = "";
+        });
+    })
+    .catch(error => {
+        console.error('loadStormCenters() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
+    });
+}
+
+// Plot the storm centers, then keep updating them
+setTimeout(() => loadStormCenters(), 100);
+setInterval(() => loadStormCenters(), 30000);
+
+
 // Function to build the tileserver URL
 function tileURL(baseURL, params) {
     const url = new URL(baseURL);
@@ -1280,9 +1404,13 @@ function addRadarToMap (station="conus") {
         }
     } else {
         thisprod = document.getElementById("prod").value;
-        document.getElementById("prod").innerHTML = '<option value="conus_cref">Composite Reflectivity</option><option value="conus_bref">Base Reflectivity</option>';
+        document.getElementById("prod").innerHTML = '<option value="conus_cref">Composite Reflectivity</option><option value="conus_bref">Base Reflectivity</option><option value="conus_neet_v18">Echo Tops</option><option value="conus_pcpn_typ">Precipitation Type</option>';
         document.getElementById("prod").value = thisprod;
-        stattype = document.getElementById("prod").value + '_qcd';
+        if (document.getElementById("prod").value != 'conus_neet_v18' && document.getElementById("prod").value != 'conus_pcpn_typ'){
+            stattype = document.getElementById("prod").value + '_qcd';
+        } else {
+            stattype = document.getElementById("prod").value
+        }
     }
 
     var idx = document.getElementById("prod").selectedIndex;
@@ -1294,6 +1422,10 @@ function addRadarToMap (station="conus") {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BDHC_CT.png"
     } else if (document.getElementById("prod").value == 'boha') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BOHA_CT.png"
+    } else if (document.getElementById("prod").value == 'conus_pcpn_typ') {
+        document.getElementById("radarlegend").src = "https://www.weather.gov/images/nws/radarfaq/PCPNTYP_CT.png"
+    } else if (document.getElementById("prod").value == 'conus_neet_v18') {
+        document.getElementById("radarlegend").src = "https://www.weather.gov/images/nws/radarfaq/NEETV18_CT.png"
     } else if (document.getElementById("prod").value == 'bdsa') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BDSA_CT.png"
     } else {
@@ -1656,7 +1788,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FA, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flood warnings - lower importance
         data.features.forEach(function(alert) {
@@ -1667,7 +1799,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flash Flood warnings - less importance
         data.features.forEach(function(alert) {
@@ -1678,7 +1810,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Marine Statements - low importance
         data.features.forEach(function(alert) {
@@ -1689,7 +1821,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SMW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flash Flood Emergencies - medium importance
         data.features.forEach(function(alert) {
@@ -1700,7 +1832,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFE, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // SW Statements - high importance
         data.features.forEach(function(alert) {
@@ -1711,7 +1843,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SWS, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // SVR - higher importance
         data.features.forEach(function(alert) {
@@ -1726,7 +1858,7 @@ function loadAlerts() {
                     }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // TOR - near highest importance
         data.features.forEach(function(alert) {
@@ -1743,7 +1875,7 @@ function loadAlerts() {
                     }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Extreme Wind Warning - highest importance
         data.features.forEach(function(alert) {
@@ -1755,7 +1887,7 @@ function loadAlerts() {
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
 
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         document.getElementById("infop").innerHTML = "";
     })

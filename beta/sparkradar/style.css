@@ -29,16 +29,6 @@ body {
     left: 0px;
     z-index: 1;
 }
-
-@font-face {
-  font-family: 'eas';
-  src: url('easvhs.ttf') format('truetype');
-}
-
-.easfont {
-  font-family: 'eas';
-  line-height: 1.5;
-}
   
 .hidden {
     opacity: 0 !important;
