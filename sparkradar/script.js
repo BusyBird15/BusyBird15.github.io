@@ -10,7 +10,7 @@ if (maplat && maplon) {
         var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([maplat, maplon], mapz);
     } else {
         var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([maplat, maplon], 7);
-    }
+    }f
 } else {
     var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([38.0, -100.4], 4);
 }
@@ -3193,4 +3193,3 @@ function uploadstyles() {
     }
 }
 
-window.alert("You are using Spark Radar BETA.\nBugs or broken features are not uncommon.\nFor the stable version, visit busybird15.github.io/sparkradar.")
