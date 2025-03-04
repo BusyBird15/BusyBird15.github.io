@@ -3,6 +3,7 @@
 **Portfolio / Home:** https://busybird15.github.io
 
 **Spark Radar (stable):** https://busybird15.github.io/sparkradar/
+Wiki: https://github.com/BusyBird15/BusyBird15.github.io/wiki/Spark-Radar-Tutorial
 
 **The Weather Team Main Site:** https://busybird15.github.io/theweatherteam
 
