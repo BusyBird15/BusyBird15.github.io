@@ -10,7 +10,7 @@ if (maplat && maplon) {
         var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([maplat, maplon], mapz);
     } else {
         var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([maplat, maplon], 7);
-    } if
+    } 
 } else {
     var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([38.0, -100.4], 4);
 }
