@@ -30,6 +30,8 @@ map.createPane('radars');
 map.createPane('radios');
 map.createPane('reports');
 map.createPane('lightning');
+map.createPane('sg');
+map.createPane('sc');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 250;
@@ -37,7 +39,9 @@ map.getPane('cities').style.zIndex = 300;
 map.getPane('lightning').style.zIndex = 400;
 map.getPane('watches').style.zIndex = 500;
 map.getPane('alerts').style.zIndex = 600;
+map.getPane('sg').style.zIndex = 625;
 map.getPane('radars').style.zIndex = 650;
+map.getPane('sc').style.zIndex = 650;
 map.getPane('radios').style.zIndex = 650;
 map.getPane('reports').style.zIndex = 700;
 
@@ -49,6 +53,8 @@ var radars = L.layerGroup().addTo(map);
 var radios = L.layerGroup().addTo(map);
 var reports = L.layerGroup().addTo(map);
 var lightningdata = L.layerGroup().addTo(map);
+var sg = L.layerGroup().addTo(map);
+var stormCenters = L.layerGroup().addTo(map);
 
 
 // Maps
@@ -98,6 +104,11 @@ var spcEnabled = true;
 let weatherRadioMarkers = [];
 let weatherRadioVisible = true;
 var definitions = true;
+var sparkgen = false;
+var sg_alertsoff = false;
+var polydrawmode = false;
+var sg_color = 'red';
+var stormCentersOn = true;
 
 // Database of alert colors
 var alertcolors = {
@@ -248,25 +259,6 @@ flashingstyles.type = 'text/css';
 updateflashes();
 document.head.appendChild(flashingstyles);
 
-
-function outlinecolor (enable) {
-    if (enable) {
-        themap = document.getElementById("map");
-        themap.style.width = "calc(100% - 10px)";
-        themap.style.height = "calc(100% - 10px)";
-        themap.style.animation = "alertpulse 1s infinite";
-        themap.style.border = "5px solid red";
-    } else {
-        themap = document.getElementById("map");
-        themap.style.width = "calc(100% - 10px)";
-        themap.style.height = "calc(100% - 10px)";
-        themap.style.animation = "none";
-        themap.style.border = "5px solid black";
-    }
-}
-
-outlinecolor(false);
-
 // Stored settings management
 function saveSettings() {
     var mapMode = 0;
@@ -287,6 +279,7 @@ function saveSettings() {
         'out': spcEnabled,
         'rad': weatherRadioVisible,
         'def': definitions,
+        'scs': stormCentersOn,
     };
     localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
     console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
@@ -326,6 +319,13 @@ try {
             watchesEnabled = document.getElementById('wwtoggle').checked;
             if (watchesEnabled) { loadWatches(); }
             else { watches.clearLayers(); }
+        } catch {}
+
+        try {
+            document.getElementById('stormcentertoggle').checked = settings.scs;
+            stormCentersOn = document.getElementById('stormcentertoggle').checked;
+            if (stormCentersOn) { loadStormCenters(); }
+            else { stormCenters.clearLayers(); }
         } catch {}
 
         try {
@@ -682,7 +682,7 @@ function loadProd(producttoview) {
                     return response.json();
                 })
                 .then(data => {
-                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + String(data.productText).replace(/\n/g, "<br>");
+                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + String(data.productText)(/\n/g, "<br>");
                 })
                 .catch(error => {
                     console.error('loadProd() > fetch() > fetch() > ', error);
@@ -769,9 +769,9 @@ function loadProd(producttoview) {
     }
 }
 
-function loadrisks() {
+function loadrisks(day=1) {
     document.getElementById("risktext").innerHTML = "Loading...";
-    const url = 'https://www.spc.noaa.gov/products/outlook/day1otlk.html';
+    const url = `https://www.spc.noaa.gov/products/outlook/day${day}otlk.html`;
 
     fetch(url)
     .then(response => {
@@ -828,19 +828,35 @@ function loadrisks() {
         }
         console.log(nameMatch);
 
-        if (discussionText.includes("HIGH RISK")) { var risklevel = "High (5/5)" }
-        else if (discussionText.includes("MODERATE RISK")) { var risklevel = "Moderate (4/5)" }
-        else if (discussionText.includes("ENHANCED RISK")) { var risklevel = "Enhanced (3/5)" }
-        else if (discussionText.includes("SLIGHT RISK")) { var risklevel = "Slight (2/5)" }
-        else if (discussionText.includes("MARGINAL RISK")) { var risklevel = "Marginal (1/5)" }
-        else if (discussionText.includes("NO THUNDERSTORM AREAS FORECAST")) { var risklevel = "No storms expected" }
-        else { var risklevel = "General (No severe storms expected)" }
+        if (discussionText.includes("HIGH RISK")) { var risklevel = "High (5/5)"; var spccolor = "#f31bff"; }
+        else if (discussionText.includes("MODERATE RISK")) { var risklevel = "Moderate (4/5)"; var spccolor = "#cb0000"; }
+        else if (discussionText.includes("ENHANCED RISK")) { var risklevel = "Enhanced (3/5)"; var spccolor = "#cf8600"; }
+        else if (discussionText.includes("SLIGHT RISK")) { var risklevel = "Slight (2/5)"; var spccolor = "#a3a32e"; }
+        else if (discussionText.includes("MARGINAL RISK")) { var risklevel = "Marginal (1/5)"; var spccolor = "#008d00"; }
+        else if (discussionText.includes("NO THUNDERSTORM AREAS FORECAST")) { var risklevel = "No storms expected"; var spccolor = "none"; }
+        else { var risklevel = "General (No severe storms expected)"; var spccolor = "#65ab65"; }
 
-        var construct = '<p style="margin: 0px 0px 5px 0px;"><b>Level: </b>' + risklevel + '</p>'
+        var construct = '<p style="margin: 0px 0px 5px 0px;"><b>Level: </b><i style="border-radius: 5px; padding: 2px; background: ' + spccolor + ';">' + risklevel + '</i></p>'
         var construct = construct + '<p style="margin: 0px 0px 5px 0px;"><b>Issued: </b>' + spcIssuedTime + '</p>'
         var construct = construct + '<p style="margin: 0px 0px 0px 0px;"><b>Forecaster: </b>' + forecaster + '</p>'
 
         document.getElementById("risklevelstats").innerHTML = construct;
+
+        if (day == 3){
+            document.getElementById("row2").style.display = 'none';
+            document.getElementById("swody1").src = 'https://spc.noaa.gov/partners/outlooks/national/swody3.png';
+            document.getElementById("swody1_TORN").src = `https://spc.noaa.gov/partners/outlooks/national/swody3_PROB.png`;
+        } else {
+            document.getElementById("row2").style.display = 'flex';
+            document.getElementById("swody1").src = `https://spc.noaa.gov/partners/outlooks/national/swody${day}.png`;
+            document.getElementById("swody1_TORN").src = `https://spc.noaa.gov/partners/outlooks/national/swody${day}_TORN.png`;
+            document.getElementById("swody1_HAIL").src = `https://spc.noaa.gov/partners/outlooks/national/swody${day}_HAIL.png`;
+            document.getElementById("swody1_WIND").src = `https://spc.noaa.gov/partners/outlooks/national/swody${day}_WIND.png`;
+        }
+        document.getElementById(`spc1`).style.background = "gray";
+        document.getElementById(`spc2`).style.background = "gray";
+        document.getElementById(`spc3`).style.background = "gray";
+        document.getElementById(`spc${day}`).style.background = "#27beffff";
     })
     .catch(error => {
         document.getElementById("risktext").innerHTML = "Failed to load data.";
@@ -850,7 +866,7 @@ function loadrisks() {
 
 
 function dialog(toOpen, object=null, producttoview){
-    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook', 'dictionary'];
+    const objects = ['settings', 'appinfo', 'alertinfo', 'about', 'soundingviewer', 'prodviewer', 'conditions', 'spcoutlook', 'dictionary', 'radarhelp'];
     if (toOpen) {
         fadeIn("dialog");
         fadeIn("innerdialog");
@@ -885,6 +901,43 @@ function wfodialog(toOpen){
         fadeOut("wfodialog");
         fadeOut("innerwfodialog");
         document.getElementById("innerdialog").style.scale = "70%";
+    }
+}
+
+function styles() {
+    sgdialog(true, 'styles');
+}
+
+function sgdialog(toOpen, object=null){
+    objects = ['tut-1', 'tut-2', 'tut-3', 'editor', 'styles']
+    if (toOpen) {
+        updatesgsettings();
+        fadeIn("sgdialog");
+        fadeIn("innersgdialog");
+        if (object) {
+            document.getElementById(object).style.display = 'flex';
+            objects.forEach(function(obj) {
+                if (obj != object) { document.getElementById(obj).style.display = 'none'; }
+            })
+        }
+        if (object == 'editor') {
+            document.getElementById('tut-advance').style.display = 'none';
+            document.getElementById('sgdialog-closer').style.display = 'flex';
+            document.getElementById('innersgdialog').style.justifyContent = 'flex-start';
+        } else if (object == 'styles') {
+            document.getElementById('tut-advance').style.display = 'none';
+            document.getElementById('sgdialog-closer').style.display = 'flex';
+            document.getElementById('innersgdialog').style.justifyContent = 'flex-start';
+        } else {
+            document.getElementById('tut-advance').style.display = 'flex';
+            document.getElementById('sgdialog-closer').style.display = 'none';
+            document.getElementById('innersgdialog').style.justifyContent = 'space-between';
+        }
+    } else {
+        fadeOut("sgdialog");
+        fadeOut("innersgdialog");
+        document.getElementById("innerdialog").style.scale = "70%";
+        updatesginfo();
     }
 }
 
@@ -985,8 +1038,11 @@ function openAlertProduct(alertInfoId) {
         .replace("IMPACTS", '<b style="font-family: Consolas, monospace, sans-serif !important;">IMPACTS</b>')
         .replace("HAZARDS", '<b style="font-family: Consolas, monospace, sans-serif !important;">HAZARDS</b>')
         .replace("SOURCE", '<b style="font-family: Consolas, monospace, sans-serif !important;">SOURCE</b>')
-        .replace("IMPACT", '<b style="font-family: Consolas, monospace, sans-serif !important;">IMPACT</b>')
+        .replace("LOCATIONS IMPACTED INCLUDE", '<b style="font-family: Consolas, monospace, sans-serif !important;">LOCATIONS IMPACTED INCLUDE</b>')
         .replace("HAZARD", '<b style="font-family: Consolas, monospace, sans-serif !important;">HAZARD</b>')
+        .replace("LOCATION AND MOVEMENT", '<b style="font-family: Consolas, monospace, sans-serif !important;">LOCATION AND MOVEMENT</b>')
+        .replace("IMPACT", '<b style="font-family: Consolas, monospace, sans-serif !important;">IMPACT</b>')
+        .replace("SAFETY INFO", '<b style="font-family: Consolas, monospace, sans-serif !important;">SAFETY INFO</b>')
         .replace("ADDITIONAL DETAILS", '<b style="font-family: Consolas, monospace, sans-serif !important;">ADDITIONAL DETAILS</b>')
         .replace("Locations impacted include", '<b style="font-family: Consolas, monospace, sans-serif !important;">Locations impacted include</b>')
 
@@ -1122,6 +1178,16 @@ function toggleRadars() {
     }
 }
 
+function toggleAlerts() {
+    sg_alertsoff = !sg_alertsoff;
+    setTimeout(() => loadAlerts(), 100);
+    if (sg_alertsoff){
+        document.getElementById("alerttoggle").classList.remove("selected_toolbtn");
+    } else {
+        document.getElementById("alerttoggle").classList.add("selected_toolbtn");
+    }
+}
+
 function putRadarStationsOnMap() {
     if (!radarsOn) {radars.clearLayers(); return;}
     if (checkPopups(radars)){ return; }
@@ -1188,6 +1254,108 @@ setTimeout(() => putRadarStationsOnMap(), 100);
 setInterval(() => putRadarStationsOnMap(), 15000);
 
 
+
+function knotsToMph(knots) {
+    return Math.ceil(knots * 1.15078);
+}
+
+function knotsToKph(knots) {
+    return Math.ceil(knots * 1.852);
+}
+
+function kmToM(km) {
+    return Math.ceil(km / 1.609);
+}
+
+function degreeToCompass(degrees) {
+    const directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+    const index = Math.round(degrees / 45) % 8;
+    return directions[index];
+}
+
+
+function constructStormCenter(feature){
+
+    var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; margin-bottom: 15px; justify-content: space-around; align-items: center;">';
+    if (feature.properties.sknt == 0) { var stormmarker = 'stormmarker-norot.png'; } else { var stormmarker = 'stormmarker.png'; }
+    construct += '<img src="' + stormmarker + '" style="rotate: ' + String(270 - feature.properties.drct) + 'deg; width: 40px; height: 40px; text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;">';
+    construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">Storm ' + feature.properties.storm_id + '</p>';
+    if (feature.properties.sknt == 0){
+        construct += '<p style="color: white">Motion unknown';
+    } else {
+        construct += '<p style="color: white">Moving ' + knotsToMph(feature.properties.sknt) + ' mph ' + degreeToCompass(270 - feature.properties.drct);
+    }
+        construct += '</p></div></div>'
+    
+    if (feature.properties.meso != "NONE") {
+        var meso = String(feature.properties.meso) + '/10';
+    } else {
+        var meso = feature.properties.meso
+    }
+    if (feature.properties.tvs == "NONE" && feature.properties.meso == "NONE"){} else {
+        construct += '<p style="margin: 5px;"><b style="color: red;">TVS: </b>' + feature.properties.tvs + ' / <b style="color: orange;">MESO: </b>' + meso + '</p>'
+    }
+    construct += '<p style="margin: 5px;"><b>VIL: </b>' + feature.properties.vil + ' kg/m²</p>'
+    construct += '<p style="margin: 5px;"><b>Storm top: </b>' + kmToM(feature.properties.top) + ' mi ASL</p>'
+    construct += '<p style="margin: 5px;"><b>Hail Odds: </b>' + feature.properties.poh + '% / ' + feature.properties.posh + '% (' + feature.properties.max_size + ' in.)</p>'
+
+    
+    construct += '';
+
+    return construct;
+}
+
+// Storm centers
+function loadStormCenters() {
+    if (!stormCentersOn) {stormCenters.clearLayers(); return;}
+    if (checkPopups(stormCenters)){ return; }
+    console.info("Updating storm centers.")
+    document.getElementById("infop").innerHTML = "Loading storm centers...";
+    fetch('https://mesonet.agron.iastate.edu/geojson/nexrad_attr.py')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        stormCenters.clearLayers();
+        data.features.forEach(feature => {
+            try {
+                const rotation = 270 - feature.properties.drct;
+                var resultiveMarker;
+                if (feature.properties.sknt == 0) { resultiveMarker = "stormmarker-norot.png" } else { resultiveMarker = "stormmarker.png"}
+                if (feature.properties.vil > 3) {
+                    const stormcentermarker = L.divIcon({
+                        html: `<img style="width: 30px; height: 30px; opacity: 0.7; rotate:${270 - feature.properties.drct}deg" src="${resultiveMarker}">`,
+                        iconSize: [30, 30],
+                        iconAnchor: [15, 15],
+                        className: ''
+                    });
+                    var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], { icon: stormcentermarker, pane: 'sc' }).addTo(stormCenters);
+                    marker.bindPopup(constructStormCenter(feature), {
+                        "autoPan": true,
+                        "maxHeight": 500,
+                        "maxWidth": 500,
+                        "className": "popup",
+                        "autoPanPadding": [10, 110],
+                    });
+                }
+            } catch (error) {console.error(error);}
+            document.getElementById("infop").innerHTML = "";
+        });
+    })
+    .catch(error => {
+        console.error('loadStormCenters() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
+    });
+}
+
+// Plot the storm centers, then keep updating them
+setTimeout(() => loadStormCenters(), 100);
+setInterval(() => loadStormCenters(), 30000);
+
+
 // Function to build the tileserver URL
 function tileURL(baseURL, params) {
     const url = new URL(baseURL);
@@ -1242,10 +1410,17 @@ function addRadarToMap (station="conus") {
         }
     } else {
         thisprod = document.getElementById("prod").value;
-        document.getElementById("prod").innerHTML = '<option value="conus_cref">Composite Reflectivity</option><option value="conus_bref">Base Reflectivity</option>';
+        document.getElementById("prod").innerHTML = '<option value="conus_cref">Composite Reflectivity</option><option value="conus_bref">Base Reflectivity</option><option value="conus_neet_v18">Echo Tops</option><option value="conus_pcpn_typ">Precipitation Type</option>';
         document.getElementById("prod").value = thisprod;
-        stattype = document.getElementById("prod").value + '_qcd';
+        if (document.getElementById("prod").value != 'conus_neet_v18' && document.getElementById("prod").value != 'conus_pcpn_typ'){
+            stattype = document.getElementById("prod").value + '_qcd';
+        } else {
+            stattype = document.getElementById("prod").value
+        }
     }
+
+    var idx = document.getElementById("prod").selectedIndex;
+    document.getElementById("photo-prod").innerHTML = document.getElementById("prod").options[idx].text;
 
     if (document.getElementById("prod").value == 'bvel') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/SRBVEL_CT.png"
@@ -1253,11 +1428,17 @@ function addRadarToMap (station="conus") {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BDHC_CT.png"
     } else if (document.getElementById("prod").value == 'boha') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BOHA_CT.png"
+    } else if (document.getElementById("prod").value == 'conus_pcpn_typ') {
+        document.getElementById("radarlegend").src = "https://www.weather.gov/images/nws/radarfaq/PCPNTYP_CT.png"
+    } else if (document.getElementById("prod").value == 'conus_neet_v18') {
+        document.getElementById("radarlegend").src = "https://www.weather.gov/images/nws/radarfaq/NEETV18_CT.png"
     } else if (document.getElementById("prod").value == 'bdsa') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BDSA_CT.png"
     } else {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/BREFQCD_CT.png"
     }
+
+    document.title = "Spark Radar | " + station.toUpperCase();
 
     const params = {
         REQUEST: "GetMap",
@@ -1297,8 +1478,7 @@ function addRadarToMap (station="conus") {
         document.getElementById("radarloader").style.display = "none";
         console.log(imageUrl)
         document.getElementById("infop").innerHTML = "";
-        var mapEvents = 1;
-        var canRefresh = true;
+        mapEvents -= 1;
         addRadarToMap(radarStation);
     };
 }
@@ -1539,7 +1719,7 @@ function buildAlertPopup(alertInfo, lat, lng) {
         construct = construct + '<div style="overflow-y: auto; overflow-x: clip;">'
 
         construct = construct + '<p style="margin: 0px;"><b>Expires in:</b> ' + isoTimeUntil(alertInfo.properties.expires) + '</p>';
-        construct = construct + '<p style="margin: 0px;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
+        construct = construct + '<p style="margin: 0px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; text-overflow: ellipsis; line-height: 1.5em; max-height: 4.5em;"><b>Areas:</b> ' + alertInfo.properties.areaDesc + '</p><br>'
 
         if (maxwind || maxhail || fflooddamage) {
             construct = construct + '<div style="display: flex; justify-content: space-around; margin-bottom: 20px;">'
@@ -1587,7 +1767,12 @@ function isAnyPopupOpen(layerGroup) {
 }
 
 function loadAlerts() {
-    if(isAnyPopupOpen(alerts)){ return }
+    if(isAnyPopupOpen(alerts)){ return; }
+    if(sg_alertsoff){
+        alerts.clearLayers();
+        alertDataSet = {};
+        return;
+    }
     console.log("No popup open, refreshing alerts.")
     document.getElementById("infop").innerHTML = "Loading alerts...";
     fetch('https://api.weather.gov/alerts/active', {headers: {'Accept': 'Application/geo+json'} })
@@ -1609,7 +1794,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FA, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flood warnings - lower importance
         data.features.forEach(function(alert) {
@@ -1620,7 +1805,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flash Flood warnings - less importance
         data.features.forEach(function(alert) {
@@ -1631,7 +1816,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Marine Statements - low importance
         data.features.forEach(function(alert) {
@@ -1642,7 +1827,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SMW, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Flash Flood Emergencies - medium importance
         data.features.forEach(function(alert) {
@@ -1653,7 +1838,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFE, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // SW Statements - high importance
         data.features.forEach(function(alert) {
@@ -1664,7 +1849,7 @@ function loadAlerts() {
                     var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SWS, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // SVR - higher importance
         data.features.forEach(function(alert) {
@@ -1679,7 +1864,7 @@ function loadAlerts() {
                     }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // TOR - near highest importance
         data.features.forEach(function(alert) {
@@ -1696,7 +1881,7 @@ function loadAlerts() {
                     }
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         // Extreme Wind Warning - highest importance
         data.features.forEach(function(alert) {
@@ -1708,7 +1893,7 @@ function loadAlerts() {
                     polygon.bindPopup(buildAlertPopup(alert, reverseSubarrays(thisItem)[0][0], reverseSubarrays(thisItem)[0][1]), {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'});
                 }
 
-            } catch (error) { if (!String(error).includes("Cannot read properties of null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
         document.getElementById("infop").innerHTML = "";
     })
@@ -1893,7 +2078,7 @@ function buildWatchPopup(alertInfo, lat, lng) {
 
         alertTitle = alertTitle + "#" + alertInfo.properties.NUM;
         var timestamp = new Date().getTime();
-        var construct = '<div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: medium; font-weight: bolder; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';"><b>' + alertTitle + '</b></div><br>';
+        var construct = '<div style="display: flex; justify-content: center; width: auto; padding: 5px; border-radius: 5px; font-size: medium; font-weight: bolder; box-shadow: rgb(0, 0, 0, 0.8) 0px 0px 10px; background-color: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + ';"><b>' + alertTitle + '</b></div><br>';
         construct = construct + '<p style="margin: 0px; margin-bottom: 10px;"><b>Expires in:</b> ' + isoTimeUntil(convertToIso(String(alertInfo.properties.EXPIRE))) + '</p>';
         construct = construct + '<p style="margin: 0px;"><b>Max Hail Size:</b> ' + alertInfo.properties.MAX_HAIL + '"</p>';
         construct = construct + '<p style="margin: 0px;"><b>Max Wind Gusts:</b> ' + Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945) + 'mph</p><br>';
@@ -1915,10 +2100,21 @@ function loadWatches() {
 
     document.getElementById("infop").innerHTML = "Loading watches...";
     console.info("Getting alerts");
-    var currentDate = new Date();
-    currentDate.setMonth(currentDate.getMonth() + 1);
 
-    fetch('https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=' + currentDate.getUTCFullYear() + '&month1=' + currentDate.getUTCMonth() + '&day1=' + currentDate.getDate() + '&hour1=0&minute1=0&year2=' + currentDate.getUTCFullYear() + '&month2=' + currentDate.getUTCMonth() + '&day2=' + currentDate.getDate() + '&hour2=23&minute2=0&format=geojson', {headers: {'Accept': 'Application/geo+json'} })
+    // Watch fetch script from wxtership
+    const now = new Date();
+    const year = now.getUTCFullYear();
+    const month = String(now.getUTCMonth() + 1).padStart(2, '0'); 
+    const day = String(now.getUTCDate()).padStart(2, '0');
+    const yesterday = new Date();
+    yesterday.setUTCDate(now.getUTCDate() - 1);
+    const prevYear = yesterday.getUTCFullYear();
+    const prevMonth = String(yesterday.getUTCMonth() + 1).padStart(2, '0'); 
+    const prevDay = String(yesterday.getUTCDate()).padStart(2, '0');
+
+    const url = `https://www.mesonet.agron.iastate.edu/cgi-bin/request/gis/spc_watch.py?year1=${prevYear}&month1=${prevMonth}&day1=${prevDay}&hour1=0&minute1=0&year2=${year}&month2=${month}&day2=${day}&hour2=23&minute2=0&format=geojson`;
+
+    fetch(url, {headers: {'Accept': 'Application/geo+json'} })
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok: ' + response.statusText);
@@ -2001,7 +2197,7 @@ function showSearchedLocation(lat, lon){
 function sizing(){
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
 
-    if (vw > 600 && document.getElementById("drawing").style.display == 'none') {
+    if (vw > 600 && document.getElementById("drawing").style.display == 'none' && !sparkgen) {
         fadeIn("searchbox");
     } else {
         fadeOut("searchbox");
@@ -2195,13 +2391,13 @@ function toggleDrawing(tof){
         fadeOut('info');
         fadeOut('toolbar');
         fadeOut('searchbox');
-        fadeOut('menu-opener');
+        if(!sparkgen) { fadeOut('menu-opener'); } else { fadeOut('sginfo'); }
         fadeIn("drawingtoolbar");
     } else {
         canvas.style.display = "none";
         fadeIn('info');
         fadeIn('toolbar');
-        fadeIn('menu-opener');
+        if(!sparkgen) { fadeIn('menu-opener'); } else { fadeIn('sginfo'); }
         fadeOut("drawingtoolbar");
         sizing();
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -2360,13 +2556,15 @@ async function addWeatherRadios() {
                         const popupContent = `
                             <div style="display: flex; align-items: center; justify-content: space-around; flex-direction: row; margin: 10px;">
                                 <i class="fa-solid fa-radio" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>
-                                <p style="margin: 0px; font-size: large;">${CALLSIGN}</p>
+                                <div style="display: flex; align-items: center; flex-direction: column;">
+                                    <p style="margin: 0px; font-weight: bold; margin-bottom: 2px; font-size: large;">${CALLSIGN}</p>
+                                    <p style="margin: 0px; font-size: medium;">${STATUS.replace("NORMAL", "ONLINE")}</p>
+                                </div>
                             </div>
                             <br>
-                            <div style="font-size: 1em; margin-top: 12px;">
+                            <div style="font-size: 1em; margin-top: 0px;">
                                 <b>Frequency:</b> ${FREQ} MHz<br>
                                 <b>Location:</b> ${SITENAME}<br>
-                                <b>Status:</b> ${STATUS.replace("NORMAL", "ONLINE")}<br>
                                 <b>Provider:</b> ${streamDetails.description.replace("Stream provided by ", "")}<br>
                                 <div class="audio-controls" style="margin-top: 10px; margin-bottom: 7px;">
                                     <button onclick="togglePlayPause('${CALLSIGN}', '${streamDetails.url}', '${streamDetails.description}', '${FREQ}')" style="justify-content: center; display: flex; flex-direction: row; align-items: center; margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 10px;" class="function-btn"><i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen</button>
@@ -2595,3 +2793,404 @@ document.getElementById('dictbox').addEventListener('keypress', function (e) {
 });
 
 document.getElementById("dictbox").value = "";
+
+counties = undefined;
+
+function convertToSparkgen(toconv) {
+    sparkgen = toconv;
+    showBlackTransition();
+
+    setTimeout(() => {
+        if (toconv) {
+            sizing();
+            document.getElementById("sparkgenexit").style.display = "block";
+            document.getElementById("pmode").style.display = "block";
+            document.getElementById("clearmap").style.display = "block";
+            document.getElementById("polydraw").style.display = "block";
+            document.getElementById("styler").style.display = "block";
+            document.getElementById("insg").style.display = "block";
+            document.getElementById("sparkgenbtn").style.display = "none";
+            document.getElementById('tut-1').style.display = 'flex'
+            document.getElementById('tut-2').style.display = 'none'
+            document.getElementById('tut-3').style.display = 'none'
+            document.getElementById('tut-4').style.display = 'none'
+            document.getElementById('tut-5').style.display = 'none'
+            document.getElementById('editor').style.display = 'none'
+            document.getElementById('styles').style.display = 'none'
+            fadeOut("menu-opener");
+            fadeIn("sginfo");
+            if (!localStorage.getItem("sg_hasbeenused")) { sgdialog(true); localStorage.setItem("sg_hasbeenused", true) }
+
+            // Fetch county dataset
+            fetch('https://busybird15.github.io/assets/countymaps/counties-simplified.json')
+            .then(response => response.json())
+            .then(data => {
+                counties = L.geoJSON(data, { pane: 'sg', fillOpacity: 0, color: '#000000', weight: 0 }).addTo(sg);
+
+                // Convert to polygons if necessary
+                counties.eachLayer(function(layer) {
+                    if (layer.feature.geometry.type === 'Polygon' || layer.feature.geometry.type === 'MultiPolygon') {
+                        let polygonLayer = L.polygon(layer.getLatLngs(), { pane: 'sg', fillOpacity: 0, color: 'lightgray', weight: 1 }).addTo(sg);
+                        polygonLayer.customColor = 'no';
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading GeoJSON data:', error);
+            });
+            
+
+        } else {
+            sg.clearLayers();
+            sizing();
+            clearmap();
+            document.getElementById("sparkgenexit").style.display = "none";
+            document.getElementById("pmode").style.display = "none";
+            document.getElementById("polydraw").style.display = "none";
+            document.getElementById("styler").style.display = "none";
+            document.getElementById("clearmap").style.display = "none";
+            document.getElementById("insg").style.display = "none";
+            document.getElementById("sparkgenbtn").style.display = "flex";
+            fadeIn("menu-opener");
+            fadeOut("sginfo");
+        }
+
+    }, 300);
+}
+
+
+
+function updatesginfo() {
+    document.getElementById("alerttitletext").innerHTML = document.getElementById("alerttitle").value;
+    document.getElementById("sub1").innerHTML = document.getElementById("subtext1").value;
+    document.getElementById("sub2").innerHTML = document.getElementById("subtext2").value;
+    document.getElementById("disc").innerHTML = document.getElementById("discussiontext").value.replace(/\n/g, '<br>');
+
+    if (document.getElementById("disc").innerHTML == ''){
+        document.getElementById("disc").style.marginTop = '0px';
+    } else {
+        document.getElementById("disc").style.marginTop = '10px';
+    }
+}
+
+function updatesgsettings () {
+    document.getElementById("alerttitletext").value = document.getElementById("alerttitle").innerHTML;
+    document.getElementById("subtext1").value = document.getElementById("sub1").innerHTML;
+    document.getElementById("subtext2").value = document.getElementById("sub2").innerHTML;
+    document.getElementById("discussiontext").value = document.getElementById("disc").innerHTML.replace(/<br>/g, '\n');;
+}
+
+function showBlackTransition() {
+    const overlay = document.getElementById('black-overlay');
+    overlay.style.pointerEvents = 'auto';
+    overlay.style.opacity = '1';
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.pointerEvents = 'none';
+        }, 500);
+    }, 500);
+}
+
+map.on('click', function(e) {
+    if (sparkgen && !polydrawmode) {
+        var clickedPoint = e.latlng;
+        var clickedPointGeoJSON = turf.point([clickedPoint.lng, clickedPoint.lat]);
+        var fixedAnObject = false;
+
+        var reversedLayers = sg.getLayers().reverse();
+
+        reversedLayers.forEach(function(layer) {
+            if (layer instanceof L.Polygon) {
+                var polygonGeoJSON = layer.toGeoJSON();
+                var isInside = turf.booleanPointInPolygon(clickedPointGeoJSON, polygonGeoJSON);
+                if (isInside) {
+                    fixedAnObject = true;
+                    if (layer.customColor == 'yes') {
+                        layer.setStyle({ fillOpacity: 0, color: 'lightgray' });
+                        layer.customColor = 'no';
+                    } else if (layer.customColor == 'no'){
+                        layer.setStyle({ fillOpacity: 0.2, color: sg_color });
+                        layer.customColor = 'yes';
+                    }
+                }
+            }
+        });
+    }
+});
+
+
+function advanceSgTutorial() {
+    if (document.getElementById('tut-1').style.display == 'flex'){
+        document.getElementById('tut-1').style.display = 'none'
+        document.getElementById('tut-2').style.display = 'flex'
+    } else if (document.getElementById('tut-2').style.display == 'flex'){
+        document.getElementById('tut-2').style.display = 'none'
+        document.getElementById('tut-3').style.display = 'flex'
+    } else if (document.getElementById('tut-3').style.display == 'flex'){
+        document.getElementById('tut-3').style.display = 'none'
+        document.getElementById('tut-4').style.display = 'flex'
+    } else if (document.getElementById('tut-4').style.display == 'flex'){
+        document.getElementById('tut-4').style.display = 'none'
+        document.getElementById('tut-5').style.display = 'flex'
+    } else if (document.getElementById('tut-5').style.display == 'flex'){
+        document.getElementById('tut-5').style.display = 'none'
+        sgdialog(false);
+    }
+}
+
+
+var markers = [];
+var polygons = [];
+var polygon = null;
+var isDragging = false;
+
+
+function updatePolygon() {
+    if (polygon) {
+        map.removeLayer(polygon);
+    }
+    var latlngs = markers.map(m => m.getLatLng());
+    if (latlngs.length >= 3) { 
+        polygon = L.polygon(latlngs, { color: sg_color, pane: 'sg', customColor: 'noCustomColor' }).addTo(sg);
+    }
+}
+
+function createDraggableMarker(latlng) {
+    var marker = L.divIcon({
+      className: 'custom-div-icon',
+      html: "<div style='border-radius: 5px; width:20px; height:20px; background-color: white; box-shadow: rgba(0, 0, 0, 0.7) 0px 0px 10px;'></div>",
+      iconSize: [20, 20]
+    });
+  
+    var newMarker = L.marker(latlng, { icon: marker, draggable: true }).addTo(map);
+  
+    newMarker.on('click', function() {
+        if (polydrawmode){
+            map.removeLayer(newMarker);
+            markers = markers.filter(m => m !== newMarker);
+            updatePolygon();
+        }
+    });
+  
+    newMarker.on('dragstart', function() {
+      isDragging = true;
+    });
+  
+    newMarker.on('dragend', function() {
+      isDragging = false;
+      updatePolygon();
+    });
+  
+    markers.push(newMarker);
+    updatePolygon();
+  }
+  
+
+  map.on('click', function(e) {
+    if (!isDragging && polydrawmode) {
+      createDraggableMarker(e.latlng);
+    }
+  });
+  
+
+function polydraw() {
+    polydrawmode = !polydrawmode
+    if (polydrawmode){
+        document.getElementById("polydraw").classList.add("selected_toolbtn");
+        document.getElementById("polydraw").title = "Finish drawing";
+    } else {
+        document.getElementById("polydraw").classList.remove("selected_toolbtn");
+        document.getElementById("polydraw").title = "Draw a polygon";
+
+        // Delete all markers
+        markers.forEach(function(marker) {
+            map.removeLayer(marker);
+        });
+        markers = [];
+        polygons.push(polygon);
+        polygon = null;
+    }
+}
+
+function clearmap() {
+    var reversedLayers = sg.getLayers().reverse();
+
+    reversedLayers.forEach(function(layer) {
+        if (layer.customColor == 'yes'){
+            layer.setStyle({ fillOpacity: 0, color: 'lightgray' });
+            layer.customColor = 'no';
+        }
+    });
+
+    polygons.forEach(function(poly){
+        map.removeLayer(poly);
+    });
+    polygons = [];
+
+    // Delete all markers
+    markers.forEach(function(marker) {
+        map.removeLayer(marker);
+    });
+    markers = [];
+}
+
+// ~little easter egg~
+var rainbowmode = false;
+var oeea = undefined;
+let clickCount = 0;
+let lastClickTime = 0;
+function createAudioElement() {
+    oeea = document.createElement("audio");
+    oeea.id = "oiia";
+    oeea.src = "https://www.myinstants.com/media/sounds/oiia-oiia-sound.mp3";
+    oeea.loop = true;
+    oeea.style.display = "none";
+}
+function deleteAudioElement() {
+    oeea.src = "";
+    oeea.remove();
+    oeea = undefined;
+}
+const img = document.getElementById("logo-header");
+const easteregg = document.createElement('style');
+easteregg.innerHTML = `
+    .overlay-object{
+        animation: rainbow 3s linear infinite;
+    }
+    .set-btn {
+        animation: rainbow 3s linear infinite;
+    }
+    .menuitem {
+        animation: rainbow 3s linear infinite;
+    }
+    .menuitemunavailable {
+        animation: rainbow 3s linear infinite;
+    }
+    .searchbuttons {
+        animation: rainbow 3s linear infinite;
+    }
+    .toolbtn {
+        animation: rainbow 3s linear infinite;
+    }
+    #radinfo_lna {
+        animation: rainbow 3s linear infinite;
+    }
+
+    @keyframes rainbow {
+        0% { color: red; }
+        14% { color: orange; }
+        28% { color: yellow; }
+        42% { color: green; }
+        57% { color: blue; }
+        71% { color: indigo; }
+        85% { color: violet; }
+        100% { color: red; }
+    }
+`;
+
+img.addEventListener("click", () => {
+    const currentTime = new Date().getTime();
+    if (currentTime - lastClickTime > 500) {
+        clickCount = 0;
+    }
+    clickCount++;
+    lastClickTime = currentTime;
+    if (clickCount === 10) {
+        if (rainbowmode) {
+            document.head.removeChild(easteregg);
+            oeea.pause();
+            oeea.currentTime = 0;
+            deleteAudioElement();
+        } else {
+            document.head.appendChild(easteregg);
+            createAudioElement();
+            document.body.appendChild(oeea);
+            oeea.play();
+        }
+        rainbowmode = !rainbowmode;
+        clickCount = 0;
+    }
+});
+
+function photomode(toConv=null) {
+
+    if (toConv === null || toConv === true) {
+        document.getElementById("photo-prod").style.display = 'block';
+        document.getElementById("prod").style.display = 'none';
+        document.getElementById("sg_editor").style.display = 'none';
+        document.getElementById("sg_menu").style.display = 'none';
+        fadeOut("toolbar");
+    } else {
+        document.getElementById("photo-prod").style.display = 'none';
+        document.getElementById("prod").style.display = 'block';
+        document.getElementById("sg_editor").style.display = 'block';
+        document.getElementById("sg_menu").style.display = 'block';
+        fadeIn("toolbar");
+    }
+}
+
+function legendclick() {
+    photomode(false);
+}
+
+function setStyle(color, title) {
+    document.getElementById("alerttitletext").innerHTML = title;
+    document.getElementById("alerttitle").value = title;
+    sg_color = `#${color}`;
+    var reversedLayers = sg.getLayers().reverse();
+
+    reversedLayers.forEach(function(layer) {
+        if (layer.customColor == 'yes' || layer.customColor == 'noCustomColor'){
+            layer.setStyle({ color: `#${color}` });
+        }
+    });
+    
+    polygons.forEach(function(layer) {
+        layer.setStyle({ color: `#${color}` });
+    });
+}
+
+var sgstyles = JSON.parse(localStorage.getItem('sparkgen_styles'));
+if (sgstyles) {
+    sgstyles.sort(function(a, b) {
+        return a.alert.localeCompare(b.alert);
+    });
+    var construct = '';
+    sgstyles.forEach(function(item) {
+        construct += `
+            <div onclick="setStyle('${item.color.toString()}', '${item.alert.toString()}');" class="presetitem">
+                <h2 style="color: #${item.color}">${item.alert}</h2>
+                <button><i style="font-size: 16px;" class="fa-solid fa-pen-to-square"></i></button>
+            </div>`;
+    });
+    document.getElementById("stylepresets").innerHTML = construct;
+}
+
+
+function uploadstyles() {
+    if (confirm('The uploaded styles will overwrite all existing styles and refresh the page. Proceed?')) {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.addEventListener('change', function(event) {
+            const selectedFile = event.target.files[0];
+            if (selectedFile) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const fileContent = event.target.result;
+                    try {
+                        const jsonContent = JSON.parse(fileContent);
+                        localStorage.setItem('sparkgen_styles', JSON.stringify(jsonContent));
+                        window.location.reload();
+                    } catch (e) {
+                        window.alert("The JSON data could not be processed. The JSON file may not be a valid file.")
+                    }
+                };
+                reader.readAsText(selectedFile);
+            }
+        });
+        fileInput.click();
+    }
+}
+
+window.alert("You are using Spark Radar BETA.\nBugs or broken features are not uncommon.\nFor the stable version, visit busybird15.github.io/sparkradar.")
