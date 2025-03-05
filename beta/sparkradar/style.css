@@ -653,3 +653,15 @@ em {
 .presetitem:hover {
     background-color: #ffffff40;
 }
+
+@font-family {
+    font-family: 'easvhs';
+    src: url('easvhs.ttf') format('ttf');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.easfont {
+    font-family: "easvhs";
+    line-height: 1.5;
+}
