@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVGer</title>
+    <style>
+        .svg-container {
+            width: 120px;
+            height: 120px;
+        }
+        #dynamic-svg {
+            margin: none;
+            padding: none;
+        }
+    </style>
+    <script>
+        function setSvgUrl() {
+            const params = new URLSearchParams(window.location.search);
+            const svgUrl = params.get('svg');
+            if (svgUrl) {
+                const svgImage = document.getElementById('dynamic-svg');
+                svgImage.src = "https://busybird15.github.io/assets/weathericons/" + svgUrl + ".svg";
+                svgImage.alt = "Loaded SVG";
+            } else {
+                console.error("No 'svg' parameter found in the URL.");
+            }
+        }
+    </script>
+</head>
+<body onload="setSvgUrl()">
+    <div class="svg-container">
+        <img id="dynamic-svg" src="" alt="SVG will load here" width="120" height="120">
+    </div>
+</body>
+</html>
