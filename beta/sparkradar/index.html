@@ -78,8 +78,8 @@ Programming of the Spark Radar project began in September 2024.
     <div id="attrib" class="overlay-object"></div>
 
     <!--Menu opener-->
-    <button id="menu-opener" onclick="menuToggle(true);" class="nav-btn overlay-object" style="transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
-        <i class="fa-solid fa-bars" style="font-size: 22px;"></i>
+    <button id="menu-opener" onclick="menuToggle(true); fadeIn('menu-blur')" class="nav-btn overlay-object" style="justify-content: center; width: 40px; height: 40px; transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+        <i class="fa-solid fa-bars" style="font-size: 20px;"></i>
     </button>
 
     <!--Radar state info-->
@@ -87,7 +87,7 @@ Programming of the Spark Radar project began in September 2024.
         <div style="display: flex; flex-direction: row;"><div id="radarloader" style="margin-right: 20px;" class="lds-ripple-mini"><div></div><div></div></div><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b></p></div>
         <h3 id="photo-prod" onclick="legendclick();" style="display: none; color: #27beffff; cursor: pointer; font-weight: bolder; width: 100%; text-align: center; margin: 2px; font-size: large; text-shadow: 0 0 3px #000000ee;">Composite reflectivity</h3>
         
-        <select id="prod" style="display: block; width: 100%; font-size: medium; margin-top: 10px;" onchange="setProduct();">
+        <select id="prod" style="display: block; width: 100%; font-size: medium; margin-top: 10px; border-radius: 20px;" onchange="setProduct();">
             <option value="conus_cref">Composite Reflectivity</option>
             <option value="conus_bref">Base Reflectivity</option>
         </select>
@@ -95,20 +95,22 @@ Programming of the Spark Radar project began in September 2024.
 
     <div id="radarproducts" class="overlay-object" style="transition: opacity 0.2s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
+    <!--Menu Blur-->
+    <div id="menu-blur" onclick="menuToggle(false); fadeOut('menu-blur')" style="transition: opacity 0.5s !important; opacity: 0; display: none;"></div>
 
     <!--Menu-->
     <div id="menu" style="transition: opacity 0.5s, transform 0.5s !important; transform: translateX(-300px); opacity: 0;">
         <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: ceter; padding: 10px;">
-            <button id="menu-closer" onclick="menuToggle(false);" class="nav-btn" style="border-radius: 10px; background: #ff2121ff;">
+            <button id="menu-closer" onclick="menuToggle(false); fadeOut('menu-blur')" class="nav-btn" style="border-radius: 20px; background: #ff2121ff;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
             </button>
-            <button id="sparkgenbtn" onclick="menuToggle(false); convertToSparkgen(true);" class="nav-btn" style="border-radius: 10px; align-items: center; font-size: medium; font-weight: bold; color: black; display: flex; flex-direction: row; background: #ffcc00ff;">
-                SparkGen <p style="margin: 0px; margin-left: 5px; padding: 5px; color: white; background-color: red; border-radius: 5px;">NEW</p>
+            <button id="sparkgenbtn" onclick="menuToggle(false); convertToSparkgen(true);" class="nav-btn" style="width: auto !important; border-radius: 20px; align-items: center; font-size: medium; font-weight: bold; color: black; display: flex; flex-direction: row; background: #ffcc00ff;">
+                SparkGen <p style="margin: 0px; margin-left: 5px; padding: 5px; color: white; background-color: red; border-radius: 20px;">NEW</p>
             </button>
             <p id="insg" style="margin: 5px; font-weight: bold; display: none; font-size: medium; color: #ffcc00ff;">You are in SparkGen</p>
         </div>
-        <img id="logo-header" src="logo.png" style="display: flex; width: calc(100% - 20px); height: auto; border-radius: 10px; margin: 10px;">
-        <div id="audio-ctrl" style="margin-top: 10px; color: white; background: rgb(50, 50, 50); border-radius: 10px; display: none; flex-direction: column; width: 100%; height: auto;">
+        <img id="logo-header" src="logo.png" style="display: flex; width: calc(100% - 20px); height: auto; border-radius: 20px; margin: 10px;">
+        <div id="audio-ctrl" style="margin-top: 10px; color: white; background: rgb(50, 50, 50); border-radius: 20px; display: none; flex-direction: column; width: 100%; height: auto;">
             <div style="margin-top: 5px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
                 <i class="fa-solid fa-radio" style="color: white; margin-right: 10px; font-size: 20px; color: #27beffff;"></i>
                 <p id="audio-title" style="font-size: large; margin: 10px;">WXJ58</p>
@@ -130,15 +132,16 @@ Programming of the Spark Radar project began in September 2024.
         <div style="overflow-y: auto; scrollbar-width: none;">
             <!--<div onclick="" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-cloud-bolt"></i><b>SPC Outlook</b></div>-->
             <div onclick="dialog(true, 'spcoutlook');" class="menuitem"><i class="fa-solid fa-triangle-exclamation"></i><b>SPC Outlook</b></div>
-            <div onclick="dialog(true, 'dictionary'); document.getElementById('dictbox').value = ''; doDictSearch('');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-book"></i><b>Weather Glossary</b></div>
+            <div onclick="dialog(true, 'dictionary'); document.getElementById('dictbox').value = ''; doDictSearch('');" style="margin-bottom: 30px;" class="menuitem"><i class="fa-solid fa-book"></i><b>Weather Glossary</b></div>
             <div onclick="dialog(true, 'settings');" class="menuitem"><i class="fa-solid fa-gear"></i><b>Settings</b></div>
+            <div onclick="dialog(true, 'shortcuts');" class="menuitem"><i class="fa-solid fa-keyboard"></i><b>Shortcuts</b></div>
             <div onclick="dialog(true, 'appinfo');" class="menuitem"><i class="fa-solid fa-circle-info"></i><b>About</b></div>
-            <div onclick="dialog(true, 'about');" style="margin-bottom: 20px;" class="menuitem"><i class="fa-solid fa-circle-question"></i><b>Technical Info</b></div>
+            <div onclick="dialog(true, 'about');" style="margin-bottom: 30px;" class="menuitem"><i class="fa-solid fa-circle-question"></i><b>Technical Info</b></div>
             <a style="text-decoration: none;" target="_blank" href="https://discord.com/invite/CTyybFMQrM"><div class="menuitem"><i class="fa-brands fa-discord"></i><b>Discord Server</b></div></a>
             <a style="text-decoration: none;" target="_blank" href="maito:busybird15@mail.com"><div class="menuitem"><i class="fa-solid fa-envelope"></i><b>Email Me</b></div></a>
             <a style="text-decoration: none;" target="_blank" href="https://github.com/BusyBird15/busybird15.github.io"><div class="menuitem"><i class="fa-brands fa-github"></i><b>Github</b></div></a>
         </div>
-        <!--<div id="survey" style="margin-top: 10px; color: white; background: rgb(50, 50, 50); border-radius: 10px; display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: center; height: auto;">
+        <!--<div id="survey" style="margin-top: 10px; color: white; background: rgb(50, 50, 50); border-radius: 20px; display: flex; flex-direction: column; width: 100%; align-items: center; justify-content: center; height: auto;">
             <p style="margin: 5px; margin-top: 10px; text-align: center;">
                 <b>We want to hear what you think!</b><br>
                 Feel free to take the survey below:
@@ -148,15 +151,18 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Dialog-->
-    <div id="dialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 15; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
-        <div id="innerdialog" style="flex-direction: column; transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
-            <button id="dialog-closer" onclick="dialog(false); saveSettings();" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
-                <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
-            </button>
+    <div id="dialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 15; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+        <div id="innerdialog" style="flex-direction: column; transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 20px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+            <div style="display: flex; margin-bottom: 5px; flex-direction: row; align-items: center; justify-content: space-between;">
+                <button id="dialog-closer" onclick="dialog(false); saveSettings();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px;">
+                    <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
+                </button>
+                <p id="dialogTitle" style="border-radius: 20px; background-color: blue; margin: 0px; color: white; padding: 8px 18px; width: 100%; text-align: center; font-weight: bold; font-size: larger; height: 24px; margin-left: 10px;">Severe Thunderstorm Warning</p>
+            </div>
 
             <div id="conditions" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
                 <div style="display: flex; margin: 20px; flex-direction: row; align-items: center; justify-content: center;">
-                    <img style="margin-right: 30px; border-radius: 10px;" width="60px" height="60px" id="weathersimg">
+                    <img style="margin-right: 30px; border-radius: 20px;" width="60px" height="60px" id="weathersimg">
                     <div style="display: flex; flex-direction: column; align-items: flex-sart; justify-content: center;">
                         <h2 id="conditionsbox" style="color: white; font-weight: bold; margin: 0px;">Loading</h2>
                         <h3 id="tempsbox" style="color: white; font-weight: bold; margin: 0px;">--°</h3>
@@ -166,20 +172,25 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="dictionary" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
-                <div style="margin-top: 10px; display: flex; flex-direction: row;">
-                    <input type="text" placeholder="Search for a term" id="dictbox" style="width: calc(100% - 20px); transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
+                <div style="margin: 10px 10px 0px 10px; display: flex; flex-direction: row;">
+                    <input type="text" placeholder="Search for a term" id="dictbox" style="width: calc(100% - 20px); transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; padding: 10px; border: none; width: 100%; border-radius: 20px;">
                     <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doDictSearch(document.getElementById('dictbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>
-                </div><br>
+                </div>
                 <div id="dictres" style="display: flex; flex-direction: column;"></div>
             </div>
 
             <div id="spcoutlook" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
+                <div style="margin-top: 5px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+                    <button id="spc1" onclick="loadrisks(1);" class="function-btn" style="border: none; cursor: pointer; width: 100%; margin: 5px; padding: 5px; font-size: medium; border-radius: 20px; background: gray;">Today</button>
+                    <button id="spc2" onclick="loadrisks(2);" class="function-btn" style="border: none; cursor: pointer; width: 100%; margin: 5px; padding: 5px; font-size: medium; border-radius: 20px; background: gray;">Day 2</button>
+                    <button id="spc3" onclick="loadrisks(3);" class="function-btn" style="border: none; cursor: pointer; width: 100%; margin: 5px; padding: 5px; font-size: medium; border-radius: 20px; background: gray;">Day 3</button>
+                </div>
                 <div style="display: flex; margin-bottom: 5px; flex-direction: column; align-items: center; justify-content: center;">
                     <div style="margin-top: 10px; display: flex; flex-direction: row; align-items: center; justify-content: center;">
                         <img id="swody1" style="width: 50%; height: auto;" src="https://spc.noaa.gov/partners/outlooks/national/swody1.png">
                         <img id="swody1_TORN" style="width: 50%; height: auto;" src="https://spc.noaa.gov/partners/outlooks/national/swody1_TORN.png">
                     </div>
-                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
+                    <div id="row2" style="display: flex; flex-direction: row; align-items: center; justify-content: center;">
                         <img id="swody1_HAIL" style="width: 50%; height: auto;" src="https://spc.noaa.gov/partners/outlooks/national/swody1_HAIL.png">
                         <img id="swody1_WIND" style="width: 50%; height: auto;" src="https://spc.noaa.gov/partners/outlooks/national/swody1_WIND.png">
                     </div>
@@ -199,19 +210,19 @@ Programming of the Spark Radar project began in September 2024.
             <div id="settings" style="display: flex; flex-direction: column; overflow-x: clip; scrollbar-width: none; height: calc(100% - 40px);">
                 <hr style="width: 100%; margin-top: 10px;">
                 <div style="display: flex; justify-content: space-around;">
-                    <button id="settings-general" onclick="settingsmode('settmenu-general', 'settings-general');" class="set-btn" style="background: #27beffff; border-radius: 10px;">
+                    <button id="settings-general" onclick="settingsmode('settmenu-general', 'settings-general');" class="set-btn" style="background: #27beffff; border-radius: 20px;">
                         <i class="fa-solid fa-gear" style="font-size: 16px;"></i>
                     </button>
-                    <button id="settings-map" onclick="settingsmode('settmenu-map', 'settings-map');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                    <button id="settings-map" onclick="settingsmode('settmenu-map', 'settings-map');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-solid fa-map" style="font-size: 16px;"></i>
                     </button>
-                    <button id="settings-radar" onclick="settingsmode('settmenu-radar', 'settings-radar');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                    <button id="settings-radar" onclick="settingsmode('settmenu-radar', 'settings-radar');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-solid fa-satellite-dish" style="font-size: 16px"></i>
                     </button>
-                    <button id="settings-alerts" onclick="settingsmode('settmenu-alerts', 'settings-alerts');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                    <button id="settings-alerts" onclick="settingsmode('settmenu-alerts', 'settings-alerts');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
                     </button>
-                    <!--<button id="settings-stream" onclick="settingsmode('settmenu-streaming', 'settings-stream');" class="set-btn" style="background: #89999f; border-radius: 10px;">
+                    <!--<button id="settings-stream" onclick="settingsmode('settmenu-streaming', 'settings-stream');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-brands fa-youtube" style="font-size: 16px;"></i>
                     </button>-->
                 </div>
@@ -386,10 +397,9 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b> BETA v0.24</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Mar 3, 2025</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b>v2.0 BETA (v1.0)</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Mar 24, 2025</p>
                 <br>
-                <p style="margin: 10px 5px 5px 5px; font-size: large; width: 100%; text-align: left;"><b>Release Notes:</b><br>- Added new EAS font for Sparkgen<br>- Added storm centers<br>- Added echo tops and precipitation type radar.</p>
             </div>
 
             <div id="alertinfo" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; font-family: Consolas; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
@@ -420,18 +430,40 @@ Programming of the Spark Radar project began in September 2024.
                 <p style="font-size: medium; margin: 5px;"><b>More info: </b><a href="https://www.weather.gov/radarfaq">weather.gov/radarfaq</a></p>
 
             </div>
+
+            <div id="shortcuts" style="color: white; height: calc(100% - 50px); margin-top: 10px; flex-direction: column; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
+                <br>
+                <div style="display: flex; flex-direction: column;">
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 10px;">
+                        <h3 style="margin: 0px;">D</h3>
+                        <p style="margin: 0px;">Open the drawing menu</p>
+                    </div>
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 10px;">
+                        <h3 style="margin: 0px;">R</h3>
+                        <p style="margin: 0px;">Refresh</p>
+                    </div> 
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 10px;">
+                        <h3 style="margin: 0px;">SHIFT + A</h3>
+                        <p style="margin: 0px;">Toggle alerts</p>
+                    </div>
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 10px;">
+                        <h3 style="margin: 0px;">SHIFT + R</h3>
+                        <p style="margin: 0px;">Toggle radars</p>
+                    </div> 
+                </div>                
+            </div>
         </div>
     </div>
 
     <!--WFO Products dialog-->
-    <div id="wfodialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
-        <div id="innerwfodialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
-            <button id="wfo-dialog-closer" onclick="wfodialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
+    <div id="wfodialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
+        <div id="innerwfodialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 20px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+            <button id="wfo-dialog-closer" onclick="wfodialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 20px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
             </button><br>
 
             <div style="display: flex; margin-bottom: 20px; flex-direction: row; align-items: center; justify-content: center;">
-                <img style="margin-right: 30px; border-radius: 10px;" width="60px" height="60px" id="weatherimg">
+                <img style="margin-right: 30px; border-radius: 20px;" width="60px" height="60px" id="weatherimg">
                 <div style="display: flex; flex-direction: column; align-items: flex-sart; justify-content: center;">
                     <h2 id="conditionbox" style="color: white; font-weight: bold; margin: 0px;">Loading</h2>
                     <h3 id="tempbox" style="color: white; font-weight: bold; margin: 0px;">--°</h3>
@@ -448,9 +480,9 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--SparkGen dialog-->
-    <div id="sgdialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.1); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
-        <div id="innersgdialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; justify-content: space-between; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 10px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
-            <button id="sgdialog-closer" onclick="sgdialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 10px;">
+    <div id="sgdialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
+        <div id="innersgdialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; justify-content: space-between; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 20px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+            <button id="sgdialog-closer" onclick="sgdialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 20px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
             </button>
             <div id="tut-1" style="margin: 10px; justify-content: flex-start; flex-direction: column; display: flex;">
@@ -522,10 +554,10 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="tut-advance" style="display: flex; flex-direction: row; justify-content: space-between; align-items: ceter; padding: 10px;">
-                <button id="menu-closer" onclick="sgdialog(false);" class="nav-btn" style="border-radius: 10px; align-items: center; font-size: medium; font-weight: bold; color: white; display: flex; flex-direction: row; background: #ff2121ff;">
+                <button id="menu-closer" onclick="sgdialog(false);" class="nav-btn" style="border-radius: 20px; align-items: center; font-size: medium; font-weight: bold; color: white; display: flex; flex-direction: row; background: #ff2121ff;">
                     Skip
                 </button>
-                <button onclick="advanceSgTutorial();" class="nav-btn" style="border-radius: 10px; align-items: center; font-size: medium; font-weight: bold; color: white; display: flex; flex-direction: row; background: #2a7fffff;">
+                <button onclick="advanceSgTutorial();" class="nav-btn" style="border-radius: 20px; align-items: center; font-size: medium; font-weight: bold; color: white; display: flex; flex-direction: row; background: #2a7fffff;">
                     Next
                 </button>
             </div>
@@ -533,12 +565,12 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Location Finder-->
-    <div class="overlay-object" id="searchbox" style="padding: 0px; display: flex; top: 10px; left: 70px; width: calc(100% - 400px); max-width: 350px; min-width: 200px; z-index: 4;">
+    <div class="overlay-object" id="searchbox" style="height: 40px; padding: 0px; padding-left: 3px; padding-right: 3px; display: flex; top: 10px; left: 60px; width: calc(100% - 400px); max-width: 350px; min-width: 200px; z-index: 4;">
         <button onclick="document.getElementById('results').style.opacity = 0; setTimeout(() => document.getElementById('results').style.display = 'none', 500); document.getElementById('textbox').value = '';" class="searchbuttons" style="padding: 5px 0px 5px 5px;"><i class="fa-solid fa-xmark" style="font-size: 16px; margin: 5px;"></i></button>
-        <input type="text" placeholder="Find a place" id="textbox" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
+        <input type="text" placeholder="Find a place" id="textbox" style="transition-duration: 0.3s; background: transparent; font-size: 16px; color: white; padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
         <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doLocSearch(document.getElementById('textbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>
     </div>
-    <div id="results" class="overlay-object" style="transition: opacity 0.2s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
+    <div id="results" class="overlay-object" style="transition: opacity 0.2s !important; opacity: 0; width: calc(100% - 415px); flex-direction: column; max-width: 335px; min-width: 180px; left: 60px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
     <p id="infop" style="display: none; transition-duration: 0.2s; z-index: 100; margin: 0px; font-size: large; bottom: 10px; left: 10px; position: absolute; color: black;">Loading radar...</p>
 
@@ -550,36 +582,37 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Map text attribution-->
-    <p id="textattr" style="position: absolute; bottom: 45px; right: 10px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://www.maptiler.com">MapTiler</a></p>
+    <p id="textattr" style="position: absolute; bottom: 45px; right: 10px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://maptiler.com">MapTiler</a></p>
 
     <!--Radar Legend-->
-    <img id="radarlegend" onclick="dialog(true, 'radarhelp')" style="cursor: pointer; position: absolute; border-radius: 10px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
+    <img id="radarlegend" onclick="dialog(true, 'radarhelp')" style="cursor: pointer; position: absolute; border-radius: 20px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
 
     <!--Canvas for drawing-->
     <canvas id="drawing" style="background: none; display: none; cursor: crosshair; position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 101;" style="cursor: crosshair;"></canvas>
 
     <!--Toolbar-->
-    <div class="overlay-object" id="toolbar" style="border-radius: 10px; padding-bottom: 5px; flex-direction: column; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 9; height: auto; width: auto;">
+    <div class="overlay-object" id="toolbar" style="border-radius: 20px; padding-bottom: 5px; flex-direction: column; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 8; height: auto; width: auto;">
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: none; background-color: #00af00ff; color: white;" title="Photo mode" id="pmode" onclick="photomode();"><i class="fa-solid fa-camera" style="font-size: 16px;"></i></button>
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: none;" title="Draw a polygon" id="polydraw" onclick="polydraw()"><i class="fa-solid fa-draw-polygon" style="font-size: 16px;"></i></button>
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: none;" title="Change styles" id="styler" onclick="styles();"><i class="fa-solid fa-palette" style="font-size: 16px;"></i></button>
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: none;" title="Clear map" id="clearmap" onclick="clearmap()"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 20px 5px; display: none; background-color: #ff2121ff; color: white;" title="Exit SparkGen" id="sparkgenexit" onclick="convertToSparkgen(false);"><i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 16px; transform: rotate(180deg);"></i></button>
-        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="[R] Refresh" onclick="mapEvents += 1; addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i></button>
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Go to my location" onclick="if(outermarker) {map.flyTo([nowlat, nowlon], 10);}"><i class="fa-solid fa-location" style="font-size: 16px;"></i></button>
-        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
-        <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: block; background-color: white; color: black;" title="Toggle alerts" id="alerttoggle" onclick="toggleAlerts();"><i class="fa-solid fa-circle-exclamation" style="font-size: 16px;"></i></button>
-        <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="Turn stations on/off" onclick="toggleRadars();"id="radarstogg"><i class="fa-solid fa-satellite-dish" style="font-size: 16px;"></i></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="[D] Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
+        <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: block; background-color: white; color: black;" title="[SHIFT + A] Toggle alerts" id="alerttoggle" onclick="toggleAlerts();"><i class="fa-solid fa-circle-exclamation" style="font-size: 16px;"></i></button>
+        <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="[SHIFT + R] Turn radar stations on/off" onclick="toggleRadars();"id="radarstogg"><i class="fa-solid fa-satellite-dish" style="font-size: 16px;"></i></button>
     </div>
 
     <!--Drawing toolbar-->
-    <div class="overlay-object" id="drawingtoolbar" style="border-radius: 10px; padding: 5px; align-items: center; justify-content: center; position: absolute; top: 10px; left: 10px; z-index: 102; height: auto; width: auto;">
+    <div class="overlay-object" id="drawingtoolbar" style="border-radius: 20px; padding: 5px; align-items: center; justify-content: center; position: absolute; top: 10px; left: 10px; z-index: 102; height: auto; width: auto;">
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Close" onclick="toggleDrawing(false)"><i class="fa-solid fa-xmark" style="font-size: 16px;"></i></button>
-        <button class="drawingtoolbtn" id="blue" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #27beffff; border: none;" onclick="setPenColor('#27beffff'); setSelectedColor('blue');"><i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i></button>
-        <button class="drawingtoolbtn" id="red" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #ff2121ff; border: none;" onclick="setPenColor('#ff2121ff'); setSelectedColor('red');"></button>
-        <button class="drawingtoolbtn" id="green" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #00af00ff; border: none;" onclick="setPenColor('#00af00ff'); setSelectedColor('green');"></button>
-        <button class="drawingtoolbtn" id="white" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #ffffffff; border: none;" onclick="setPenColor('#ffffffff'); setSelectedColor('white');"></button>
-        <button class="drawingtoolbtn" id="black" style="transition-duration: 0.2s; border-radius: 10px; width: 35px; height: 35px; margin: 5px; background: #000000ff; border: none;" onclick="setPenColor('#000000ff'); setSelectedColor('black');"></button>
+        <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px; margin-right: 15px;" title="Clear" onclick="ctx.clearRect(0, 0, canvas.width, canvas.height);"><i class="fa-solid fa-trash" style="font-size: 16px;"></i></button>
+        <button class="drawingtoolbtn" id="blue" style="transition-duration: 0.2s; border-radius: 20px; width: 35px; height: 35px; margin: 5px; background: #27beffff; border: none;" onclick="setPenColor('#27beffff'); setSelectedColor('blue');"><i class="fa-regular fa-circle-dot" style="color: lightgray; font-size: 16px;"></i></button>
+        <button class="drawingtoolbtn" id="red" style="transition-duration: 0.2s; border-radius: 20px; width: 35px; height: 35px; margin: 5px; background: #ff2121ff; border: none;" onclick="setPenColor('#ff2121ff'); setSelectedColor('red');"></button>
+        <button class="drawingtoolbtn" id="green" style="transition-duration: 0.2s; border-radius: 20px; width: 35px; height: 35px; margin: 5px; background: #00af00ff; border: none;" onclick="setPenColor('#00af00ff'); setSelectedColor('green');"></button>
+        <button class="drawingtoolbtn" id="white" style="transition-duration: 0.2s; border-radius: 20px; width: 35px; height: 35px; margin: 5px; background: #ffffffff; border: none;" onclick="setPenColor('#ffffffff'); setSelectedColor('white');"></button>
+        <button class="drawingtoolbtn" id="black" style="transition-duration: 0.2s; border-radius: 20px; width: 35px; height: 35px; margin: 5px; background: #000000ff; border: none;" onclick="setPenColor('#000000ff'); setSelectedColor('black');"></button>
     </div>
 
     <!--Black screen for pointless transitions-->
@@ -588,11 +621,11 @@ Programming of the Spark Radar project began in September 2024.
     <!--SparkGen alert info box-->
     <div id="sginfo" class="overlay-object" style="top: 10px; left: 10px; flex-direction: column; padding: 10px; display: none; align-items: flex-end; justify-content: flex-start; width: calc(100% - 350px); max-width: 350px; min-width: 100px;">
         <div style="display: flex; width: 100%; flex-direction: row; align-items: center; justify-content: space-between;">
-            <button id="sg_menu" onclick="menuToggle(true);" class="nav-btn" style="border-radius: 10px; box-shadow: none; transition-duration: 0.5s; background: transparent;">
+            <button id="sg_menu" onclick="menuToggle(true);" class="nav-btn" style="border-radius: 20px; box-shadow: none; transition-duration: 0.5s; background: transparent;">
                 <i class="fa-solid fa-bars" style="color: rgba(255, 255, 255, 0.4); font-size: 16px;"></i>
             </button>
             <h3 id="alerttitletext" class="easfont" style="width: 100%; margin: 0px; font-weight: bold; text-align: center;">Weather Alert Title</h3>
-            <button id="sg_editor" onclick="sgdialog(true, 'editor')" class="nav-btn" style="border-radius: 10px; box-shadow: none; transition-duration: 0.5s; background: transparent;">
+            <button id="sg_editor" onclick="sgdialog(true, 'editor')" class="nav-btn" style="border-radius: 20px; box-shadow: none; transition-duration: 0.5s; background: transparent;">
                 <i class="fa-solid fa-pen-to-square" style="color: rgba(255, 255, 255, 0.4); font-size: 16px;"></i>
             </button>
         </div>
