@@ -84,7 +84,14 @@ Programming of the Spark Radar project began in September 2024.
 
     <!--Radar state info-->
     <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
-        <div style="display: flex; flex-direction: row;"><div id="radarloader" style="margin-right: 20px;" class="lds-ripple-mini"><div></div><div></div></div><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b></p></div>
+        <div style="display: flex; flex-direction: row; margin-bottom: 5px; justify-content: center; align-items: center;">
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Earliest frame" onclick="frameIdx = 0; addRadarToMap(radarStation);"><i class="fa-solid fa-backward-step" style="font-size: 20px;"></i></button>
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Previous frame" onclick="if (frameIdx > 0) {frameIdx -= 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-left" style="font-size: 20px;"></i></button>
+            <!--<button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Start or stop the animation" onclick=""><i class="fa-solid fa-circle-play" style="font-size: 20px;"></i></button>-->
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Next frame" onclick="if (frameIdx < maxFrames-1) {frameIdx += 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-right" style="font-size: 20px;"></i></button>
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Latest frame" onclick="frameIdx = maxFrames-1; addRadarToMap(radarStation);"><i class="fa-solid fa-forward-step" style="font-size: 20px;"></i></button>
+        </div> 
+        <div style="display: flex; flex-direction: row;"><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b></p></div>
         <h3 id="photo-prod" onclick="legendclick();" style="display: none; color: #27beffff; margin-top: 0px !important; cursor: pointer; font-weight: bolder; width: 100%; text-align: center; margin: 2px; text-shadow: 0 0 3px #000000ee;">Composite reflectivity</h3>
         
         <select id="prod" style="appearance: none; padding: 5px; color: #27beffff; font-weight: bolder; text-align: center; -webkit-appearance: none; -moz-appearance: none; background: none; border: none; font-size: large; display: block; width: 100%; text-shadow: 0px 0px 6px #464646; font-size: medium; border-radius: 20px;" onchange="setProduct();">

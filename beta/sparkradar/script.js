@@ -108,6 +108,7 @@ var sg_alertsoff = false;
 var polydrawmode = false;
 var sg_color = 'red';
 var stormCentersOn = true;
+var needFrameAdj = true;
 
 // Database of alert colors
 var alertcolors = {
@@ -1163,7 +1164,7 @@ function buildRadarContent (feature) {
     if (stus == "Offline"){
         construct += '<button title="View this radar." style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 20px;">Select Station</button>'
     } else if (stus == "Operate" && timediff < 10){
-        construct += '<button onclick="mapEvents += 1; canRefresh = true; addRadarToMap(\'' + feature.properties.id + '\'.toUpperCase()); map.closePopup();" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" class="function-btn">Select Station</button>'
+        construct += '<button onclick="mapEvents += 1; canRefresh = true; needFrameAdj = true; addRadarToMap(\'' + feature.properties.id + '\'.toUpperCase()); map.closePopup();" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" class="function-btn">Select Station</button>'
     } else {
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 20px;">Select Station</button>'
     }
@@ -1412,9 +1413,56 @@ var radarbound = null;
 
 var radarTime = null;
 
+function getRadarFrameTimes(radarStation) {
+    const url = `https://opengeo.ncep.noaa.gov/geoserver/${radarStation.toLowerCase()}/ows?service=wms&version=1.3.0&request=GetCapabilities`;
+
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.text();
+        })
+        .then(text => {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(text, "text/xml");
+
+            console.log(xmlDoc);
+
+            const capabilityLayer = xmlDoc.querySelector("WMS_Capabilities > Capability > Layer");
+
+            if (!capabilityLayer) {
+                console.error("Layer not found in XML structure.");
+                return [];
+            }
+            const layerElements = capabilityLayer.querySelectorAll("Layer");
+            const layers = Array.from(layerElements).map(layer => {
+                const dimensionsText = layer.querySelector("Dimension")?.textContent || null;
+                var dimensionsList = dimensionsText ? dimensionsText.split(",") : null;
+                dimensionsList = dimensionsList.filter(item => item !== undefined);
+
+                return {
+                    name: layer.querySelector("Name")?.textContent || null,
+                    description: layer.querySelector("Abstract")?.textContent || null,
+                    times: dimensionsList
+                };
+            });
+            console.log(layers);
+            return layers;
+        })
+        .catch(error => {
+            console.error('getRadarFrameTimes() > ', error);
+        });
+}
+
+var availableRadarFrames = [];
+var frameIdx = 31;
+var prevStattype = "conus_cref_qcd";
+var oldFrameIdx = 31;
+var maxFrames = undefined;
+
 function addRadarToMap (station="conus") {
-    document.getElementById("radarloader").style.display = "flex";
-    var stattype = ""
+    var stattype = "";
     if (station != "conus"){
         if (firstsruse) { document.getElementById("prod").innerHTML = '<option value="bref">Base Reflectivity</option> <option value="bvel">Base Velocity</option> <option value="bdhc">Digital Hydrometer Classification</option> <option value="boha">Rainfall Accumulation (One Hour)</option> <option value="bdsa">Rainfall Accumulation (Storm Total)</option>'; }
         radarProduct = document.getElementById("prod").value;
@@ -1461,40 +1509,57 @@ function addRadarToMap (station="conus") {
 
     document.title = "Spark Radar | " + station.toUpperCase();
 
-    document.getElementById("infop").innerHTML = "Loading radar...";
+    var oldAvRadarFrames = availableRadarFrames;
+    const timedata = getRadarFrameTimes(station)
+    .then(timedata => {
+        timedata.forEach(item => {
+            if (item.name == stattype) { availableRadarFrames = item.times; }
+        });
+        
+        maxFrames = availableRadarFrames.length;
 
-    radarTime = getCurrentISOTime()
-
-    radar.clearLayers();
-    const wmsLayer = L.tileLayer.wms(
-        'https://opengeo.ncep.noaa.gov/geoserver/' + station.toLowerCase() + '/' + stattype + '/ows', {
-            layers: stattype,
-            format: 'image/png',
-            transparent: true,
-            version: '1.1.1',
-            time: radarTime,
-            crs: L.CRS.EPSG3857,
-            opacity: radarOpacity,
-            cacheBypass: radarTime
+        if (needFrameAdj) {
+            needFrameAdj = false;
+            frameIdx = maxFrames-1;
         }
-    );
-
-    wmsLayer.addTo(radar);
-    if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
-    radarStation = station;
-    updateRadarInfo(station);
-    document.getElementById("infop").innerHTML = "";
-    document.getElementById("radarloader").style.display = "none";
-    if (station != "conus" && firstsruse){ firstsruse=false }; 
     
+        document.getElementById("infop").innerHTML = "Loading radar...";
+
+        // Checks if we're not on the same station, or that there is a difference in the time
+        // I dont exactly know whats happening, I just know it works
+        if (prevStattype != stattype || availableRadarFrames[frameIdx] != oldAvRadarFrames[frameIdx] || frameIdx != oldFrameIdx){
+            radarTime = availableRadarFrames[frameIdx];
+            oldFrameIdx = frameIdx;
+        
+            radar.clearLayers();
+            const wmsLayer = L.tileLayer.wms(
+                'https://opengeo.ncep.noaa.gov/geoserver/' + station.toLowerCase() + '/' + stattype + '/ows', {
+                    layers: stattype,
+                    format: 'image/png',
+                    transparent: true,
+                    version: '1.1.1',
+                    time: radarTime,
+                    crs: L.CRS.EPSG3857,
+                    opacity: radarOpacity,
+                }
+            );
+        
+            wmsLayer.addTo(radar);
+            radarStation = station;
+            prevStattype = stattype;
+            updateRadarInfo(station);
+            document.getElementById("infop").innerHTML = "";
+            if (station != "conus" && firstsruse){ firstsruse=false }
+        } else {
+            console.log("No radar update.")
+            document.getElementById("infop").innerHTML = "";
+        }
+    });
 }
 
 // Add the radar to map and update it every 60 seconds
 setTimeout(() => addRadarToMap(), 100);
-setInterval(() => {
-    console.log("Auto-updating radar.")
-    addRadarToMap(radarStation);
-}, 60000);
+setInterval(() => { if (frameIdx == maxFrames-1){ console.log("Auto-updating radar."); needFrameAdj = true; addRadarToMap(radarStation); } }, 10000);
 
 function onMapEvent(e) {
     const center = map.getCenter();
@@ -1513,7 +1578,8 @@ function holdRadar () {
     canRefresh = false;
 }
 
-function parseRadarTimestamp (isoString) {
+function parseRadarTimestamp(isoString) {
+    console.log(isoString)
     const options = {
         hour: '2-digit',
         minute: '2-digit',
@@ -1521,47 +1587,36 @@ function parseRadarTimestamp (isoString) {
         hour12: true
     };
 
-    const date = new Date(isoString);
+    const date = new Date(isoString)
     return date.toLocaleString(undefined, options);
 }
+
 
 function updateRadarInfo(stat="conus") {
     if (stat == "conus"){
         document.getElementById("radinfo_lna").style.color = 'white';
-        document.getElementById("radinfo_lna").innerHTML = "<b>" + radarStation.toUpperCase() + "</b> • " + radarTime;
+        document.getElementById("radinfo_lna").innerHTML = "<b>" + radarStation.toUpperCase() + "</b> • " + parseRadarTimestamp(radarTime);
     } else {
         stat = stat.toUpperCase();
         console.info("Getting info for " + stat);
-        fetch('https://api.weather.gov/radar/stations/' + stat)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            return response.json();
-        })
-        .then(data => {
-            document.getElementById("radinfo_lna").innerHTML = "<b>" + stat.toUpperCase() + "</b> • " + parseRadarTimestamp(data.properties.latency.levelTwoLastReceivedTime);
+        document.getElementById("radinfo_lna").innerHTML = "<b>" + stat.toUpperCase() + "</b> • " + parseRadarTimestamp(radarTime);
 
-            clearInterval(radartimerefresher);
-            radartimerefresher = setInterval(function() {
-                try {
-                    const radarDate = new Date(data.properties.latency.levelTwoLastReceivedTime);
-                    const currentDate = new Date();
-                    const timediff = (currentDate - radarDate) / (1000 * 60);
+        clearInterval(radartimerefresher);
+        radartimerefresher = setInterval(function() {
+            try {
+                const radarDate = new Date(data.properties.latency.levelTwoLastReceivedTime);
+                const currentDate = new Date();
+                const timediff = (currentDate - radarDate) / (1000 * 60);
 
-                    if (timediff > 10) {
-                        document.getElementById("radinfo_lna").style.color = '#ff2121ff';
-                    } else if (timediff > 5) {
-                        document.getElementById("radinfo_lna").style.color = '#ffcc0fff';
-                    } else {
-                        document.getElementById("radinfo_lna").style.color = 'white';
-                    }
-                } catch { document.getElementById("radinfo_lna").style.color = 'white'; }
-            }, 1000);
-        })
-        .catch(error => {
-            console.error('updateRadarInfo() > fetch() > ', error);
-        });
+                if (timediff > 10) {
+                    document.getElementById("radinfo_lna").style.color = '#ff2121ff';
+                } else if (timediff > 5) {
+                    document.getElementById("radinfo_lna").style.color = '#ffcc0fff';
+                } else {
+                    document.getElementById("radinfo_lna").style.color = 'white';
+                }
+            } catch { document.getElementById("radinfo_lna").style.color = 'white'; }
+        }, 1000);
     }
 }
 
@@ -2411,6 +2466,7 @@ function setProduct() {
     var e = document.getElementById('prod');
     radarProduct = e.options[e.selectedIndex].value;
     canRefresh = true;
+    needFrameAdj = true;
     addRadarToMap(radarStation);
 }
 

@@ -564,6 +564,9 @@ input:focus::-webkit-input-placeholder {
     border-radius: 20px;
     border: 0px;
     color: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .selected_toolbtn {
