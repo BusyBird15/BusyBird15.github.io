@@ -83,11 +83,11 @@ Programming of the Spark Radar project began in September 2024.
     </button>
 
     <!--Radar state info-->
-    <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: flex-end; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
+    <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
         <div style="display: flex; flex-direction: row;"><div id="radarloader" style="margin-right: 20px;" class="lds-ripple-mini"><div></div><div></div></div><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b></p></div>
-        <h3 id="photo-prod" onclick="legendclick();" style="display: none; color: #27beffff; cursor: pointer; font-weight: bolder; width: 100%; text-align: center; margin: 2px; font-size: large; text-shadow: 0 0 3px #000000ee;">Composite reflectivity</h3>
+        <h3 id="photo-prod" onclick="legendclick();" style="display: none; color: #27beffff; margin-top: 0px !important; cursor: pointer; font-weight: bolder; width: 100%; text-align: center; margin: 2px; text-shadow: 0 0 3px #000000ee;">Composite reflectivity</h3>
         
-        <select id="prod" style="display: block; width: 100%; font-size: medium; margin-top: 10px; border-radius: 20px;" onchange="setProduct();">
+        <select id="prod" style="appearance: none; padding: 5px; color: #27beffff; font-weight: bolder; text-align: center; -webkit-appearance: none; -moz-appearance: none; background: none; border: none; font-size: large; display: block; width: 100%; text-shadow: 0px 0px 6px #464646; font-size: medium; border-radius: 20px;" onchange="setProduct();">
             <option value="conus_cref">Composite Reflectivity</option>
             <option value="conus_bref">Base Reflectivity</option>
         </select>
@@ -96,7 +96,7 @@ Programming of the Spark Radar project began in September 2024.
     <div id="radarproducts" class="overlay-object" style="transition: opacity 0.2s !important; opacity: 0; width: calc(100% - 520px); flex-direction: column; max-width: 330px; min-width: 180px; left: 70px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
     <!--Menu Blur-->
-    <div id="menu-blur" onclick="menuToggle(false); fadeOut('menu-blur')" style="transition: opacity 0.5s !important; opacity: 0; display: none;"></div>
+    <div id="menu-blur" onclick="menuToggle(false); fadeOut('menu-blur')" style="transition: opacity 0.5s !important; border-radius: 0px; opacity: 0; display: none;"></div>
 
     <!--Menu-->
     <div id="menu" style="transition: opacity 0.5s, transform 0.5s !important; transform: translateX(-300px); opacity: 0;">
@@ -207,51 +207,55 @@ Programming of the Spark Radar project began in September 2024.
                 <div class="lds-ripple"><div></div><div></div></div>
             </div>
 
-            <div id="settings" style="display: flex; flex-direction: column; overflow-x: clip; scrollbar-width: none; height: calc(100% - 40px);">
-                <hr style="width: 100%; margin-top: 10px;">
-                <div style="display: flex; justify-content: space-around;">
-                    <button id="settings-general" onclick="settingsmode('settmenu-general', 'settings-general');" class="set-btn" style="background: #27beffff; border-radius: 20px;">
-                        <i class="fa-solid fa-gear" style="font-size: 16px;"></i>
+            <div id="settings" style="display: flex; flex-direction: row; overflow-x: clip; scrollbar-width: none; height: calc(100% - 40px);">
+                <div style="display: flex; width: 90px; flex-direction: column; justify-content: flex-start; overflow-y: auto; overflow-x: none; scrollbar-width: none;">
+                    <button id="settings-general" onclick="settingsmode('settmenu-general', 'settings-general');" class="set-btn" style="margin-top: 10px; background: #27beffff; border-radius: 20px;">
+                        <i class="fa-solid fa-gear" style="font-size: 16px;"></i><br>General
                     </button>
                     <button id="settings-map" onclick="settingsmode('settmenu-map', 'settings-map');" class="set-btn" style="background: #89999f; border-radius: 20px;">
-                        <i class="fa-solid fa-map" style="font-size: 16px;"></i>
+                        <i class="fa-solid fa-map" style="font-size: 16px;"></i><br>Maps
                     </button>
                     <button id="settings-radar" onclick="settingsmode('settmenu-radar', 'settings-radar');" class="set-btn" style="background: #89999f; border-radius: 20px;">
-                        <i class="fa-solid fa-satellite-dish" style="font-size: 16px"></i>
+                        <i class="fa-solid fa-satellite-dish" style="font-size: 16px"></i><br>Radar
                     </button>
                     <button id="settings-alerts" onclick="settingsmode('settmenu-alerts', 'settings-alerts');" class="set-btn" style="background: #89999f; border-radius: 20px;">
-                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i>
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 16px;"></i><br>Alerts
+                    </button>
+                    <button id="settings-storm" onclick="settingsmode('settmenu-storm', 'settings-storm');" class="set-btn" style="background: #89999f; border-radius: 20px;">
+                        <i class="fa-solid fa-cloud-bolt" style="font-size: 16px"></i><br>Storms
+                    </button>
+                    <button id="settings-radio" onclick="settingsmode('settmenu-radio', 'settings-radio');" class="set-btn" style="background: #89999f; border-radius: 20px;">
+                        <i class="fa-solid fa-radio" style="font-size: 16px"></i><br>Radios
                     </button>
                     <!--<button id="settings-stream" onclick="settingsmode('settmenu-streaming', 'settings-stream');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-brands fa-youtube" style="font-size: 16px;"></i>
                     </button>-->
                 </div>
-                <hr style="margin-bottom: 10px; width: 100%;">
-
-                <div style="overflow-y: auto; scrollbar-width: none; height: 100%;">
+                <div style="border-left:1px solid darkgray; height:100%; margin-left: 10px; margin-right: 10px;"></div>
+                <div style="width: 100%; overflow-y: auto; scrollbar-width: none; height: 100%;">
                     <div id="settmenu-general" style="flex-direction: column; display: flex;">
                         <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bugs setticon" style="font-size: 16px; color: white;"></i><b>Backend Information</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">The info appears in the bottom left corner and reveals what the application is doing.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">The info appears in the bottom left corner and reveals what the application is doing.</p>
                         <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" id="debugger" onchange="if (document.getElementById('debugger').checked) { document.getElementById('infop').style.display = 'flex' } else { document.getElementById('infop').style.display = 'none' }">
                             <span class="checkmark" style="margin-right: 10px;"></span>
                             Show debugger
                         </label>
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-location setticon" style="font-size: 16px; color: white;"></i><b>Current Location</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show your current location on the radar map. Your location info does not leave your device.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show your current location on the radar map. Your location info does not leave your device.</p>
                         <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" checked="false" id="location" onchange="showLocation();">
                             <span class="checkmark" style="margin-right: 10px;"></span>
                             Show my location
                         </label>
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-download setticon" style="font-size: 16px; color: white;"></i><b>Settings Database</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Download your settings as a backup, or upload an existing backup.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Download your settings as a backup, or upload an existing backup.</p>
                         <div style="display: flex; flex-direction: row;">
                             <button style="width: max-content; font-weight: bold; margin-left: 20px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="settingsManagement('download');"><i class="fa-solid fa-download" style="font-size: 16px; margin-right: 5px;"></i>Download settings</button>
                             <button style="width: max-content; font-weight: bold; margin-left: 20px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="settingsManagement('upload');"><i class="fa-solid fa-upload" style="font-size: 16px; margin-right: 5px;"></i>Upload settings</button>
                         </div>
                         <p style="margin: 25px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-rotate setticon" style="font-size: 16px; color: white;"></i><b>Restore Settings</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Reset all settings to their defaults, including custom alert colors.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Reset all settings to their defaults, including custom alert colors.</p>
                         <button style="width: max-content; font-weight: bold; margin-left: 20px; font-size: medium; background: #ff2121ff" class="function-btn" onclick="if (confirm('Reset all settings to default?')) { localStorage.removeItem('SparkRadar_settings'); window.location.reload(); }"><i class="fa-solid fa-rotate" style="font-size: 16px; margin-right: 5px;"></i>Reset to defaults</button>
                     </div>
 
@@ -260,17 +264,20 @@ Programming of the Spark Radar project began in September 2024.
                         <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" id="darkmatmp" onchange="setMapType('darkmatmp', map_darkmaterial)">
                             <span class="checkmark" style="margin-right: 10px;"></span>
-                            <p style="font-size: medium; margin: 0px;">Dark (Default)</p>
+                            <img style="border-radius: 100%; width: 70px; height: 70px;" src="dark_tb.png">
+                            <p style="font-size: medium; margin: 0px; margin-left: 15px;">Dark (Default)</p>
                         </label>
                         <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" id="defaultmp" onchange="setMapType('defaultmp', map_default)">
                             <span class="checkmark" style="margin-right: 10px;"></span>
-                            <p style="font-size: medium; margin: 0px;">Light</p>
+                            <img style="border-radius: 100%; width: 70px; height: 70px;" src="light_tb.png">
+                            <p style="font-size: medium; margin: 0px; margin-left: 15px;">Light</p>
                         </label>
                         <label style="margin-left: 20px; margin-bottom: 10px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" id="streetsmp" onchange="setMapType('streetsmp', map_streets)">
                             <span class="checkmark" style="margin-right: 10px;"></span>
-                            <p style="font-size: medium; margin: 0px;">Streets</p>
+                            <img style="border-radius: 100%; width: 70px; height: 70px;" src="streets_tb.png">
+                            <p style="font-size: medium; margin: 0px; margin-left: 15px;">Streets</p>
                         </label>
                         <div style="display: flex; align-items: center;">
                             <p style="margin: 5px;">Maps provided by </p>
@@ -278,59 +285,23 @@ Programming of the Spark Radar project began in September 2024.
                         </div>
 
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>SPC Outlook</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show or hide the SPC Day 1 Categorical Outlook outline.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show or hide the SPC Day 1 Categorical Outlook outline.</p>
                         <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" checked="true" id="spctoggle" onchange="spcEnabled = document.getElementById('spctoggle').checked; if (spcEnabled) { loadOutlook(); } else { outlook.clearLayers(); }">
                             <span class="checkmark" style="margin-right: 10px;"></span>
                             Show outlook
                         </label>
-
-                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-radio setticon" style="font-size: 16px; color: white;"></i><b>Weather Radios</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Turn the weather radio listener on or off. Also shows or hides radio markers on the map.</p>
-                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
-                            <input type="checkbox" checked="true" id="radiotoggle" onchange="weatherRadioVisible = document.getElementById('radiotoggle').checked; if (weatherRadioVisible) { addWeatherRadios(); } else { stopPlayer(); radios.clearLayers(); }">
-                            <span class="checkmark" style="margin-right: 10px;"></span>
-                            Enable radios
-                        </label>
                     </div>
 
                      <div id="settmenu-radar" style="flex-direction: column; display: none;">
-                         <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-star setticon" style="font-size: 16px; color: white;"></i><b>Radar resolution</b></p>
-                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher resolution provides a more crisp radar image but uses more data and may cause the radar to lag or load slower.</p>
-                         <select id="res" onchange="setResolution();">
-                            <option value="1">Maximum</option>
-                            <option value="1.5">Great</option>
-                            <option value="2" selected="selected">Good (Recommended)</option>
-                            <option value="3">Fair</option>
-                            <option value="4">Data saver</option>
-                            <option value="5">Minimum</option>
-                         </select>
-                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
-                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">A higher opacity value means a less transparent radar.</p>
+                         <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-eye setticon" style="font-size: 16px; color: white;"></i><b>Radar opacity</b></p>
+                         <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">A higher opacity value means a less transparent radar.</p>
                          <input style="width: calc(100% - 10px);" type="range" min="1" max="100" value="75" class="slider" id="radop" onchange="radarOpacityChange()" title="Radar Opacity">
-                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bolt setticon" style="font-size: 16px; color: white;"></i><b>Lightning</b></p>
-                         <p style="margin: 5px 5px 10px 5px; font-size: medium;">Choose at what zoom lightning strikes appear on the map. Lightning strikes are accumulated over the last 60 minutes.</p>
-                         <select id="light" onchange="setLightningLevel();">
-                            <option value="4">Maximum (Level 4, Extremely laggy)</option>
-                            <option value="6">More (Level 6, Laggy)</option>
-                            <option value="9" selected="selected">Regular (Level 9, Recommended, Minimal lag)</option>
-                            <option value="10">Less (Level 10, No lag)</option>
-                            <option value="11">Least (Level 11, No lag)</option>
-                            <option value="20">Never show lightning</option>
-                         </select>
-
-                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>Storm Centers</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Turns storm centers on or off.</p>
-                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
-                            <input type="checkbox" checked="true" id="stormcentertoggle" onchange="stormCentersOn = document.getElementById('stormcentertoggle').checked; if (stormCentersOn) { loadStormCenters(); } else { stormCenters.clearLayers(); }">
-                            <span class="checkmark" style="margin-right: 10px;"></span>
-                            Enable storm centers
-                        </label>
                      </div>
 
                     <div id="settmenu-alerts" style="flex-direction: column; display: none;">
                         <!--<p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-star setticon" style="font-size: 16px; color: white;"></i><b>Radar refresh interval</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Choose how often alerts are refreshed from NOAA. This includes the warnings refresh cycle only.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Choose how often alerts are refreshed from NOAA. This includes the warnings refresh cycle only.</p>
                         <select id="alertrefint" onchange="setAlertRefreshInterval();">
                             <option value="120000">2 Minutes</option>
                             <option value="60000">1 Minute</option>
@@ -341,7 +312,7 @@ Programming of the Spark Radar project began in September 2024.
                         </select>-->
 
                         <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-triangle-exclamation setticon" style="font-size: 16px; color: white;"></i><b>Alert Colors</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Make the radar yours by defining your own alert polygon colors. If there is more than one color option, the alert will flash between the two colors.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Make the radar yours by defining your own alert polygon colors. If there is more than one color option, the alert will flash between the two colors.</p>
                         <div style="margin: 5px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Extreme Wind Warning</p> <input type="color" id="ewwcolor" onchange="changeAlertColors('EWW', document.getElementById('ewwcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div>
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Tornado Emergency</p> <div style="display: flex; flex-direction: row;"><input type="color" id="torecolor" onchange="changeAlertColors('TORE', document.getElementById('torecolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#c940ff"><input type="color" id="torecolor2" onchange="changeAlertColors('TORE2', document.getElementById('torecolor2').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div></div>
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">PDS Tornado Warning</p> <div style="display: flex; flex-direction: row;"><input type="color" id="pdstorcolor" onchange="changeAlertColors('PDSTOR', document.getElementById('pdstorcolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer; margin-right: 10px;" value="#ff0000"><input type="color" id="pdstorcolor2" onchange="changeAlertColors('PDSTOR2', document.getElementById('pdstorcolor2').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#ff00ff"></div></div>
@@ -356,7 +327,7 @@ Programming of the Spark Radar project began in September 2024.
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Flood Advisory</p> <input type="color" id="facolor" onchange="changeAlertColors('FA', document.getElementById('facolor').value)" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#6A5ACD"></div>
 
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>SPC Watches</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">Show or hide severe thunderstorm and tornado watches issued by the SPC.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show or hide severe thunderstorm and tornado watches issued by the SPC.</p>
                         <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
                             <input type="checkbox" checked="true" id="wwtoggle" onchange="watchesEnabled = document.getElementById('wwtoggle').checked; if (watchesEnabled) { loadWatches(); } else { watches.clearLayers(); }">
                             <span class="checkmark" style="margin-right: 10px;"></span>
@@ -364,10 +335,42 @@ Programming of the Spark Radar project began in September 2024.
                         </label>
 
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-circle-exclamation setticon" style="font-size: 16px; color: white;"></i><b>Watch Colors</b></p>
-                        <p style="margin: 5px 5px 10px 5px; font-size: medium;">As you can change alert colors, you can also change the colors of SPC watches.</p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">As you can change alert colors, you can also change the colors of SPC watches.</p>
                         <div style="margin: 5px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Tornado Watch</p> <input type="color" id="toacolor" onchange="changeWatchColors('TOA', document.getElementById('toacolor').value);" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#FE5859"></div>
                         <div style="margin: 0px 5px 10px 20px; display: flex; flex-direction: row; justify-content: space-between; align-items: center;"><p style="margin: 0px 10px 0px 0px; font-size: medium;">Severe Tstorm Watch</p> <input type="color" id="svacolor" onchange="changeWatchColors('SVA', document.getElementById('svacolor').value);" style="border: none; border-radius: 5px; background: darkgray; cursor: pointer;" value="#516BFF"></div>
 
+                    </div>
+
+                    <div id="settmenu-storm" style="flex-direction: column; display: none;">
+                        <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-bolt setticon" style="font-size: 16px; color: white;"></i><b>Lightning</b></p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Choose at what zoom lightning strikes appear on the map. Lightning strikes are accumulated over the last 60 minutes.</p>
+                        <select id="light" onchange="setLightningLevel();">
+                            <option value="4">Maximum (Level 4, Extremely laggy)</option>
+                            <option value="6">More (Level 6, Laggy)</option>
+                            <option value="9" selected="selected">Regular (Level 9, Recommended, Minimal lag)</option>
+                            <option value="10">Less (Level 10, No lag)</option>
+                            <option value="11">Least (Level 11, No lag)</option>
+                            <option value="20">Never show lightning</option>
+                        </select>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium;"><b>Note:</b> At the moment, the lightning data source has stopped running. Spark Radar is in the process of partering with a new data source.</p>
+
+                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>Storm Centers</b></p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Turns storm centers on or off.</p>
+                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                            <input type="checkbox" checked="true" id="stormcentertoggle" onchange="stormCentersOn = document.getElementById('stormcentertoggle').checked; if (stormCentersOn) { loadStormCenters(); } else { stormCenters.clearLayers(); }">
+                            <span class="checkmark" style="margin-right: 10px;"></span>
+                            Enable storm centers
+                        </label>
+                    </div>
+
+                    <div id="settmenu-radio" style="flex-direction: column; display: none;">
+                        <p style="margin: 10px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-radio setticon" style="font-size: 16px; color: white;"></i><b>Weather Radios</b></p>
+                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Turn the weather radio listener on or off. Also shows or hides radio markers on the map.</p>
+                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                            <input type="checkbox" checked="true" id="radiotoggle" onchange="weatherRadioVisible = document.getElementById('radiotoggle').checked; if (weatherRadioVisible) { addWeatherRadios(); } else { stopPlayer(); radios.clearLayers(); }">
+                            <span class="checkmark" style="margin-right: 10px;"></span>
+                            Enable radios
+                        </label>
                     </div>
 
                     <div id="settmenu-streaming" style="flex-direction: column; display: none;">
@@ -397,8 +400,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b>v2.0 BETA (v1.0)</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Mar 24, 2025</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b>v2.0 BETA (v1.1)</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Apr 1, 2025</p>
                 <br>
             </div>
 

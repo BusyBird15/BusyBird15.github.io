@@ -121,6 +121,8 @@ body {
     width: fit-content;
     height: fit-content;
     transition-duration: 0.2s;
+    margin-bottom: 10px;
+    width: 100%;
 }
 
 .set-btn:hover {
@@ -669,4 +671,14 @@ em {
 
 .presetitem:hover {
     background-color: #ffffff40;
+}
+
+select:focus {
+    outline: none;
+    border: none;
+    box-shadow: none;
+  }
+
+#prod::after{
+    border: none;
 }

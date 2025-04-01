@@ -79,11 +79,10 @@ var citylayer = L.maptilerLayer({
     pane: "cities",
     navigationControl: false,
     geolocateControl: false,
-}).addTo(map);
+});
 
 
 // Variables
-var resolutionFactor = 2;     // Scaling of the viewport for the radar. The higher the number, the lower the quality.
 var radarOpacity = 0.75;      // Opacity of radar imagery
 
 var radarTime = "";
@@ -144,13 +143,17 @@ function checkMobile() {
 
 function fixSizing () {
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    document.getElementById("radarlegend").style.display = "block";
     document.getElementById("textattr").style.bottom = "45px";
     document.querySelectorAll("a").forEach(function(item) {
         if (item.href == "https://www.maptiler.com/") {
             item.style.display = 'none';
         }
     });
+    if (vw < 575){
+        if (document.getElementById("radarlegend").style.display != "none") { document.getElementById("radarlegend").style.display = "none"; }
+    } else {
+        if (document.getElementById("radarlegend").style.display != "block") { document.getElementById("radarlegend").style.display = "block"; }
+    }
 }
 
 window.addEventListener('resize', function(event){
@@ -193,6 +196,12 @@ function setMapType(mapselector, type) {
         document.getElementById(thisobj).checked = false;
     });
     document.getElementById(mapselector).checked = true;
+
+    if (mapselector == 'streetsmp'){
+        map.removeLayer(citylayer);
+    } else {
+        citylayer.addTo(map);
+    }
 
     if (currentMapLayer) { map.removeLayer(currentMapLayer); }
     currentMapLayer = type;
@@ -251,7 +260,6 @@ function saveSettings() {
     if (document.getElementById("streetsmp").checked) { mapMode = 3; }
 
     const settingsToSave = {
-        'res': resolutionFactor,
         'rop': radarOpacity,
         'ltz': lightningzoomlevel,
         'alc': alertcolors,
@@ -274,9 +282,6 @@ try {
     const settings = JSON.parse(localStorage.getItem('SparkRadar_settings'));
 
     if (settings){
-        resolutionFactor = settings.res;
-        document.getElementById('res').value = resolutionFactor;
-
         lightningzoomlevel = settings.ltz;
         document.getElementById('light').value = lightningzoomlevel;
 
@@ -666,7 +671,7 @@ function loadProd(producttoview) {
                     return response.json();
                 })
                 .then(data => {
-                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + String(data.productText)(/\n/g, "<br>");
+                    document.getElementById("produc").innerHTML = '<p style="font-family: \'Cabin\', sans-serif; margin: 0px;"><b>Issued: </b>' + formatTimestamp(data.issuanceTime) + " (" + isoTimeAgo(data.issuanceTime) + ")<br><b>Concerning: </b>" + data.issuingOffice + "</p><br>" + data.productText.toString().replace(/\n/g, "<br>");
                 })
                 .catch(error => {
                     console.error('loadProd() > fetch() > fetch() > ', error);
@@ -965,6 +970,9 @@ function openAlertProduct(alertInfoId) {
     if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
          alertInfo.properties.event = "Flash Flood Emergency"
     }
+    if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes(" TEST")){
+        alertInfo.properties.event = "TEST Tornado Warning";
+    }
 
     var alerttitle = document.getElementById("dialogTitle");
     alerttitle.innerHTML = alertInfo.properties.event;
@@ -1135,8 +1143,8 @@ function buildRadarContent (feature) {
     const currentDate = new Date();
     const timediff = (currentDate - radarDate) / (1000 * 60);
 
-    var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; justify-content: space-around; align-items: center;">';
-    construct += '<i class="fa-solid fa-satellite-dish" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>';
+    var construct = '<div> <div style="display: flex; align-items: flex-start; flex-direction: row; margin-bottom: 10px; justify-content: space-between;"> <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
+    construct += '<div style="display: flex; align-items: center; justify-content: space-evenly; flex-direction: row; width: 100%;"><i class="fa-solid fa-satellite-dish" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>';
     construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">' + feature.properties.id + '</p>';
 
     try {
@@ -1150,17 +1158,21 @@ function buildRadarContent (feature) {
     } catch {
         construct += '<p style="color: #ff2121ff">Offline';
     }
-    construct += '</p></div></div><div style="display: flex; flex-direction: row;">';
+    construct += '</p></div></div></div></div><div style="display: flex; flex-direction: row; height: 45px;">';
 
     if (stus == "Offline"){
-        construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 20px;">Select Station</button>'
+        construct += '<button title="View this radar." style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 20px;">Select Station</button>'
     } else if (stus == "Operate" && timediff < 10){
         construct += '<button onclick="mapEvents += 1; canRefresh = true; addRadarToMap(\'' + feature.properties.id + '\'.toUpperCase()); map.closePopup();" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" class="function-btn">Select Station</button>'
     } else {
         construct += '<button style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; background: #89999f; color: black; padding: 3px; border: none; border-radius: 20px;">Select Station</button>'
     }
 
-    if (feature.properties.id.startsWith("K")) { construct += '<button class="function-btn" style="margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" onclick="selectedWfoArea = \'' + feature.properties.id + '\'; selectedLAT = ' + feature.geometry.coordinates[1] + '; selectedLON = ' + feature.geometry.coordinates[0] + '; loadSounding(' + feature.geometry.coordinates[1] + ', ' + feature.geometry.coordinates[0] + '); wfodialog(true);">WFO Products</button>' }
+    if (feature.properties.id.startsWith("K")) {
+        construct += '<button class="function-btn" title="View the radar status message for this station." style="margin: 10px 5px 5px 5px; width: 50px; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" onclick="selectedWfoArea = \'' + feature.properties.id + '\'; selectedLAT = ' + feature.geometry.coordinates[1] + '; selectedLON = ' + feature.geometry.coordinates[0] + '; loadSounding(' + feature.geometry.coordinates[1] + ', ' + feature.geometry.coordinates[0] + '); dialog(true, \'prodviewer\', \'RDA\');"><i class="fa-solid fa-thumbtack" style="font-size: 16px;"></i></button>'
+        construct += '<button class="function-btn" title="View the Area Forecast Discussion for this area." style="margin: 10px 5px 5px 5px; width: 50px; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" onclick="selectedWfoArea = \'' + feature.properties.id + '\'; selectedLAT = ' + feature.geometry.coordinates[1] + '; selectedLON = ' + feature.geometry.coordinates[0] + '; loadSounding(' + feature.geometry.coordinates[1] + ', ' + feature.geometry.coordinates[0] + '); dialog(true, \'prodviewer\', \'AFD\');"><i class="fa-solid fa-comments" style="font-size: 16px;"></i></button>'
+        construct += '<button class="function-btn" title="View the Public Information Statement for this area." style="margin: 10px 5px 5px 5px; width: 50px; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" onclick="selectedWfoArea = \'' + feature.properties.id + '\'; selectedLAT = ' + feature.geometry.coordinates[1] + '; selectedLON = ' + feature.geometry.coordinates[0] + '; loadSounding(' + feature.geometry.coordinates[1] + ', ' + feature.geometry.coordinates[0] + '); dialog(true, \'prodviewer\', \'PNS\');"><i class="fa-solid fa-message" style="font-size: 16px;"></i></button>'
+    }
 
     construct += '</div>';
     return construct;
@@ -1238,7 +1250,8 @@ function putRadarStationsOnMap() {
                 "maxHeight": 500,
                 "maxWidth": 500,
                 "className": "popup",
-                "autoPanPadding": [10, 110],
+                "autoPanPadding": [10, 60],
+                "closeButton": false
             });
             document.getElementById("infop").innerHTML = "";
         });
@@ -1338,7 +1351,7 @@ function loadStormCenters() {
                         "maxHeight": 500,
                         "maxWidth": 500,
                         "className": "popup",
-                        "autoPanPadding": [10, 110],
+                        "autoPanPadding": [10, 60],
                     });
                 }
             } catch (error) {console.error(error);}
@@ -1397,11 +1410,13 @@ var mapEvents = 1;
 var canRefresh = true;
 var radarbound = null;
 
+var radarTime = null;
+
 function addRadarToMap (station="conus") {
     document.getElementById("radarloader").style.display = "flex";
     var stattype = ""
     if (station != "conus"){
-        if (firstsruse) { firstsruse=false; document.getElementById("prod").innerHTML = '<option value="bref">Base Reflectivity</option> <option value="bvel">Base Velocity</option> <option value="bdhc">Digital Hydrometer Classification</option> <option value="boha">Rainfall Accumulation (One Hour)</option> <option value="bdsa">Rainfall Accumulation (Storm Total)</option>'; }
+        if (firstsruse) { document.getElementById("prod").innerHTML = '<option value="bref">Base Reflectivity</option> <option value="bvel">Base Velocity</option> <option value="bdhc">Digital Hydrometer Classification</option> <option value="boha">Rainfall Accumulation (One Hour)</option> <option value="bdsa">Rainfall Accumulation (Storm Total)</option>'; }
         radarProduct = document.getElementById("prod").value;
         if (radarProduct == "bref" || radarProduct == "bvel"){
             stattype = station.toLowerCase() + '_sr_' + radarProduct
@@ -1419,8 +1434,14 @@ function addRadarToMap (station="conus") {
         }
     }
 
-    var idx = document.getElementById("prod").selectedIndex;
-    document.getElementById("photo-prod").innerHTML = document.getElementById("prod").options[idx].text;
+    try{
+        var idx = document.getElementById("prod").selectedIndex;
+        document.getElementById("photo-prod").innerHTML = document.getElementById("prod").options[idx].text;
+    } catch {
+        document.getElementById("prod").options.selectedIndex = 0;
+        var idx = document.getElementById("prod").selectedIndex;
+        document.getElementById("photo-prod").innerHTML = document.getElementById("prod").options[idx].text;
+    }
 
     if (document.getElementById("prod").value == 'bvel') {
         document.getElementById("radarlegend").src = "https://weather.gov/images/nws/radarfaq/SRBVEL_CT.png"
@@ -1440,56 +1461,40 @@ function addRadarToMap (station="conus") {
 
     document.title = "Spark Radar | " + station.toUpperCase();
 
-    const params = {
-        REQUEST: "GetMap",
-        SERVICE: "WMS",
-        VERSION: "1.1.1",
-        FORMAT: "image/png",
-        TRANSPARENT: "true",
-        TILES: "false",
-        LAYERS: stattype,
-        TIME: getCurrentISOTime(),
-        WIDTH: Math.floor(window.innerWidth / resolutionFactor).toString(),
-        HEIGHT: Math.floor(window.innerHeight / resolutionFactor).toString(),
-        SRS: "EPSG:3857",
-        BBOX: getBoundingBox(true)
-    };
     document.getElementById("infop").innerHTML = "Loading radar...";
 
-    const imageUrl = tileURL('https://opengeo.ncep.noaa.gov/geoserver/' + station.toLowerCase() + '/' + stattype + '/ows', params);
-    var img = new Image();
-    img.src = imageUrl
-    img.onload = function() {
-        if (mapEvents == 1 && canRefresh) {
-            radar.clearLayers();
-            L.imageOverlay(imageUrl, getBoundingBox(false), { opacity: radarOpacity, pane: 'radar' }).addTo(radar);
-            if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
-            radarStation = station;
-            updateRadarInfo(station);
-            document.getElementById("infop").innerHTML = "";
-            mapEvents -= 1;
-            document.getElementById("radarloader").style.display = "none";
-        } else {
-            mapEvents -= 1;
+    radarTime = getCurrentISOTime()
+
+    radar.clearLayers();
+    const wmsLayer = L.tileLayer.wms(
+        'https://opengeo.ncep.noaa.gov/geoserver/' + station.toLowerCase() + '/' + stattype + '/ows', {
+            layers: stattype,
+            format: 'image/png',
+            transparent: true,
+            version: '1.1.1',
+            time: radarTime,
+            crs: L.CRS.EPSG3857,
+            opacity: radarOpacity,
+            cacheBypass: radarTime
         }
-    };
-    img.onerror = function() {
-        console.error("Failed to load radar tile. Trying again...");
-        document.getElementById("radarloader").style.display = "none";
-        console.log(imageUrl)
-        document.getElementById("infop").innerHTML = "";
-        mapEvents -= 1;
-        addRadarToMap(radarStation);
-    };
+    );
+
+    wmsLayer.addTo(radar);
+    if (station == "conus"){ radarTime = parseRadarTimestamp(getCurrentISOTime()); }
+    radarStation = station;
+    updateRadarInfo(station);
+    document.getElementById("infop").innerHTML = "";
+    document.getElementById("radarloader").style.display = "none";
+    if (station != "conus" && firstsruse){ firstsruse=false }; 
+    
 }
 
-// Add the radar to map and update it when the user moves the map and every 30 seconds
+// Add the radar to map and update it every 60 seconds
 setTimeout(() => addRadarToMap(), 100);
 setInterval(() => {
     console.log("Auto-updating radar.")
     addRadarToMap(radarStation);
-    mapEvents += 1;
-}, 20000);
+}, 60000);
 
 function onMapEvent(e) {
     const center = map.getCenter();
@@ -1501,22 +1506,11 @@ function onMapEvent(e) {
     url.search = params.toString();
     window.history.pushState({}, '', url);
 
-    mapEvents += 1;
-    canRefresh = true;
-    addRadarToMap(radarStation);
     loadLightning();
 }
 
 function holdRadar () {
     canRefresh = false;
-}
-
-function setResolution() {
-    var e = document.getElementById('res');
-    resolutionFactor = e.options[e.selectedIndex].value;
-    mapEvents += 1;
-    canRefresh = true;
-    addRadarToMap(radarStation);
 }
 
 function parseRadarTimestamp (isoString) {
@@ -1794,165 +1788,181 @@ function buildWatchPopup(alertInfo, lat, lng) {
         return construct;
     } catch (error) {console.error(error)}
 }
+var alertpop = undefined;
+var alts = [];
 
 // V2 - Dynamic alert popups
 map.on('click', function (e) {
     if (sparkgen) {return;}
-    var clickedPoint = e.latlng;
-    var clickedPointGeoJSON = turf.point([clickedPoint.lng, clickedPoint.lat]);
-    var reversedLayers = alerts.getLayers().reverse();
-    var totalAlerts = 0;
+    if (alertpop) {
+        map.closePopup();
+        alertpop = null;
+        return;
+    } else {
 
-    var construct = '<div> <div style="display: flex; align-items: center; flex-direction: row; margin-bottom: 10px;"> <button id="dialog-closer" onclick="map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
-    construct += '<p style="margin: 5px; color: white; width: 100%; text-align: center; font-weight: bold; font-size: large; height: 24px; margin-left: 10px;">' + e.latlng.lat.toFixed(3) + ', ' + e.latlng.lng.toFixed(3) + '</p> <button class="function-btn" title="Find the nearest radar" onclick="openNearestRadarFromAlert(' + clickedPoint.lat + ', ' + clickedPoint.lng + ');"><i class="fa-solid fa-satellite-dish" style="font-size: 18px;"></i></button> <button class="function-btn" style="margin: 0px 5px;" title="Get the weather conditions for this area" onclick="dialog(true, \'conditions\'); loadWeatherConditions(' + String(clickedPoint.lat) + ', ' + String(clickedPoint.lng) + ')"><i class="fa-solid fa-cloud-sun-rain" style="font-size: 18px;"></i></button></div>';
-    construct += '<div style="overflow-y: auto; overflow-x: hidden; scrollbar-width: none; max-height: 300px; border-radius: 20px;">';
+        var clickedPoint = e.latlng;
+        var clickedPointGeoJSON = turf.point([clickedPoint.lng, clickedPoint.lat]);
+        var reversedLayers = alerts.getLayers().reverse();
+        var totalAlerts = 0;
+        alts = [];
 
-    reversedLayers.forEach(function(layer) {
-        if (layer instanceof L.Polygon) {
-            var polygonGeoJSON = layer.toGeoJSON();
-            var isInside = turf.booleanPointInPolygon(clickedPointGeoJSON, polygonGeoJSON);
-            if (isInside && layer.options.weight == 4) {
-                totalAlerts += 1;
-                var alertInfo = layer.options.data;
-                console.log(alertInfo);
-                var alertTitlecolor = 'white';
-                var alertTitlebackgroundColor = "white";
+        var construct = '<div> <div style="display: flex; align-items: center; flex-direction: row; margin-bottom: 10px;"> <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
+        construct += '<p style="margin: 5px; color: white; width: 100%; text-align: center; font-weight: bold; font-size: large; height: 24px; margin-left: 10px;">' + e.latlng.lat.toFixed(3) + ', ' + e.latlng.lng.toFixed(3) + '</p> <button class="function-btn" title="Find the nearest radar" onclick="openNearestRadarFromAlert(' + clickedPoint.lat + ', ' + clickedPoint.lng + ');"><i class="fa-solid fa-satellite-dish" style="font-size: 18px;"></i></button> <button class="function-btn" style="margin: 0px 5px;" title="Get the weather conditions for this area" onclick="dialog(true, \'conditions\'); loadWeatherConditions(' + String(clickedPoint.lat) + ', ' + String(clickedPoint.lng) + ')"><i class="fa-solid fa-cloud-sun-rain" style="font-size: 18px;"></i></button></div>';
+        construct += '<div style="overflow-y: auto; overflow-x: hidden; scrollbar-width: none; max-height: 300px; border-radius: 20px;">';
 
-                if (alertInfo.properties.event.includes("Severe Thunderstorm")){
-                    alertTitlebackgroundColor = alertcolors.SVR;
-                } else if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes("TORNADO EMERGENCY")) {
-                    alertTitlebackgroundColor = alertcolors.TORE;
-                } else if (alertInfo.properties.event.includes("Tornado")){
-                    alertTitlebackgroundColor = alertcolors.TOR;
-                } else if (alertInfo.properties.event.includes("Flood Advisory")){
-                    alertTitlebackgroundColor = alertcolors.FA;
-                } else if (alertInfo.properties.event.includes("Flash Flood")){
-                    alertTitlebackgroundColor = alertcolors.FFW;
-                } else if (alertInfo.properties.event.includes("Flood Warning")){
-                    alertTitlebackgroundColor = alertcolors.FW;
-                } else if (alertInfo.properties.event.includes("Special Weather")){
-                    alertTitlebackgroundColor = alertcolors.SWS;
-                } else if (alertInfo.properties.event.includes("Extreme Wind")){
-                    alertTitlebackgroundColor = alertcolors.EWW;
-                } else if (alertInfo.properties.event.includes("Special Marine")){
-                    alertTitlebackgroundColor = alertcolors.SMW;
-                }
+        reversedLayers.forEach(function(layer) {
+            if (layer instanceof L.Polygon) {
+                var polygonGeoJSON = layer.toGeoJSON();
+                var isInside = turf.booleanPointInPolygon(clickedPointGeoJSON, polygonGeoJSON);
+                try { var vtec = layer.options.data.properties.parameters.VTEC[0]; } catch {}
+                try { var wmoidentifier = layer.options.data.properties.parameters.WMOidentifier[0]; } catch {}
 
-                alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
+                alts.push(vtec);
 
-                if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
-                    alertInfo.properties.event = "Flash Flood Emergency"
-                }
-                if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
-                    alertInfo.properties.event = "Tornado Emergency";
-                }
-        
-                //if (alertInfo.properties.description.includes("DESTRUCTIVE")){
-                //    construct = construct + '<div style="background-color: red; border-radius: 20px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p></div><br>';
-                //} else if (alertInfo.properties.description.includes("considerable") || isConsid(alertInfo.properties.description)){
-                 //   construct = construct + '<div style="background-color: orange; border-radius: 20px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p></div><br>';
-                //}
-
-                try { var vtec = alertInfo.properties.parameters.VTEC[0]; } catch {}
-                try { var awipsidentifier = alertInfo.properties.parameters.AWIPSidentifier[0]; } catch {}
-                try { var easorg = alertInfo.properties.parameters['EAS-ORG'][0]; } catch {}
-                try { var wmoidentifier = alertInfo.properties.parameters.WMOidentifier[0]; } catch {}
-                try { var motiondesc = alertInfo.properties.parameters.eventMotionDescription[0]; } catch {}
-                try { var maxhail = alertInfo.properties.parameters.maxHailSize[0]; } catch {}
-                try { var maxwind = alertInfo.properties.parameters.maxWindGust[0]; } catch {}
-                try { var fflooddamage = alertInfo.properties.parameters.flashFloodDamageThreat[0]; } catch {}
-                try { var fflooddetection = alertInfo.properties.parameters.flashFloodDetection[0]; } catch {}
-                try { var windthreat = alertInfo.properties.parameters.windThreat[0]; } catch {}
-                try { var hailthreat = alertInfo.properties.parameters.hailThreat[0]; } catch {}
-                try { var tordetection = alertInfo.properties.parameters.tornadoDetection[0]; } catch {}
-
-                construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + layer.options.data.properties.event + '</div>';
-                construct += '<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between;"><div style="flex; flex-direction: column;"><p style="margin: 5px; color: black;"><b>Expires in:</b> ' + isoTimeUntil(alertInfo.properties.expires) + '</p>';
-                if (maxwind || maxhail || fflooddamage || tordetection) {
-                    if (maxwind) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxwind + '</p>';}
-                    if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-cloud-meatball" style=" font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
-                    if (fflooddamage) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-cloud-showers-heavy" style=" font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + fflooddamage + '</p>';}
-                    if (tordetection) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-tornado" style=" font-size: 18px; color: #ff2121ff; margin-right: 5px;"></i> ' + tordetection + '</p>';}
-
-                }
-                construct += '</div>'
-
-                var alertInfoId = 'alert_' + String(alertInfo.properties.id);
-
-                construct = construct + '<div style="display: flex; justify-content: space-around; margin-top: 10px;">'
-                construct = construct + '<button class="function-btn" style="margin: 0px 5px;" title="View the alert text product" onclick="openAlertProduct(\'' + alertInfoId + '\');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
-                construct = construct + "</div></div></div>";
-            }
-        }
-    });
-
-    reversedLayers = watches.getLayers().reverse();
-
-    reversedLayers.forEach(function(layer) {
-        if (layer instanceof L.Polygon) {
-            var polygonGeoJSON = layer.toGeoJSON();
-            var isInside = turf.booleanPointInPolygon(clickedPointGeoJSON, polygonGeoJSON);
-            if (isInside && layer.options.weight == 4) {
-                totalAlerts += 1;
-                var alertInfo = layer.options.dataset[0];
-                try {
-                    var alertTitlecolor = 'black';
+                if (isInside && layer.options.weight == 4) {
+                    totalAlerts += 1;
+                    var alertInfo = layer.options.data;
+                    var alertInfoId = 'alert_' + String(alertInfo.properties.id);
+                    var alertTitlecolor = 'white';
                     var alertTitlebackgroundColor = "white";
-                    if (alertInfo.properties.TYPE == "SVR"){
-                        alertTitlebackgroundColor = watchcolors.SVA;
-                    } else if (alertInfo.properties.TYPE == "TOR"){
-                        alertTitlebackgroundColor = watchcolors.TOA;
-                    }
-            
-                    var alertTitle = "";
-                    if (alertInfo.properties.IS_PDS){
-                        alertTitle = alertTitle + "PDS ";
-                    }
-            
-                    if (alertInfo.properties.TYPE == "TOR"){
-                        alertTitle = alertTitle + "Tornado Watch ";
-                    } else {
-                        alertTitle = alertTitle + "Severe Tstorm Watch ";
-                    }
-            
-                    alertTitle = alertTitle + "#" + alertInfo.properties.NUM;
-                    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
-                        
-                    var identifier = Math.random();
-                    watchdata[identifier] = alertInfo;
-                            
-                    var maxhail = alertInfo.properties.MAX_HAIL;
-                    var maxwind = Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945);
 
-                    construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + alertTitle + '</div>';
-                    construct += '<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between;"><div style="flex; flex-direction: column;"><p style="margin: 5px; color: black;"><b>Expires in:</b> ' + isoTimeUntil(convertToIso(String(alertInfo.properties.EXPIRE))) + '</p>';
-                    if (maxwind || maxhail) {
-                        if (maxwind) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxwind + ' MPH</p>';}
-                        if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-cloud-meatball" style=" font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
+                    if (alertInfo.properties.event.includes("Severe Thunderstorm")){
+                        alertTitlebackgroundColor = alertcolors.SVR;
+                    } else if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes("TORNADO EMERGENCY")) {
+                        alertTitlebackgroundColor = alertcolors.TORE;
+                    } else if (alertInfo.properties.event.includes("Tornado")){
+                        alertTitlebackgroundColor = alertcolors.TOR;
+                    } else if (alertInfo.properties.event.includes("Flood Advisory")){
+                        alertTitlebackgroundColor = alertcolors.FA;
+                    } else if (alertInfo.properties.event.includes("Flash Flood")){
+                        alertTitlebackgroundColor = alertcolors.FFW;
+                    } else if (alertInfo.properties.event.includes("Flood Warning")){
+                        alertTitlebackgroundColor = alertcolors.FW;
+                    } else if (alertInfo.properties.event.includes("Special Weather")){
+                        alertTitlebackgroundColor = alertcolors.SWS;
+                    } else if (alertInfo.properties.event.includes("Extreme Wind")){
+                        alertTitlebackgroundColor = alertcolors.EWW;
+                    } else if (alertInfo.properties.event.includes("Special Marine")){
+                        alertTitlebackgroundColor = alertcolors.SMW;
                     }
+
+                    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
+
+                    if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
+                        alertInfo.properties.event = "Flash Flood Emergency"
+                    }
+                    if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
+                        alertInfo.properties.event = "Tornado Emergency";
+                    }
+                    if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes(" TEST")){
+                        alertInfo.properties.event = "TEST Tornado Warning";
+                    }
+            
+                    //if (alertInfo.properties.description.includes("DESTRUCTIVE")){
+                    //    construct = construct + '<div style="background-color: red; border-radius: 20px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p></div><br>';
+                    //} else if (alertInfo.properties.description.includes("considerable") || isConsid(alertInfo.properties.description)){
+                    //   construct = construct + '<div style="background-color: orange; border-radius: 20px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin: 5px; color: black;"><b>DAMAGE THREAT: CONSIDERABLE</b></p></div><br>';
+                    //}
+
+                    try { var awipsidentifier = alertInfo.properties.parameters.AWIPSidentifier[0]; } catch {}
+                    try { var easorg = alertInfo.properties.parameters['EAS-ORG'][0]; } catch {}
+                    try { var motiondesc = alertInfo.properties.parameters.eventMotionDescription[0]; } catch {}
+                    try { var maxhail = alertInfo.properties.parameters.maxHailSize[0]; } catch {}
+                    try { var maxwind = alertInfo.properties.parameters.maxWindGust[0]; } catch {}
+                    try { var fflooddamage = alertInfo.properties.parameters.flashFloodDamageThreat[0]; } catch {}
+                    try { var fflooddetection = alertInfo.properties.parameters.flashFloodDetection[0]; } catch {}
+                    try { var windthreat = alertInfo.properties.parameters.windThreat[0]; } catch {}
+                    try { var hailthreat = alertInfo.properties.parameters.hailThreat[0]; } catch {}
+                    try { var tordetection = alertInfo.properties.parameters.tornadoDetection[0]; } catch {}
+
+                    construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + layer.options.data.properties.event + '</div>';
+                    construct += '<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between;"><div style="flex; flex-direction: column;"><p style="margin: 5px; color: black;"><b>Expires in:</b> ' + isoTimeUntil(alertInfo.properties.expires) + '</p>';
+                    if (maxwind || maxhail || fflooddamage || tordetection) {
+                        if (maxwind) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxwind + '</p>';}
+                        if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-cloud-meatball" style=" font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
+                        if (fflooddamage) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-cloud-showers-heavy" style=" font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + fflooddamage + '</p>';}
+                        if (tordetection) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-tornado" style=" font-size: 18px; color: #ff2121ff; margin-right: 5px;"></i> ' + tordetection + '</p>';}
+
+                    }
+                    if (alertInfo.properties.description.includes("fog")) { construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-smog" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> Areas of fog</p>';}
+                    
                     construct += '</div>'
 
-                    var alertInfoId = 'alert_' + String(alertInfo.properties.id);
-
                     construct = construct + '<div style="display: flex; justify-content: space-around; margin-top: 10px;">'
-                    construct = construct + '<button class="function-btn" style="margin: 0px 5px;" title="View the watch text product" onclick="openWatchProduct(' + identifier + ');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
+                    construct = construct + '<button class="function-btn" style="margin: 0px 5px;" title="View the alert text product" onclick="openAlertProduct(\'' + alertInfoId + '\');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
                     construct = construct + "</div></div></div>";
-
-                } catch (error) {console.error(error)}
+                }
             }
+        });
+
+        reversedLayers = watches.getLayers().reverse();
+
+        reversedLayers.forEach(function(layer) {
+            if (layer instanceof L.Polygon) {
+                var polygonGeoJSON = layer.toGeoJSON();
+                var isInside = turf.booleanPointInPolygon(clickedPointGeoJSON, polygonGeoJSON);
+                if (isInside && layer.options.weight == 4) {
+                    totalAlerts += 1;
+                    var alertInfo = layer.options.dataset[0];
+                    try {
+                        var alertTitlecolor = 'black';
+                        var alertTitlebackgroundColor = "white";
+                        if (alertInfo.properties.TYPE == "SVR"){
+                            alertTitlebackgroundColor = watchcolors.SVA;
+                        } else if (alertInfo.properties.TYPE == "TOR"){
+                            alertTitlebackgroundColor = watchcolors.TOA;
+                        }
+                
+                        var alertTitle = "";
+                        if (alertInfo.properties.IS_PDS){
+                            alertTitle = alertTitle + "PDS ";
+                        }
+                
+                        if (alertInfo.properties.TYPE == "TOR"){
+                            alertTitle = alertTitle + "Tornado Watch ";
+                        } else {
+                            alertTitle = alertTitle + "Severe Tstorm Watch ";
+                        }
+                
+                        alertTitle = alertTitle + "#" + alertInfo.properties.NUM;
+                        alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
+                            
+                        var identifier = Math.random();
+                        watchdata[identifier] = alertInfo;
+                                
+                        var maxhail = alertInfo.properties.MAX_HAIL;
+                        var maxwind = Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945);
+
+                        construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + alertTitle + '</div>';
+                        construct += '<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between;"><div style="flex; flex-direction: column;"><p style="margin: 5px; color: black;"><b>Expires in:</b> ' + isoTimeUntil(convertToIso(String(alertInfo.properties.EXPIRE))) + '</p>';
+                        if (maxwind || maxhail) {
+                            if (maxwind) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxwind + ' MPH</p>';}
+                            if (maxhail && maxhail != "0.00") {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-cloud-meatball" style=" font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxhail + ' IN</p>';}
+                        }
+                        construct += '</div>'
+
+                        var alertInfoId = 'alert_' + String(alertInfo.properties.id);
+
+                        construct = construct + '<div style="display: flex; justify-content: space-around; margin-top: 10px;">'
+                        construct = construct + '<button class="function-btn" style="margin: 0px 5px;" title="View the watch text product" onclick="openWatchProduct(' + identifier + ');"><i class="fa-solid fa-message" style="font-size: 18px;"></i></button>'
+                        construct = construct + "</div></div></div>";
+
+                    } catch (error) {console.error(error)}
+                }
+            }
+        });
+
+        construct += "</div>"
+
+        if (totalAlerts == 0) {
+            construct = construct + '<p style="margin: 5px; text-align: center; width: 100%;">No alerts here.</p>';
         }
-    });
 
-    construct += "</div>"
-
-    if (totalAlerts == 0) {
-        construct = construct + '<p style="margin: 5px; text-align: center; width: 100%;">No alerts here.</p>';
+        alertpop = L.popup({"autoPan": true, "closeButton": false, "autoPanPadding": [10, 60], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'})
+            .setLatLng(e.latlng)
+            .setContent(construct)
+            .openOn(map);
     }
-
-    L.popup({"autoPan": true, "closeButton": false, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '350', 'className': 'popup'})
-        .setLatLng(e.latlng)
-        .setContent(construct)
-        .openOn(map);
 });
 
 
@@ -1990,7 +2000,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flood Advisory") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Flood Advisory") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2002,7 +2012,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flood Warning") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Flood Warning") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2014,7 +2024,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flash Flood Warning") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Flash Flood Warning") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2026,7 +2036,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Special Marine") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Special Marine") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2038,7 +2048,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flash Flood Emergency") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Flash Flood Emergency") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2050,7 +2060,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Special Weather") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Special Weather") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2062,7 +2072,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Severe Thunderstorm") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Severe Thunderstorm") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2078,7 +2088,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Tornado") && !alert.properties.description.includes("allowed to expire")){
+                if (alert.properties.event.includes("Tornado") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
                     var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2270,6 +2280,16 @@ function openWatchProduct(id) {
     })
     .catch(error => {
         console.error('Error fetching and parsing the document:', error);
+        var construct = '<p>This watch has just been issued and therefore the SPC has not published the watch details yet. Check back in about a minute.</p>';
+
+        dialog(true, "alertinfo");
+        document.getElementById("alertinfo").innerHTML = construct;
+
+        var alerttitleitem = document.getElementById("dialogTitle");
+        alerttitleitem.innerHTML = "Watch Unavailable";
+        alerttitleitem.style.color = 'white';
+        alerttitleitem.style.backgroundColor = "none";
+        alerttitleitem.style.textAlign = 'right';
     });
 }
 
@@ -2390,7 +2410,6 @@ window.addEventListener('resize', function(event){
 function setProduct() {
     var e = document.getElementById('prod');
     radarProduct = e.options[e.selectedIndex].value;
-    mapEvents += 1;
     canRefresh = true;
     addRadarToMap(radarStation);
 }
@@ -2445,8 +2464,8 @@ setInterval(() => loadOutlook(), 300000);
 
 
 function settingsmode(thisobj, button) {
-    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar'];//, 'settings-stream'];
-    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar'];//, 'settmenu-streaming'];
+    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar', 'settings-storm', 'settings-radio'];//, 'settings-stream'];
+    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar', 'settmenu-storm', 'settmenu-radio'];//, 'settmenu-streaming'];
     document.getElementById(button).style.background = '#27beffff';
     document.getElementById(thisobj).style.display = 'flex';
     objects.forEach(function(obj) {
@@ -2748,7 +2767,7 @@ async function addWeatherRadios() {
                                 </div>
                             </div>
                         `;
-                        marker.bindPopup(popupContent, {"autoPan": true, "autoPanPadding": [10, 110], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                        marker.bindPopup(popupContent, {"autoPan": true, "autoPanPadding": [10, 60], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
 
                         weatherRadioMarkers.push(marker);
 
@@ -3386,7 +3405,6 @@ document.addEventListener('keydown', function(event) {
     }
 
     if (event.key === 'r') {   // r
-        mapEvents += 1;
         addRadarToMap(radarStation);
         loadAlerts();
         loadWatches();
@@ -3405,4 +3423,3 @@ document.addEventListener('keydown', function(event) {
         toggleRadars();
     }
 });
-
