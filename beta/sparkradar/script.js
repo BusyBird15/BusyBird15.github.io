@@ -17,7 +17,7 @@ if (maplat && maplon) {
 
 if (!L.Browser.mobile) { 
     map.scrollWheelZoom = true;
-    map.options.wheelPxPerZoomLevel = 200; 
+    map.options.wheelPxPerZoomLevel = 100; 
 }
 
 // Setup the layers of the map
@@ -35,10 +35,10 @@ map.createPane('sc');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 250;
-map.getPane('cities').style.zIndex = 300;
-map.getPane('lightning').style.zIndex = 400;
-map.getPane('watches').style.zIndex = 500;
-map.getPane('alerts').style.zIndex = 600;
+map.getPane('lightning').style.zIndex = 300;
+map.getPane('watches').style.zIndex = 400;
+map.getPane('alerts').style.zIndex = 500;
+map.getPane('cities').style.zIndex = 600;
 map.getPane('sg').style.zIndex = 625;
 map.getPane('radars').style.zIndex = 650;
 map.getPane('sc').style.zIndex = 650;
@@ -515,8 +515,8 @@ function visibility(type, elemID, needsFlex) {
 fadeIn("attrib");
 fadeIn("menu-opener");
 fadeIn("info");
+fadeIn("anim");
 fadeOut("menu");
-fadeIn("toolbar");
 fadeOut("drawingtoolbar")
 //setInterval(() => visibility("toggle", "attrib", true), 2000);
 
@@ -939,6 +939,22 @@ function sgdialog(toOpen, object=null){
     }
 }
 
+function sgedit(toOpen, name=null){
+    if (toOpen) {
+        fadeIn("sgedit");
+        fadeIn("innersgedit");
+        document.getElementById("sg-name").setAttribute("placeholder", "New preset");
+        document.getElementById("sg-name").value = "";
+        document.getElementById("sg-color").value = "#FF0000";
+        document.getElementById("sg-opacity").value = 30;
+        if (name) {document.getElementById("sg-name").setAttribute("placeholder", name); document.getElementById("sg-name").value = name;}
+    } else {
+        fadeOut("sgedit");
+        fadeOut("innersgedit");
+        document.getElementById("innersgedit").style.scale = "70%";
+    }
+}
+
 function openAlertProduct(alertInfoId) {
     dialog(true, 'alertinfo');
     document.getElementById('alertinfo').scrollTo({ top: 0 });
@@ -966,14 +982,15 @@ function openAlertProduct(alertInfoId) {
         alertTitlebackgroundColor = alertcolors.SMW;
     }
 
-    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
-
     if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
-         alertInfo.properties.event = "Flash Flood Emergency"
-    }
+         alertInfo.properties.event = "Flash Flood Emergency";
+         alertTitlebackgroundColor = alertcolors.FFE;
+        }
     if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes(" TEST")){
         alertInfo.properties.event = "TEST Tornado Warning";
     }
+
+    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
 
     var alerttitle = document.getElementById("dialogTitle");
     alerttitle.innerHTML = alertInfo.properties.event;
@@ -1561,6 +1578,11 @@ function addRadarToMap (station="conus") {
 setTimeout(() => addRadarToMap(), 100);
 setInterval(() => { if (frameIdx == maxFrames-1){ console.log("Auto-updating radar."); needFrameAdj = true; addRadarToMap(radarStation); } }, 10000);
 
+function framechange() {
+    frameIdx = document.getElementById("framerange").value;
+    addRadarToMap(radarStation);
+}
+
 function onMapEvent(e) {
     const center = map.getCenter();
     const url = new URL(window.location.href);
@@ -1593,6 +1615,11 @@ function parseRadarTimestamp(isoString) {
 
 
 function updateRadarInfo(stat="conus") {
+    document.getElementById("frameInfo").innerHTML = frameIdx;
+    document.getElementById("frameInfo2").innerHTML = (maxFrames-1);
+    document.getElementById("framerange").value = frameIdx;
+    document.getElementById("framerange").setAttribute('max', (maxFrames-1));
+
     if (stat == "conus"){
         document.getElementById("radinfo_lna").style.color = 'white';
         document.getElementById("radinfo_lna").innerHTML = "<b>" + radarStation.toUpperCase() + "</b> • " + parseRadarTimestamp(radarTime);
@@ -1848,10 +1875,13 @@ var alts = [];
 
 // V2 - Dynamic alert popups
 map.on('click', function (e) {
-    if (sparkgen) {return;}
+    if (sparkgen || document.getElementById('ctx-menu').style.display == 'flex') {document.getElementById('ctx-menu').style.display = 'none'; return;}
     if (alertpop) {
         map.closePopup();
         alertpop = null;
+        return;
+    } else if (menu.style.display == 'flex') {
+        menu.style.display = 'none';
         return;
     } else {
 
@@ -1901,17 +1931,21 @@ map.on('click', function (e) {
                         alertTitlebackgroundColor = alertcolors.SMW;
                     }
 
-                    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
-
                     if (alertInfo.properties.description.includes("FLASH FLOOD EMERGENCY") && alertInfo.properties.event.includes("Flash Flood")){
-                        alertInfo.properties.event = "Flash Flood Emergency"
+                        alertInfo.properties.event = "Flash Flood Emergency";
+                        alertTitlebackgroundColor = alertcolors.FFE;
                     }
-                    if (alertInfo.properties.description.includes("TORNADO EMERGENCY")){
+                    if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes("TORNADO EMERGENCY")){
                         alertInfo.properties.event = "Tornado Emergency";
-                    }
-                    if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes(" TEST")){
+                        alertTitlebackgroundColor = alertcolors.TORE2;
+                    } else if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")){
+                        alertInfo.properties.event = "PDS Tornado Warning";
+                        alertTitlebackgroundColor = alertcolors.PDSTOR2;
+                    } else if (alertInfo.properties.event.includes("Tornado") && alertInfo.properties.description.includes(" TEST")){
                         alertInfo.properties.event = "TEST Tornado Warning";
                     }
+
+                    alertTitlecolor = getContrastYIQ(alertTitlebackgroundColor);
             
                     //if (alertInfo.properties.description.includes("DESTRUCTIVE")){
                     //    construct = construct + '<div style="background-color: red; border-radius: 20px; margin: 0px; display: flex; justify-content: center; text-align: center;"><p style="margin-top: 5px; margin-bottom: 5px; color: black;"><b>DAMAGE THREAT: DESTRUCTIVE</b></p></div><br>';
@@ -2058,20 +2092,11 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Flood Advisory") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FA, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
-        });
-        // Flood warnings - lower importance
-        data.features.forEach(function(alert) {
-            try {
-                var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flood Warning") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
-                    var alertInfoId = 'alert_' + String(alert.properties.id);
-                    alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                        var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    } else {
+                        var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FA, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -2079,11 +2104,50 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flash Flood Warning") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
+                if (!alert.properties.description.includes("FLASH FLOOD EMERGENCY") && alert.properties.event.includes("Flash Flood Warning") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
-                    alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (!alertDataSet[alertInfoId]) {
+                        alertDataSet[alertInfoId] = JSON.stringify(alert);
+                        if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                            var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        } else {
+                            var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }
+                }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+        });
+        // Flash Flood Emergencies - medium importance
+        data.features.forEach(function(alert) {
+            try {
+                var thisItem = alert.geometry.coordinates[0];
+                if (alert.properties.description.includes("FLASH FLOOD EMERGENCY") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
+                    var alertInfoId = 'alert_' + String(alert.properties.id);
+                    if (!alertDataSet[alertInfoId]) {
+                        alertDataSet[alertInfoId] = JSON.stringify(alert);
+                        if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                            var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        } else {
+                            var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFE, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
+                    }
+                }
+            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
+        });
+        // Flood warnings - lower importance
+        data.features.forEach(function(alert) {
+            try {
+                var thisItem = alert.geometry.coordinates[0];
+                if (alert.properties.event == "Flood Warning" && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
+                    var alertInfoId = 'alert_' + String(alert.properties.id);
+                    if (!alertDataSet[alertInfoId]) {
+                        alertDataSet[alertInfoId] = JSON.stringify(alert);
+                        if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                            var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        } else {
+                            var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -2094,20 +2158,11 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Marine") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SMW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                }
-            } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
-        });
-        // Flash Flood Emergencies - medium importance
-        data.features.forEach(function(alert) {
-            try {
-                var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Flash Flood Emergency") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
-                    var alertInfoId = 'alert_' + String(alert.properties.id);
-                    alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.FFE, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'FFEPolygon'}).addTo(alerts);
+                    if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                        var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    } else {
+                        var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SMW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -2118,8 +2173,11 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Special Weather") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SWS, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                        var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    } else {
+                        var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SWS, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
         });
@@ -2130,8 +2188,11 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Severe Thunderstorm") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
+                    if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                        var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    } else {
+                        var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }                    if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SVR, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'SVRPDSPolygon'}).addTo(alerts);
                     } else {
                         var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.SVR, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
@@ -2145,14 +2206,20 @@ function loadAlerts() {
                 var thisItem = alert.geometry.coordinates[0];
                 if (alert.properties.event.includes("Tornado") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
-                    alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    if (alert.properties.description.includes("TORNADO EMERGENCY")) {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TORE, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TOREPolygon'}).addTo(alerts);
-                    } else if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TORPDSPolygon'}).addTo(alerts);
-                    } else {
-                        var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (!alertDataSet[alertInfoId]) {
+                        alertDataSet[alertInfoId] = JSON.stringify(alert);
+                        if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                            var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        } else {
+                            var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        }
+                        if (alert.properties.description.includes("TORNADO EMERGENCY")) {
+                            var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TORE, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TOREPolygon'}).addTo(alerts);
+                        } else if (alert.properties.description.includes("PARTICULARLY DANGEROUS SITUATION")) {
+                            var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts', className: 'TORPDSPolygon'}).addTo(alerts);
+                        } else {
+                            var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.TOR, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                        }
                     }
                 }
             } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -2164,8 +2231,11 @@ function loadAlerts() {
                 if (alert.properties.event.includes("Extreme Wind")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     alertDataSet[alertInfoId] = JSON.stringify(alert);
-                    var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
-                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.EWW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    if (new Date(alert.properties.sent) <= new Date(new Date().getTime() - 2 * 60 * 1000)) {
+                        var border = L.polygon(reverseSubarrays(thisItem), {color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    } else {
+                        var border = L.polygon(reverseSubarrays(thisItem), {className: 'newpoly', color: 'black', weight: 6, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
+                    }                    var polygon = L.polygon(reverseSubarrays(thisItem), {color: alertcolors.EWW, data: alert, weight: 4, fillOpacity: 0, pane: 'alerts'}).addTo(alerts);
                 }
 
             } catch (error) { if (!String(error).includes("Cannot read properties of null") && !String(error).includes("alert.geometry is null")){ console.error('loadAlerts() > fetch() > forEach() > ', error); } }
@@ -2532,36 +2602,47 @@ function settingsmode(thisobj, button) {
     })
 }
 
-var lightningLayer = L.esri.featureLayer({
-    url: 'https://utility.arcgis.com/usrsvcs/servers/a99a3d10fbf64f13897c8165d5393fca/rest/services/Severe/Lightning_CONUS/MapServer/0',
-    onEachFeature: function (feature, layer) {
-      layer.setIcon(lightningicon);
-      layer.options.pane = 'lightning';
-    }
-});
+function parseLightningData(data) {
+    const result = {
+        lastUpdate: '',
+        flashes: []
+    };
+
+    const lines = data.split('\n');
+
+    lines.forEach(line => {
+        if (line.startsWith(';GLM Flash Data is updated every 20 seconds - Last update was at')) {
+            result.lastUpdate = line.match(/\(([^)]+)\)/)[1];
+        } else if (line.startsWith('<flash>')) {
+            const coordinates = line.replace('<flash>', '').replace('</flash>', '').split(',');
+            result.flashes.push({
+                latitude: parseFloat(coordinates[0]),
+                longitude: parseFloat(coordinates[1])
+            });
+        }
+    });
+
+    return result;
+}
 
 function loadLightning() {
-    /*lightningdata.clearLayers();
-
-    if (map.getZoom() < lightningzoomlevel) {
-    return;
-    }
-
-    lightningLayer.query().within(map.getBounds()).run(function (error, featureCollection) {
-    if (error) {
-        console.error('Error fetching data:', error);
-        return;
-    }
-
-    featureCollection.features.forEach(function (feature) {
-    var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-            icon: lightningicon,
-            pane: 'lightning'
+    fetch('https://freelightning.com/glm/glm(Flashes).php')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log(data)
+        lightning.clearLayers();
+        parseLightningData(data).flashes.forEach(function(flash) {
+            L.marker([flash.latitude, flash.longitude], { icon: customIcon, pane: 'lightning' }).addTo('lightning');
         });
-
-        lightningdata.addLayer(marker);
-        });
-    });*/
+    })
+    .catch(error => {
+        console.error('loadLightning() > fetch() > ', error);
+    });
 }
 
 
@@ -2641,14 +2722,12 @@ function toggleDrawing(tof){
     if (tof) {
         canvas.style.display = "flex";
         fadeOut('info');
-        fadeOut('toolbar');
         fadeOut('searchbox');
         if(!sparkgen) { fadeOut('menu-opener'); } else { fadeOut('sginfo'); }
         fadeIn("drawingtoolbar");
     } else {
         canvas.style.display = "none";
         fadeIn('info');
-        fadeIn('toolbar');
         if(!sparkgen) { fadeIn('menu-opener'); } else { fadeIn('sginfo'); }
         fadeOut("drawingtoolbar");
         sizing();
@@ -3057,11 +3136,11 @@ function convertToSparkgen(toconv) {
         if (toconv) {
             sizing();
             fadeOut('menu-blur');
-            document.getElementById("sparkgenexit").style.display = "block";
-            document.getElementById("pmode").style.display = "block";
-            document.getElementById("clearmap").style.display = "block";
-            document.getElementById("polydraw").style.display = "block";
-            document.getElementById("styler").style.display = "block";
+            document.getElementById("sparkgenexit").style.display = "flex";
+            document.getElementById("pmode").style.display = "flex";
+            document.getElementById("clearmap").style.display = "flex";
+            document.getElementById("polydraw").style.display = "flex";
+            document.getElementById("styler").style.display = "flex";
             document.getElementById("insg").style.display = "block";
             document.getElementById("sparkgenbtn").style.display = "none";
             document.getElementById('tut-1').style.display = 'flex'
@@ -3147,6 +3226,7 @@ function showBlackTransition() {
 }
 
 map.on('click', function(e) {
+    if (document.getElementById('ctx-menu').style.display == 'flex') {document.getElementById('ctx-menu').style.display = 'none'; return;}
     if (sparkgen && !polydrawmode) {
         var clickedPoint = e.latlng;
         var clickedPointGeoJSON = turf.point([clickedPoint.lng, clickedPoint.lat]);
@@ -3242,6 +3322,7 @@ function createDraggableMarker(latlng) {
   
 
   map.on('click', function(e) {
+    if (document.getElementById('ctx-menu').style.display == 'flex') {document.getElementById('ctx-menu').style.display = 'none'; return;}
     if (!isDragging && polydrawmode) {
       createDraggableMarker(e.latlng);
     }
@@ -3374,13 +3455,11 @@ function photomode(toConv=null) {
         document.getElementById("prod").style.display = 'none';
         document.getElementById("sg_editor").style.display = 'none';
         document.getElementById("sg_menu").style.display = 'none';
-        fadeOut("toolbar");
     } else {
         document.getElementById("photo-prod").style.display = 'none';
         document.getElementById("prod").style.display = 'block';
         document.getElementById("sg_editor").style.display = 'block';
         document.getElementById("sg_menu").style.display = 'block';
-        fadeIn("toolbar");
     }
 }
 
@@ -3404,21 +3483,75 @@ function setStyle(color, title) {
         layer.setStyle({ color: `#${color}` });
     });
 }
+function loadSgStyles() {
+    var sgstyles = JSON.parse(localStorage.getItem('sparkgen_styles')) || [];
+    document.getElementById("stylepresets").innerHTML = "";
 
-var sgstyles = JSON.parse(localStorage.getItem('sparkgen_styles'));
-if (sgstyles) {
-    sgstyles.sort(function(a, b) {
-        return a.alert.localeCompare(b.alert);
-    });
-    var construct = '';
-    sgstyles.forEach(function(item) {
-        construct += `
-            <div onclick="setStyle('${item.color.toString()}', '${item.alert.toString()}');" class="presetitem">
-                <h2 style="color: #${item.color}">${item.alert}</h2>
-                <button><i style="font-size: 16px;" class="fa-solid fa-pen-to-square"></i></button>
-            </div>`;
-    });
-    document.getElementById("stylepresets").innerHTML = construct;
+    if (sgstyles && Array.isArray(sgstyles)) {
+        sgstyles.sort(function(a, b) {
+            return (a.alert || "").localeCompare(b.alert || "");
+        });
+
+        var construct = '';
+        sgstyles.forEach(function(item) {
+            if (item.color && item.alert) {
+                // Sanitize and normalize opacity
+                const validColor = /^#[0-9A-F]{6}$/i.test(item.color) ? item.color : "#000000"; // Default to black
+                const validAlert = item.alert || "No Alert"; // Default alert text
+                let normalizedOpacity = parseFloat(item.opacity);
+                if (isNaN(normalizedOpacity) || normalizedOpacity < 0 || normalizedOpacity > 1) {
+                    normalizedOpacity = 0.3; // Default opacity
+                }
+
+                construct += `
+                    <div onclick="setStyle('${validColor}', '${validAlert}');" class="presetitem">
+                        <h2 style="color: ${validColor}; opacity: ${normalizedOpacity};">${validAlert}</h2>
+                        <button onclick="sgedit(true, '${validAlert}')"><i style="font-size: 16px;" class="fa-solid fa-pen-to-square"></i></button>
+                    </div>`;
+            } else {
+                console.warn("Invalid item:", item);
+            }
+        });
+
+        document.getElementById("stylepresets").innerHTML = construct;
+    } else {
+        console.error("sgstyles is not a valid array:", sgstyles);
+    }
+}
+
+loadSgStyles();
+
+function newSgPreset() {
+    var oldStyles = JSON.parse(localStorage.getItem('sparkgen_styles'));
+    if (!oldStyles){ oldStyles = []; }
+    var ph = document.getElementById("sg-name").getAttribute("placeholder");
+    var name = document.getElementById("sg-name").value;
+    var color = document.getElementById("sg-color").value;
+    var opacity = parseFloat(document.getElementById("sg-opacity").value);
+
+    try {
+        var itemIndex = oldStyles.findIndex(item => item.name === ph);
+    } catch {
+        var itemIndex = -1;
+    }
+
+    if (!color){
+        color = "#FFFFFF";
+    }
+    if (isNaN(opacity) || opacity < 0 || opacity > 1){
+        opacity = 0.3; // Default opacity
+    }
+
+    if (itemIndex !== -1) {
+        oldStyles[itemIndex].alert = name;
+        oldStyles[itemIndex].color = color;
+        oldStyles[itemIndex].opacity = opacity;
+    } else {
+        oldStyles.push({ "alert": name, "color": color, "opacity": opacity });
+    }
+
+    localStorage.setItem('sparkgen_styles', JSON.stringify(oldStyles)); 
+    loadSgStyles();
 }
 
 
@@ -3445,6 +3578,10 @@ function uploadstyles() {
         });
         fileInput.click();
     }
+}
+
+function newstyle(){
+
 }
 
 window.alert("You are using Spark Radar BETA.\nBugs or broken features are not uncommon.\nFor the stable version, visit busybird15.github.io/sparkradar.")
@@ -3478,4 +3615,50 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'R') {     // SHIFT r
         toggleRadars();
     }
+
+    if (event.key === '=') {     // +
+        map.setZoom(map.getZoom() + 1);
+    }
+
+    if (event.key === '-') {     // -
+        map.setZoom(map.getZoom() - 1);
+    }
 });
+
+
+// Right-click menu
+const menu = document.getElementById('ctx-menu');
+map.on('contextmenu', function(e) {
+    if (document.getElementById('ctx-menu').style.display == 'flex') {document.getElementById('ctx-menu').style.display = 'none'; return;}
+    if (alertpop) {
+        map.closePopup();
+        alertpop = null;
+    }
+
+    e.originalEvent.preventDefault();
+
+    menu.style.display = 'flex';
+    
+    let left = e.containerPoint.x;
+    let top = e.containerPoint.y;
+
+    const menuWidth = menu.offsetWidth;
+    const menuHeight = menu.offsetHeight;
+
+    const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0)
+    const vh = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0)
+
+    if (e.containerPoint.x + menuWidth > vw) {
+        left = vw - menuWidth - 20;
+    }
+    if (e.containerPoint.y + menuHeight > vh) {
+        top = vh - menuHeight - 20;
+    }
+
+    menu.style.left = `${left}px`;
+    menu.style.top = `${top}px`;
+});
+
+function hideCtxMenu() {
+    document.getElementById('ctx-menu').style.display = 'none';
+}

@@ -78,19 +78,12 @@ Programming of the Spark Radar project began in September 2024.
     <div id="attrib" class="overlay-object"></div>
 
     <!--Menu opener-->
-    <button id="menu-opener" onclick="menuToggle(true); fadeIn('menu-blur')" class="nav-btn overlay-object" style="justify-content: center; width: 40px; height: 40px; transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <button id="menu-opener" onclick="hideCtxMenu(); menuToggle(true); fadeIn('menu-blur')" class="nav-btn overlay-object" style="justify-content: center; width: 40px; height: 40px; transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
         <i class="fa-solid fa-bars" style="font-size: 20px;"></i>
     </button>
 
     <!--Radar state info-->
     <div id="info" class="overlay-object" style="top: 10px; right: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
-        <div style="display: flex; flex-direction: row; margin-bottom: 5px; justify-content: center; align-items: center;">
-            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Earliest frame" onclick="frameIdx = 0; addRadarToMap(radarStation);"><i class="fa-solid fa-backward-step" style="font-size: 20px;"></i></button>
-            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Previous frame" onclick="if (frameIdx > 0) {frameIdx -= 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-left" style="font-size: 20px;"></i></button>
-            <!--<button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Start or stop the animation" onclick=""><i class="fa-solid fa-circle-play" style="font-size: 20px;"></i></button>-->
-            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Next frame" onclick="if (frameIdx < maxFrames-1) {frameIdx += 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-right" style="font-size: 20px;"></i></button>
-            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Latest frame" onclick="frameIdx = maxFrames-1; addRadarToMap(radarStation);"><i class="fa-solid fa-forward-step" style="font-size: 20px;"></i></button>
-        </div> 
         <div style="display: flex; flex-direction: row;"><p id="radinfo_lna" style="margin: 0px; font-size: large;"><b>CONUS • LATEST • </b></p></div>
         <h3 id="photo-prod" onclick="legendclick();" style="display: none; color: #27beffff; margin-top: 0px !important; cursor: pointer; font-weight: bolder; width: 100%; text-align: center; margin: 2px; text-shadow: 0 0 3px #000000ee;">Composite reflectivity</h3>
         
@@ -460,6 +453,14 @@ Programming of the Spark Radar project began in September 2024.
                         <h3 style="margin: 0px;">SHIFT + R</h3>
                         <p style="margin: 0px;">Toggle radars</p>
                     </div> 
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 10px;">
+                        <h3 style="margin: 0px;">+</h3>
+                        <p style="margin: 0px;">Zoom in</p>
+                    </div>
+                    <div style="display: flex; flex-direction: row; align-items: center; justify-content: space-between; margin: 10px;">
+                        <h3 style="margin: 0px;">-</h3>
+                        <p style="margin: 0px;">Zoom out</p>
+                    </div> 
                 </div>                
             </div>
         </div>
@@ -492,7 +493,7 @@ Programming of the Spark Radar project began in September 2024.
     <!--SparkGen dialog-->
     <div id="sgdialog" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
         <div id="innersgdialog" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; justify-content: space-between; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 550px; max-height: 600px; margin: 10px; border-radius: 20px; background: black; color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
-            <button id="sgdialog-closer" onclick="sgdialog(false);" class="nav-btn" style="background: #ff2121ff; border-radius: 20px;">
+            <button id="sgdialog-closer" onclick="sgdialog(false);" class="nav-btn" style="justify-content: center; background: #ff2121ff; border-radius: 20px;">
                 <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
             </button>
             <div id="tut-1" style="margin: 10px; justify-content: flex-start; flex-direction: column; display: flex;">
@@ -559,7 +560,7 @@ Programming of the Spark Radar project began in September 2024.
                 <div id="stylepresets" style="scrollbar-width: none; width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
                 </div>
                 <br>
-                <button style="width: max-content; font-weight: bold; margin-left: 10px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="uploadstyles();"><i class="fa-solid fa-plus" style="font-size: 16px; margin-right: 5px;"></i>New style</button>
+                <button style="width: max-content; font-weight: bold; margin-left: 10px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="sgedit(true);"><i class="fa-solid fa-plus" style="font-size: 16px; margin-right: 5px;"></i>New style</button>
                 <button style="width: max-content; font-weight: bold; margin-left: 10px; margin-bottom: 5px; font-size: medium;" class="function-btn" onclick="uploadstyles();"><i class="fa-solid fa-upload" style="font-size: 16px; margin-right: 5px;"></i>Upload a styleset JSON</button>
             </div>
 
@@ -574,11 +575,30 @@ Programming of the Spark Radar project began in September 2024.
         </div>
     </div>
 
+    <!--SparkGen style editor-->
+    <div id="sgedit" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
+        <div id="innersgedit" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; justify-content: space-between; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 300px; max-height: 200px; margin: 10px; border-radius: 20px; background: rgb(44, 44, 44); color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
+            <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
+                <input id="sg-name" type="text" placeholder="Preset name" id="dictbox" style="width: calc(100% - 20px) !important; transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; padding: 10px; border: none; width: 100%; border-radius: 20px;">
+                <input id="sg-color" type="color" value="#FF0000" style="margin: 10px; width: 20%; border: 80px; border-radius: 5px;">
+                <input id="sg-opacity" type="range" value="30" max="100" min="0" style="margin: 10px; width: 80%; border: 0px; border-radius: 5px;">
+            </div>
+            <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: ceter; padding: 10px;">
+                <button id="menu-closer" onclick="sgedit(false);" class="nav-btn" style="width: auto !important; border-radius: 20px; align-items: center; font-size: medium; font-weight: bold; color: white; display: flex; flex-direction: row; background: none;">
+                    Cancel
+                </button>
+                <button onclick="newSgPreset(); sgedit(false);" class="nav-btn" style="width: auto !important; border-radius: 20px; align-items: center; font-size: medium; font-weight: bold; color: white; display: flex; flex-direction: row; background: #2a7fffff;">
+                    Save
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!--Location Finder-->
     <div class="overlay-object" id="searchbox" style="height: 40px; padding: 0px; padding-left: 3px; padding-right: 3px; display: flex; top: 10px; left: 60px; width: calc(100% - 400px); max-width: 350px; min-width: 200px; z-index: 4;">
-        <button onclick="document.getElementById('results').style.opacity = 0; setTimeout(() => document.getElementById('results').style.display = 'none', 500); document.getElementById('textbox').value = '';" class="searchbuttons" style="padding: 5px 0px 5px 5px;"><i class="fa-solid fa-xmark" style="font-size: 16px; margin: 5px;"></i></button>
+        <button onclick="hideCtxMenu(); document.getElementById('results').style.opacity = 0; setTimeout(() => document.getElementById('results').style.display = 'none', 500); document.getElementById('textbox').value = '';" class="searchbuttons" style="padding: 5px 0px 5px 5px;"><i class="fa-solid fa-xmark" style="font-size: 16px; margin: 5px;"></i></button>
         <input type="text" placeholder="Find a place" id="textbox" style="transition-duration: 0.3s; background: transparent; font-size: 16px; color: white; padding: 5px; margin: 5px; border: none; width: 100%; border-radius: 7px;">
-        <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doLocSearch(document.getElementById('textbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>
+        <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="hideCtxMenu(); doLocSearch(document.getElementById('textbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>
     </div>
     <div id="results" class="overlay-object" style="transition: opacity 0.2s !important; opacity: 0; width: calc(100% - 415px); flex-direction: column; max-width: 335px; min-width: 180px; left: 60px; top: 60px; overflow-x: auto; height: calc(100% - 400px); min-height: 200px; max-height: 300px; scrollbar-width: none; padding: 10px; z-index: 999;"></div>
 
@@ -595,12 +615,12 @@ Programming of the Spark Radar project began in September 2024.
     <p id="textattr" style="position: absolute; bottom: 45px; right: 10px; z-index: 9; font-size: small; color: white; margin: 0px;">&copy;<a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> and &copy;<a href="https://maptiler.com">MapTiler</a></p>
 
     <!--Radar Legend-->
-    <img id="radarlegend" onclick="dialog(true, 'radarhelp')" style="cursor: pointer; position: absolute; border-radius: 20px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
+    <img id="radarlegend" onclick="hideCtxMenu(); dialog(true, 'radarhelp')" style="cursor: pointer; position: absolute; border-radius: 5px; z-index: 9; right: 10px; bottom: 10px;" src="https://weather.gov/images/nws/radarfaq/BDHC_CT.png">
 
     <!--Canvas for drawing-->
     <canvas id="drawing" style="background: none; display: none; cursor: crosshair; position: absolute; top: 0px; left: 0px; width: 100%; height: 100%; z-index: 101;" style="cursor: crosshair;"></canvas>
 
-    <!--Toolbar-->
+    <!--Toolbar
     <div class="overlay-object" id="toolbar" style="border-radius: 20px; padding-bottom: 5px; flex-direction: column; align-items: center; justify-content: center; position: absolute; bottom: 10px; left: 10px; z-index: 8; height: auto; width: auto;">
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: none; background-color: #00af00ff; color: white;" title="Photo mode" id="pmode" onclick="photomode();"><i class="fa-solid fa-camera" style="font-size: 16px;"></i></button>
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: none;" title="Draw a polygon" id="polydraw" onclick="polydraw()"><i class="fa-solid fa-draw-polygon" style="font-size: 16px;"></i></button>
@@ -612,7 +632,7 @@ Programming of the Spark Radar project began in September 2024.
         <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="[D] Drawing tools" onclick="toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i></button>
         <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px; display: block; background-color: white; color: black;" title="[SHIFT + A] Toggle alerts" id="alerttoggle" onclick="toggleAlerts();"><i class="fa-solid fa-circle-exclamation" style="font-size: 16px;"></i></button>
         <button class="toolbtn selected_toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px 5px 0px 5px;" title="[SHIFT + R] Turn radar stations on/off" onclick="toggleRadars();"id="radarstogg"><i class="fa-solid fa-satellite-dish" style="font-size: 16px;"></i></button>
-    </div>
+    </div>-->
 
     <!--Drawing toolbar-->
     <div class="overlay-object" id="drawingtoolbar" style="border-radius: 20px; padding: 5px; align-items: center; justify-content: center; position: absolute; top: 10px; left: 10px; z-index: 102; height: auto; width: auto;">
@@ -631,7 +651,7 @@ Programming of the Spark Radar project began in September 2024.
     <!--SparkGen alert info box-->
     <div id="sginfo" class="overlay-object" style="top: 10px; left: 10px; flex-direction: column; padding: 10px; display: none; align-items: flex-end; justify-content: flex-start; width: calc(100% - 350px); max-width: 350px; min-width: 100px;">
         <div style="display: flex; width: 100%; flex-direction: row; align-items: center; justify-content: space-between;">
-            <button id="sg_menu" onclick="menuToggle(true);" class="nav-btn" style="border-radius: 20px; box-shadow: none; transition-duration: 0.5s; background: transparent;">
+            <button id="sg_menu" onclick="hideCtxMenu(); menuToggle(true); fadeIn('menu-blur')" class="nav-btn" style="border-radius: 20px; box-shadow: none; transition-duration: 0.5s; background: transparent;">
                 <i class="fa-solid fa-bars" style="color: rgba(255, 255, 255, 0.4); font-size: 16px;"></i>
             </button>
             <h3 id="alerttitletext" class="easfont" style="width: 100%; margin: 0px; font-weight: bold; text-align: center;">Weather Alert Title</h3>
@@ -643,6 +663,36 @@ Programming of the Spark Radar project began in September 2024.
         <h4 id="sub2" class="easfont" style="font-weight: bold; width: 100%; margin: 0px; text-align: center;">Subtitle 2</h4>
         <p id="disc" class="easfont" style="width: 100%; margin: 0px; text-align: left;"></p>
     </div>
+
+    <!--Radar animation controls-->
+    <div id="anim" class="overlay-object" style="left: 10px; bottom: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
+        <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Earliest frame" onclick="hideCtxMenu(); frameIdx = 0; addRadarToMap(radarStation);"><i class="fa-solid fa-backward-step" style="font-size: 20px;"></i></button>
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Previous frame" onclick="hideCtxMenu(); if (frameIdx > 0) {frameIdx -= 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-left" style="font-size: 20px;"></i></button>
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 70px; height: 35px; margin: 5px;" title="Start or stop the animation" onclick="hideCtxMenu();"><i class="fa-solid fa-circle-play" style="font-size: 20px;"></i></button>
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Next frame" onclick="hideCtxMenu(); if (frameIdx < maxFrames-1) {frameIdx += 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-right" style="font-size: 20px;"></i></button>
+            <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Latest frame" onclick="hideCtxMenu(); frameIdx = maxFrames-1; addRadarToMap(radarStation);"><i class="fa-solid fa-forward-step" style="font-size: 20px;"></i></button>
+        </div> 
+        <div style="display: flex; flex-direction: row; padding: 0px 10px; width: 100%; margin: 5px;">
+            <p id="frameInfo" style="margin: 0px; margin-right: 5px;">0</p>
+            <input onchange="framechange();" id="framerange" type="range" min="0" style="width: 100%;">
+            <p id="frameInfo2" style="margin: 0px; margin-left: 5px;">0</p>
+        </div>
+    </div>
+
+    <!--Right-click menu-->
+    <ul id="ctx-menu">
+        <li style="display: none;" title="Photo mode" id="pmode" onclick="hideCtxMenu(); photomode();"><i class="fa-solid fa-camera" style="margin-right: 5px; font-size: 16px;"></i> Photo mode</li>
+        <li style="display: none;" title="Draw a polygon" id="polydraw" onclick="hideCtxMenu(); polydraw()"><i class="fa-solid fa-draw-polygon" style="font-size: 16px;"></i> Draw polygon</li>
+        <li style="display: none;" title="Change styles" id="styler" onclick="hideCtxMenu(); styles();"><i class="fa-solid fa-palette" style="font-size: 16px;"></i> Change styles</li>
+        <li style="display: none;" title="Clear map" id="clearmap" onclick="hideCtxMenu(); clearmap()"><i class="fa-solid fa-trash" style="font-size: 16px;"></i> Clear map</li>
+        <li style="display: none; margin-bottom: 10px; background-color: #ff2121ff; color: white;" title="Exit SparkGen" id="sparkgenexit" onclick="hideCtxMenu(); convertToSparkgen(false);"><i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 16px; transform: rotate(180deg);"></i> Exit SparkGen</li>
+        <li style="display: flex;" title="[R] Refresh" onclick="mapEvents += 1; hideCtxMenu(); addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i> Refresh</li>
+        <li style="display: flex;" title="Go to my location" onclick="if(outermarker) {hideCtxMenu(); map.flyTo([nowlat, nowlon], 10);}"><i class="fa-solid fa-location" style="font-size: 16px;"></i> Fly to my location</li>
+        <li style="display: flex;" title="[D] Drawing tools" onclick="hideCtxMenu(); toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i> Draw</li>
+        <li style="display: flex;" class="selected_toolbtn" title="[SHIFT + A] Turn alerts on/off" id="alerttoggle" onclick="hideCtxMenu(); toggleAlerts();"><i class="fa-solid fa-circle-exclamation" style="color: black; font-size: 16px;"></i> Toggle alerts</li>
+        <li style="display: flex;" class="selected_toolbtn" title="[SHIFT + R] Turn radar stations on/off" onclick="hideCtxMenu(); toggleRadars();"id="radarstogg"><i class="fa-solid fa-satellite-dish" style="color: black; font-size: 16px;"></i> Toggle radars</li>
+    </ul>
 </div>
 </body>
 
