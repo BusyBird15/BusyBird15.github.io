@@ -3455,11 +3455,13 @@ function photomode(toConv=null) {
         document.getElementById("prod").style.display = 'none';
         document.getElementById("sg_editor").style.display = 'none';
         document.getElementById("sg_menu").style.display = 'none';
+        fadeOut("anim");
     } else {
         document.getElementById("photo-prod").style.display = 'none';
         document.getElementById("prod").style.display = 'block';
         document.getElementById("sg_editor").style.display = 'block';
         document.getElementById("sg_menu").style.display = 'block';
+        fadeIn("anim");
     }
 }
 
