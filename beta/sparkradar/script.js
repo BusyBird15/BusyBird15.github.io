@@ -142,6 +142,12 @@ function checkMobile() {
     return userIsOnMobile;
 }
 
+if (!checkMobile) {
+  fadeOut("toolbar");
+} else {
+  fadeIn("toolbar");
+}
+
 function fixSizing () {
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
     document.getElementById("textattr").style.bottom = "45px";
@@ -3456,12 +3462,14 @@ function photomode(toConv=null) {
         document.getElementById("sg_editor").style.display = 'none';
         document.getElementById("sg_menu").style.display = 'none';
         fadeOut("anim");
+        fadeOut("toolbar");
     } else {
         document.getElementById("photo-prod").style.display = 'none';
         document.getElementById("prod").style.display = 'block';
         document.getElementById("sg_editor").style.display = 'block';
         document.getElementById("sg_menu").style.display = 'block';
         fadeIn("anim");
+        fadeIn("toolbar");
     }
 }
 
