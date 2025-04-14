@@ -665,7 +665,7 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Radar animation controls-->
-    <div id="anim" class="overlay-object" style="left: 10px; bottom: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
+    <div id="anim" class="overlay-object" style="left: 10px; bottom: 10px; flex-direction: column; padding: 10px; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
         <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; align-items: center;">
             <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Earliest frame" onclick="hideCtxMenu(); frameIdx = 0; addRadarToMap(radarStation);"><i class="fa-solid fa-backward-step" style="font-size: 20px;"></i></button>
             <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Previous frame" onclick="hideCtxMenu(); if (frameIdx > 0) {frameIdx -= 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-left" style="font-size: 20px;"></i></button>
