@@ -685,3 +685,57 @@ select:focus {
 #prod::after{
     border: none;
 }
+
+#ctx-menu {
+    position: absolute;
+    background-color: white;
+    border: 1px solid #ccc;
+    z-index: 1000;
+    display: none;
+    list-style: none;
+    padding: 0;
+    flex-direction: column;
+    border-radius: 20px;
+    box-shadow: 5px 5px 20px 0px #000000ab;
+    width: 200px;
+}
+
+#ctx-menu li {
+    padding: 2px;
+    cursor: pointer;
+    margin: 2px;
+    border-radius: 20px;
+    display: flex;
+    justify-content: left;
+    align-items: center;
+}
+
+#ctx-menu i {
+    margin: 2px 10px 2px 2px;
+    background-color: #27beffff;
+    border-radius: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+#ctx-menu li:hover {
+    background-color: #ddd;
+}
+
+@keyframes pulse {
+    0% {
+        stroke: black;
+    }
+    50% {
+        stroke: white;
+    }
+    100% {
+        stroke: black;
+    }
+}
+
+.newpoly {
+    animation: pulse 2s infinite;
+}

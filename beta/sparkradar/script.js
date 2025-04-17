@@ -142,12 +142,6 @@ function checkMobile() {
     return userIsOnMobile;
 }
 
-if (!checkMobile) {
-  fadeOut("toolbar");
-} else {
-  fadeIn("toolbar");
-}
-
 function fixSizing () {
     let vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
     document.getElementById("textattr").style.bottom = "45px";
@@ -945,7 +939,7 @@ function sgdialog(toOpen, object=null){
     }
 }
 
-function sgedit(toOpen, name=null){
+function sgedit(toOpen, name=null, color=null, opacity=null){
     if (toOpen) {
         fadeIn("sgedit");
         fadeIn("innersgedit");
@@ -953,7 +947,17 @@ function sgedit(toOpen, name=null){
         document.getElementById("sg-name").value = "";
         document.getElementById("sg-color").value = "#FF0000";
         document.getElementById("sg-opacity").value = 30;
-        if (name) {document.getElementById("sg-name").setAttribute("placeholder", name); document.getElementById("sg-name").value = name;}
+        console.log(`${name}, ${color}, ${opacity}`)
+        if (name && color) {
+            document.getElementById("sg-name").setAttribute("placeholder", name);
+            document.getElementById("sg-name").value = name;
+            document.getElementById("sg-color").value = "#" + color;
+            if (opacity){
+                document.getElementById("sg-opacity").value = opacity / 100;
+            } else {
+                document.getElementById("sg-opacity").value = 0.3;
+            }
+        }
     } else {
         fadeOut("sgedit");
         fadeOut("innersgedit");
@@ -2632,7 +2636,7 @@ function parseLightningData(data) {
 }
 
 function loadLightning() {
-    fetch('https://freelightning.com/glm/glm(Flashes).php')
+    fetch('https://freelightning.com/glm/glm(Flashes).php', {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36"})
     .then(response => {
         if (!response.ok) {
             throw new Error('Network response was not ok: ' + response.statusText);
@@ -3461,15 +3465,14 @@ function photomode(toConv=null) {
         document.getElementById("prod").style.display = 'none';
         document.getElementById("sg_editor").style.display = 'none';
         document.getElementById("sg_menu").style.display = 'none';
+        document.getElementById("anim").style.display = 'none';
         fadeOut("anim");
-        fadeOut("toolbar");
     } else {
         document.getElementById("photo-prod").style.display = 'none';
         document.getElementById("prod").style.display = 'block';
         document.getElementById("sg_editor").style.display = 'block';
         document.getElementById("sg_menu").style.display = 'block';
         fadeIn("anim");
-        fadeIn("toolbar");
     }
 }
 
@@ -3480,19 +3483,20 @@ function legendclick() {
 function setStyle(color, title) {
     document.getElementById("alerttitletext").innerHTML = title;
     document.getElementById("alerttitle").value = title;
-    sg_color = `#${color}`;
+    sg_color = `${color}`;
     var reversedLayers = sg.getLayers().reverse();
 
     reversedLayers.forEach(function(layer) {
         if (layer.customColor == 'yes' || layer.customColor == 'noCustomColor'){
-            layer.setStyle({ color: `#${color}` });
+            layer.setStyle({ color: sg_color });
         }
     });
     
     polygons.forEach(function(layer) {
-        layer.setStyle({ color: `#${color}` });
+        layer.setStyle({ color: sg_color });
     });
 }
+
 function loadSgStyles() {
     var sgstyles = JSON.parse(localStorage.getItem('sparkgen_styles')) || [];
     document.getElementById("stylepresets").innerHTML = "";
@@ -3505,18 +3509,17 @@ function loadSgStyles() {
         var construct = '';
         sgstyles.forEach(function(item) {
             if (item.color && item.alert) {
-                // Sanitize and normalize opacity
-                const validColor = /^#[0-9A-F]{6}$/i.test(item.color) ? item.color : "#000000"; // Default to black
-                const validAlert = item.alert || "No Alert"; // Default alert text
-                let normalizedOpacity = parseFloat(item.opacity);
-                if (isNaN(normalizedOpacity) || normalizedOpacity < 0 || normalizedOpacity > 1) {
-                    normalizedOpacity = 0.3; // Default opacity
+                
+                try{
+                    var normalizedOpacity = item.opacity;
+                } catch {
+                    var normalizedOpacity = 0.3;
                 }
 
                 construct += `
-                    <div onclick="setStyle('${validColor}', '${validAlert}');" class="presetitem">
-                        <h2 style="color: ${validColor}; opacity: ${normalizedOpacity};">${validAlert}</h2>
-                        <button onclick="sgedit(true, '${validAlert}')"><i style="font-size: 16px;" class="fa-solid fa-pen-to-square"></i></button>
+                    <div onclick="setStyle('#${item.color}', '${item.alert}');" class="presetitem">
+                        <h2 style="color: #${item.color};">${item.alert}</h2>
+                        <button onclick="sgedit(true, '${item.alert}', '${item.color}', ${normalizedOpacity})"><i style="font-size: 16px;" class="fa-solid fa-pen-to-square"></i></button>
                     </div>`;
             } else {
                 console.warn("Invalid item:", item);
@@ -3539,6 +3542,8 @@ function newSgPreset() {
     var color = document.getElementById("sg-color").value;
     var opacity = parseFloat(document.getElementById("sg-opacity").value);
 
+    console.log(`${ph}, ${name}, ${color}, ${opacity}`)
+
     try {
         var itemIndex = oldStyles.findIndex(item => item.name === ph);
     } catch {
@@ -3548,16 +3553,15 @@ function newSgPreset() {
     if (!color){
         color = "#FFFFFF";
     }
-    if (isNaN(opacity) || opacity < 0 || opacity > 1){
-        opacity = 0.3; // Default opacity
-    }
+
+    opacity = 100 / opacity
 
     if (itemIndex !== -1) {
         oldStyles[itemIndex].alert = name;
-        oldStyles[itemIndex].color = color;
+        oldStyles[itemIndex].color = color.replace("#", "");
         oldStyles[itemIndex].opacity = opacity;
     } else {
-        oldStyles.push({ "alert": name, "color": color, "opacity": opacity });
+        oldStyles.push({ "alert": name, "color": color.replace("#", ""), "opacity": opacity });
     }
 
     localStorage.setItem('sparkgen_styles', JSON.stringify(oldStyles)); 
