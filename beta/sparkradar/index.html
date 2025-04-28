@@ -355,12 +355,29 @@ Programming of the Spark Radar project began in September 2024.
                         <p style="margin: 5px 5px 10px 15px; font-size: medium;"><b>Note:</b> At the moment, the lightning data source has stopped running. Spark Radar is in the process of partering with a new data source.</p>
 
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>Storm Centers</b></p>
-                        <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Turns storm centers on or off.</p>
-                        <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
-                            <input type="checkbox" checked="true" id="stormcentertoggle" onchange="stormCentersOn = document.getElementById('stormcentertoggle').checked; if (stormCentersOn) { loadStormCenters(); } else { stormCenters.clearLayers(); }">
-                            <span class="checkmark" style="margin-right: 10px;"></span>
-                            Enable storm centers
-                        </label>
+                        <div style="margin-left: 20px;">
+                            <p style="margin: 30px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="TVS.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>TVS (Tornado Vortex Signature)</b></p>
+                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show centers for cells with a detected tornado vortex signature.</p>
+                            <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                                <input type="checkbox" checked="true" id="stormcentertoggle_tvs" onchange="stormCentersOn_tvs = document.getElementById('stormcentertoggle_tvs').checked; loadStormCenters();">
+                                <span class="checkmark" style="margin-right: 10px;"></span>
+                                TVS Centers
+                            </label>
+                            <p style="margin: 30px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="HAIL.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>HAIL</b></p>
+                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show centers for cells with the pssobility of hail.</p>
+                            <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                                <input type="checkbox" checked="true" id="stormcentertoggle_hail" onchange="stormCentersOn_hail = document.getElementById('stormcentertoggle_hail').checked; loadStormCenters();">
+                                <span class="checkmark" style="margin-right: 10px;"></span>
+                                Hail Centers
+                            </label>
+                            <p style="margin: 30px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="MESO.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>MESO (Mesocyclone)</b></p>
+                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show centers for cells with a detected mesocyclone signature.</p>
+                            <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                                <input type="checkbox" checked="true" id="stormcentertoggle_meso" onchange="stormCentersOn_meso = document.getElementById('stormcentertoggle_meso').checked; loadStormCenters();">
+                                <span class="checkmark" style="margin-right: 10px;"></span>
+                                MESO Centers
+                            </label>
+                        </div>
                     </div>
 
                     <div id="settmenu-radio" style="flex-direction: column; display: none;">
@@ -400,8 +417,8 @@ Programming of the Spark Radar project began in September 2024.
             </div>
 
             <div id="about" style="height: calc(100% - 50px); margin-top: 10px; flex-direction: column; align-items: center; overflow-y: auto; display: none; scrollbar-width: none; flex-direction: column;">
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b>v2.0 BETA (v1.1)</p>
-                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Apr 1, 2025</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Version:</b>v2.0 BETA (v1.2)</p>
+                <p style="margin: 10px 5px 5px 5px; font-size: large;"><b>Date:</b> Apr 28, 2025</p>
                 <br>
             </div>
 
@@ -665,7 +682,7 @@ Programming of the Spark Radar project began in September 2024.
     </div>
 
     <!--Radar animation controls-->
-    <div id="anim" class="overlay-object" style="left: 10px; bottom: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; max-width: 270px; width: calc(100% - 100px);">
+    <div id="anim" class="overlay-object" style="left: 10px; bottom: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 38px); max-width: 270px;">
         <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; align-items: center;">
             <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Earliest frame" onclick="hideCtxMenu(); frameIdx = 0; addRadarToMap(radarStation);"><i class="fa-solid fa-backward-step" style="font-size: 20px;"></i></button>
             <button class="toolbtn" style="transition-duration: 0.2s; width: 35px; height: 35px; margin: 5px;" title="Previous frame" onclick="hideCtxMenu(); if (frameIdx > 0) {frameIdx -= 1; addRadarToMap(radarStation);}"><i class="fa-solid fa-caret-left" style="font-size: 20px;"></i></button>
