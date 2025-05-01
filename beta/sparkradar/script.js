@@ -4,6 +4,7 @@ TODO:
 [ ] Mesoscale Discussion creation via SparkGen
 [ ] Opacity and editable SparkGen presets
 [ ] Add lightning
+[ ] Add storm reports
 */
 
 
@@ -24,10 +25,6 @@ if (maplat && maplon) {
     var map = L.map('map', { attributionControl: true, zoomControl: false, zoomSnap: 0, maxZoom: 17}).setView([38.0, -100.4], 4);
 }
 
-if (!L.Browser.mobile) { 
-    map.scrollWheelZoom = true;
-    map.options.wheelPxPerZoomLevel = 50; 
-}
 
 // Setup the layers of the map
 map.createPane('outlook');
@@ -50,10 +47,10 @@ map.getPane('watches').style.zIndex = 400;
 map.getPane('alerts').style.zIndex = 500;
 map.getPane('cities').style.zIndex = 600;
 map.getPane('sg').style.zIndex = 625;
+map.getPane('reports').style.zIndex = 630;
 map.getPane('radars').style.zIndex = 650;
 map.getPane('sc').style.zIndex = 650;
 map.getPane('radios').style.zIndex = 650;
-map.getPane('reports').style.zIndex = 700;
 map.getPane('markerlayer').style.zIndex = 800;
 
 var outlook = L.layerGroup().addTo(map);
@@ -61,8 +58,8 @@ var radar = L.layerGroup().addTo(map);
 var watches = L.layerGroup().addTo(map);
 var alerts = L.layerGroup().addTo(map);
 var radars = L.layerGroup().addTo(map);
-var radios = L.layerGroup().addTo(map);
 var reports = L.layerGroup().addTo(map);
+var radios = L.layerGroup().addTo(map);
 var lightningdata = L.layerGroup().addTo(map);
 var sg = L.layerGroup().addTo(map);
 var stormCenters = L.layerGroup().addTo(map);
@@ -118,11 +115,13 @@ var definitions = true;
 var sparkgen = false;
 var sg_alertsoff = false;
 var polydrawmode = false;
-var sg_color = 'red';
+var sg_color = 'yellow';
 var stormCentersOn_tvs = true;
 var stormCentersOn_hail = true;
 var stormCentersOn_meso = false;
 var needFrameAdj = true;
+var spotterReportsOn = true;
+var spotterPositionsOn = false;
 
 // Database of alert colors
 var alertcolors = {
@@ -194,10 +193,10 @@ function updatePopupStyle(darkColor) {
     } else {
         popupstyle.innerHTML = `
             .popup .leaflet-popup-content-wrapper {
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: rgba(100, 100, 100, 0.5);
             }
             .popup .leaflet-popup-tip {
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: rgba(100, 100, 100, 0.8);
             }
         `;
     }
@@ -294,6 +293,8 @@ function saveSettings() {
         'sct': stormCentersOn_tvs,
         'sch': stormCentersOn_hail,
         'scm': stormCentersOn_meso,
+        'snr': spotterReportsOn,
+        'snp': spotterPositionsOn,
     };
     localStorage.setItem('SparkRadar_settings', JSON.stringify(settingsToSave));
     console.log("Settings updated. The localStorage tag is 'SparkRadar_settings'.")
@@ -347,7 +348,18 @@ try {
             stormCentersOn_meso = document.getElementById('stormcentertoggle_meso').checked;
         } catch {}
 
+        try {
+            document.getElementById('spotterpostoggle').checked = settings.snp;
+            spotterPositionsOn = document.getElementById('spotterpostoggle').checked;
+        } catch {}
+
+        try {
+            document.getElementById('spotterreptoggle').checked = settings.snr;
+            spotterReportsOn = document.getElementById('spotterreptoggle').checked;
+        } catch {}
+
         loadStormCenters();
+        loadSpotterNetwork();
 
         try {
             document.getElementById('undertoggle').checked = settings.def;
@@ -1259,6 +1271,8 @@ function toggleAlerts() {
     }
 }
 
+var stationsdata = []
+
 function putRadarStationsOnMap() {
     if (!radarsOn) {radars.clearLayers(); return;}
     if (checkPopups(radars)){ return; }
@@ -1274,7 +1288,14 @@ function putRadarStationsOnMap() {
     .then(data => {
         document.getElementById("infop").innerHTML = "Updating radars...";
         radars.clearLayers();
+        stationsdata = [];
         data.features.forEach(feature => {
+            stationsdata.push({
+                "callsign": feature.properties.id,
+                "lat": feature.geometry.coordinates[1],
+                "lon": feature.geometry.coordinates[0],
+                "status": feature.properties.rda.properties.status,
+            })
             try {
                 const radarDate = new Date(feature.properties.latency.levelTwoLastReceivedTime);
                 const currentDate = new Date();
@@ -1387,32 +1408,6 @@ function constructStormCenter(feature){
     construct += '<p style="margin: 5px;"><b>Storm top: </b>' + kmToM(feature.properties.top) + ' mi ASL</p>'
     construct += '<p style="margin: 5px;"><b>Hail Odds: </b>' + feature.properties.poh + '% / ' + feature.properties.posh + '% (' + feature.properties.max_size + ' in.)</p>'
 
-    /*
-    var construct = '<div style="display: flex; margin: 10px; margin-top: 0px; margin-bottom: 15px; justify-content: space-around; align-items: center;">';
-    if (feature.properties.sknt == 0) { var stormmarker = 'stormmarker-norot.png'; } else { var stormmarker = 'stormmarker.png'; }
-    construct += '<img src="' + stormmarker + '" style="rotate: ' + String(270 - feature.properties.drct) + 'deg; width: 40px; height: 40px; text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;">';
-    construct += '<div style="display: flex; flex-direction: column; align-items: center;"><p style="font-size: large; font-weight: bolder;">Storm ' + feature.properties.storm_id + '</p>';
-    if (feature.properties.sknt == 0){
-        construct += '<p style="color: white">Motion unknown';
-    } else {
-        construct += '<p style="color: white">Moving ' + knotsToMph(feature.properties.sknt) + ' mph ' + degreeToCompass(270 - feature.properties.drct);
-    }
-        construct += '</p></div></div>'
-    
-    if (feature.properties.meso != "NONE") {
-        var meso = String(feature.properties.meso) + '/10';
-    } else {
-        var meso = feature.properties.meso
-    }
-    if (feature.properties.tvs == "NONE" && feature.properties.meso == "NONE"){} else {
-        construct += '<p style="margin: 5px;"><b style="color: red;">TVS: </b>' + feature.properties.tvs + ' / <b style="color: orange;">MESO: </b>' + meso + '</p>'
-    }
-    construct += '<p style="margin: 5px;"><b>VIL: </b>' + feature.properties.vil + ' kg/m²</p>'
-    construct += '<p style="margin: 5px;"><b>Storm top: </b>' + kmToM(feature.properties.top) + ' mi ASL</p>'
-    construct += '<p style="margin: 5px;"><b>Hail Odds: </b>' + feature.properties.poh + '% / ' + feature.properties.posh + '% (' + feature.properties.max_size + ' in.)</p>'
-*/
-    
-    construct += '';
 
     return construct;
 }
@@ -1437,7 +1432,6 @@ function loadStormCenters() {
         data.features.forEach(feature => {
             try {
                 const rotation = 270 - feature.properties.drct;
-                console.log(feature.properties)
 
                 if (stormCentersOn_tvs && feature.properties.tvs !== "NONE" && stormids.includes(feature.properties.storm_id) == false) {
                     stormids.push(feature.properties.storm_id);
@@ -1466,7 +1460,6 @@ function loadStormCenters() {
         data.features.forEach(feature => {
             try {
                 const rotation = 270 - feature.properties.drct;
-                console.log(feature.properties)
 
                 if (stormCentersOn_hail && feature.properties.posh > 3 && stormids.includes(feature.properties.storm_id) == false) {
                     stormids.push(feature.properties.storm_id);
@@ -1495,7 +1488,6 @@ function loadStormCenters() {
         data.features.forEach(feature => {
             try {
                 const rotation = 270 - feature.properties.drct;
-                console.log(feature.properties)
 
                 if (stormCentersOn_meso && feature.properties.meso !== "NONE" && stormids.includes(feature.properties.storm_id) == false) {
                     stormids.push(feature.properties.storm_id);
@@ -1529,8 +1521,167 @@ function loadStormCenters() {
 
 // Plot the storm centers, then keep updating them
 setTimeout(() => loadStormCenters(), 100);
-setInterval(() => loadStormCenters(), 300000);
+setInterval(() => loadStormCenters(), 30000);
 
+function constructStormReport(feature, img){
+
+    var reporter = feature.sample.split("\n")[0].replace("Reported By: ", "");
+    var reportType = feature.sample.split("\n")[1];
+    var reportTime = new Date(feature.sample.split("\n")[2].replace("Time: ", "")).toLocaleString();
+    var reportComment = feature.sample.split("\n")[3].replace("Notes: ", "");
+
+    if (reportType == "Other - See Note"){ console.log(reportType); reportType = "Storm"; }
+
+
+    var construct = '<div> <div style="display: flex; align-items: flex-start; flex-direction: row; margin-bottom: 10px; justify-content: space-between;"> <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
+
+    construct += '<p style="font-size: large; font-weight: bolder; width: 100%; text-align: center;">' + reportType + ' Report</p>';    
+    construct += '<img src="' + img + '" style="width: 30px; height: 30px; margin-right: 15px;"></img>';
+
+    
+    construct += '</div></div></div></div>';
+
+    construct += '<p style="margin: 5px;"><b>Reporter: </b>' + reporter + '</p>';
+    construct += '<p style="margin: 5px;"><b>Report Time: </b>' + reportTime + '</p>';
+    construct += '<p style="margin: 5px;"><b>Remark: </b>' + reportComment + '</p>';
+
+
+    return construct;
+}
+
+function constructSpotterPosition(feature){
+    var construct = '<div> <div style="display: flex; align-items: flex-start; flex-direction: row; margin-bottom: 10px; justify-content: space-between;"> <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
+
+    construct += '<p style="font-size: large; font-weight: bolder; width: 100%; text-align: center;">Spotter Position</p>';    
+    construct += '<img src="https://i.ibb.co/Md3GvZm/IMG-1278.webp" style="width: 30px; height: 30px; margin-right: 15px;"></img>';
+    construct += '</div></div></div></div>';
+
+    construct += '<p style="margin: 5px;">' + feature.sample.replace(/\n/g, '<br>') + '</p>';
+
+    return construct;
+}
+
+// Spotter network
+function parseSpotterNetworkData(data) {
+    data = data.replace(`Refresh: 1
+Title: Public National Spotter Network
+Filename: sn-national.txt
+
+IconFile: 1, 22, 22, 11, 11, http://www.spotternetwork.org/icon/spotternet.png
+IconFile: 2, 15, 25, 8, 25, http://www.spotternetwork.org/icon/arrows.png
+IconFile: 3, 22, 22, 11, 11, http://www.spotternetwork.org/icon/sn_reports.png
+Font: Arial,8,0,1,192,192,192
+
+`, "");
+    const objects = data.split("End:").map(obj => obj.trim()).filter(Boolean);
+    const result = objects.map(obj => {
+        var latLonMatch, textMatch, iconMatch, titleMatch, sampleMatch;
+        try { latLonMatch = obj.match(/Lat\/Lon:\s([\d.-]+),([\d.-]+)/); } catch { latLonMatch = null; }
+        try { textMatch = obj.match(/Text:\s"(.*?)",(\d+),(\d+)/); } catch { textMatch = null; }
+        try { iconMatch = obj.match(/Icon:\s([\d,]+)/); } catch { iconMatch = null; }
+        try { titleMatch = obj.match(/Title:\s(.*)/); } catch { titleMatch = null; }
+        try { sampleMatch = obj.match(/Sample:\s"(.*)"/s); } catch { sampleMatch = null; }
+
+        return {
+            lat: latLonMatch ? parseFloat(latLonMatch[1]) : null,
+            lon: latLonMatch ? parseFloat(latLonMatch[2]) : null,
+            text: textMatch ? { name: textMatch[1], value1: parseInt(textMatch[2]), value2: parseInt(textMatch[3]) } : null,
+            icon: iconMatch ? iconMatch[1].split(',').map(Number) : null,
+            title: titleMatch ? titleMatch[1].trim() : null,
+            sample: sampleMatch ? sampleMatch[1].replace(/\\n/g, '\n') : null
+        };
+    });
+
+    return result;
+}
+
+// Icon URL: https://i.ibb.co/Md3GvZm/IMG-1278.webp
+function loadSpotterNetwork() {
+    if (checkPopups(reports)){ return; }
+    console.info("Updating spotter network data.")
+    document.getElementById("infop").innerHTML = "Loading spotter network data...";
+    fetch('https://www.spotternetwork.org/feeds/stormlab.txt')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.text();
+    })
+    .then(data => {
+        try {
+            data = parseSpotterNetworkData(data);
+            console.log(data);
+            reports.clearLayers();
+
+            data.forEach(feature => {
+                try {
+
+                    if (feature.title == "Storm Spotter Network Position Report" && spotterPositionsOn) {
+                        const positionmarker = L.divIcon({
+                            html: `<img style="width: 16px; height: 16px;" src="https://i.ibb.co/Md3GvZm/IMG-1278.webp.png">`,
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8],
+                            className: ''
+                        });
+                        var marker = L.marker([feature.lat, feature.lon], { icon: positionmarker, pane: 'reports' }).addTo(reports);
+                        marker.bindPopup(constructSpotterPosition(feature), {
+                            "autoPan": true,
+                            "maxHeight": 500,
+                            "maxWidth": 500,
+                            "className": "popup",
+                            "autoPanPadding": [10, 60],
+                            "closeButton": false
+                        });
+                    } else if (feature.title == "Storm Spotter Network Severe Weather Report" && spotterReportsOn) {
+                        var info = feature.sample.split("\n");
+                        var markerimg = "UNK=report.png";
+
+                        if (info[1] == "Hail"){
+                            markerimg = "HAIL=report.png";
+                        } else if (info[1] == "High Wind"){
+                            markerimg = "WIND=report.png";
+                        } else if (info[1] == "Tornado"){
+                            markerimg = "TOR=report.png";
+                        }
+
+                        console.log("Report type: " + info[1]);
+                        // Also is "Flash Flood", "Wall Cloud"
+
+                        const repmarker = L.divIcon({
+                            html: `<img style="width: 26px; height: 26px;" src="${markerimg}">`,
+                            iconSize: [26, 26],
+                            iconAnchor: [13, 13],
+                            className: ''
+                        });
+                        var marker = L.marker([feature.lat, feature.lon], { icon: repmarker, pane: 'reports' }).addTo(reports);
+                        marker.bindPopup(constructStormReport(feature, markerimg), {
+                            "autoPan": true,
+                            "maxHeight": 500,
+                            "maxWidth": 500,
+                            "className": "popup",
+                            "autoPanPadding": [10, 60],
+                            "closeButton": false
+                        });
+                    }  
+
+                } catch (error) {console.error(error);}
+                document.getElementById("infop").innerHTML = "";
+            });
+
+        } catch (error) {console.error(error);}
+
+        document.getElementById("infop").innerHTML = "";
+        
+    })
+    .catch(error => {
+        console.error('loadSpotterNetwork() > fetch() > ', error);
+        document.getElementById("infop").innerHTML = "";
+    });
+}
+
+// Plot the spotter network data, then keep updating them
+setTimeout(() => loadSpotterNetwork(), 100);
+setInterval(() => loadSpotterNetwork(), 30000);
 
 // Function to build the tileserver URL
 function tileURL(baseURL, params) {
@@ -2124,7 +2275,7 @@ map.on('click', function (e) {
                     try { var hailthreat = alertInfo.properties.parameters.hailThreat[0]; } catch {}
                     try { var tordetection = alertInfo.properties.parameters.tornadoDetection[0]; } catch {}
 
-                    construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + layer.options.data.properties.event + '</div>';
+                    construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(150, 150, 150, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + layer.options.data.properties.event + '</div>';
                     construct += '<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between;"><div style="flex; flex-direction: column;"><p style="margin: 5px; color: black;"><b>Expires in:</b> ' + isoTimeUntil(alertInfo.properties.expires) + '</p>';
                     if (maxwind || maxhail || fflooddamage || tordetection) {
                         if (maxwind) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxwind + '</p>';}
@@ -2182,7 +2333,7 @@ map.on('click', function (e) {
                         var maxhail = alertInfo.properties.MAX_HAIL;
                         var maxwind = Math.ceil(alertInfo.properties.MAX_GUST * 1.15077945);
 
-                        construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(255, 255, 255, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + alertTitle + '</div>';
+                        construct += '<div style="display: flex; flex-direction: column; margin-bottom: 5px; padding: 10px; background: rgba(150, 150, 150, 0.4); border-radius: 20px;"><div style="border-radius: 20px; text-align: center; background: ' + alertTitlebackgroundColor + '; color: ' + alertTitlecolor + '; padding: 5px; font-weight: bold;">' + alertTitle + '</div>';
                         construct += '<div style="display: flex; flex-direction: row; align-items: flex-start; justify-content: space-between;"><div style="flex; flex-direction: column;"><p style="margin: 5px; color: black;"><b>Expires in:</b> ' + isoTimeUntil(convertToIso(String(alertInfo.properties.EXPIRE))) + '</p>';
                         if (maxwind || maxhail) {
                             if (maxwind) {construct = construct + '<p style="margin: 0px; color: black;"><i class="fa-solid fa-wind" style="font-size: 18px; color: #2a7fffff; margin-right: 5px;"></i> ' + maxwind + ' MPH</p>';}
@@ -2364,7 +2515,7 @@ function loadAlerts() {
         data.features.forEach(function(alert) {
             try {
                 var thisItem = alert.geometry.coordinates[0];
-                if (alert.properties.event.includes("Tornado") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("has been cancelled")){
+                if (alert.properties.event.includes("Tornado") && !alert.properties.description.includes("allowed to expire") && !alert.properties.description.includes("cancelled")){
                     var alertInfoId = 'alert_' + String(alert.properties.id);
                     if (!alertDataSet[alertInfoId]) {
                         alertDataSet[alertInfoId] = JSON.stringify(alert);
@@ -2652,16 +2803,27 @@ function doLocSearch(query) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === 4 && xhr.status === 200) {
             var results = JSON.parse(xhr.responseText);
+
+            var stationresults = [];
+            stationsdata.forEach(function(station) {
+                if (station.callsign.toLowerCase().includes(query.toLowerCase())) {
+                    stationresults.push(station);
+                }
+            });
+
             var reslist = document.getElementById('results');
             const rect = document.getElementById('searchbtn').getBoundingClientRect();
             reslist.style.display = "block";
             setTimeout(() => reslist.style.opacity = 1, 10);
             var construct = "";
-            if (results.length == 0){
+            if (results.length == 0 && stationresults.length == 0) {
                 construct = construct + '<div style="margin-bottom: 3px; padding: 4px;">No results found.</div>';
             }
+            stationresults.forEach(function(result) {
+                construct = construct + '<div onclick="setTimeout(() => {frameIdx = maxFrames-1; addRadarToMap(\'' + result.callsign + '\'.toUpperCase());}, 200); addRadarToMap(\'' + result.callsign + '\'.toUpperCase()); showSearchedLocation(' + result.lat + ', ' + result.lon + ', 8)" class="resultitem" style="margin-bottom: 5px; background-color: rgba(100, 100, 100, 0.5); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.callsign + '"><i style="color: black; background: #27beff; padding: 5px; margin-right: 10px; font-weight: bold; border-radius: 15px;">' + result.callsign + '</i> Radar Station</div>';
+            })
             results.forEach(function(result) {
-                construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ')" class="resultitem" style="margin-bottom: 5px; background-color: rgba(255, 255, 255, 0.2); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.display_name + '">' + result.display_name.split(",").slice(0, 4).join(",") + '</div>';
+                construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ', 12)" class="resultitem" style="margin-bottom: 5px; background-color: rgba(100, 100, 100, 0.5); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.display_name + '">' + result.display_name.split(",").slice(0, 4).join(",") + '</div>';
             })
             reslist.innerHTML = construct;
         }
@@ -2669,11 +2831,11 @@ function doLocSearch(query) {
     xhr.send();
 }
 
-function showSearchedLocation(lat, lon){
+function showSearchedLocation(lat, lon, z){
     document.getElementById('results').style.opacity = 0;
     setTimeout(() => document.getElementById('results').style.display = "none", 500);
     document.getElementById('textbox').value = "";
-    map.flyTo([lat, lon], 12, { duration: 1.0 });
+    map.flyTo([lat, lon], z, { duration: 1.0 });
 }
 
 function sizing(){
@@ -2750,8 +2912,8 @@ setInterval(() => loadOutlook(), 300000);
 
 
 function settingsmode(thisobj, button) {
-    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar', 'settings-storm', 'settings-radio'];//, 'settings-stream'];
-    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar', 'settmenu-storm', 'settmenu-radio'];//, 'settmenu-streaming'];
+    const btns = ['settings-general', 'settings-map', 'settings-alerts', 'settings-radar', 'settings-storm', 'settings-radio', 'settings-spotters'];//, 'settings-stream'];
+    const objects = ['settmenu-general', 'settmenu-map', 'settmenu-alerts', 'settmenu-radar', 'settmenu-storm', 'settmenu-radio', 'settmenu-spotters'];//, 'settmenu-streaming'];
     document.getElementById(button).style.background = '#27beffff';
     document.getElementById(thisobj).style.display = 'flex';
     objects.forEach(function(obj) {
@@ -3053,7 +3215,7 @@ async function addWeatherRadios() {
 
                         const marker = L.marker([parseFloat(LAT), parseFloat(LON)], { icon: customIcon, pane: 'radios' });
 
-                        const popupContent = `
+                        /*const popupContent = `
                             <div style="display: flex; align-items: center; justify-content: space-around; flex-direction: row; margin: 10px;">
                                 <i class="fa-solid fa-radio" style="text-shadow: black 0px 0px 20px; font-size: 24px; margin-right: 15px; color: #27beffff;"></i>
                                 <div style="display: flex; align-items: center; flex-direction: column;">
@@ -3070,8 +3232,22 @@ async function addWeatherRadios() {
                                     <button onclick="togglePlayPause('${CALLSIGN}', '${streamDetails.url}', '${streamDetails.description}', '${FREQ}')" style="justify-content: center; display: flex; flex-direction: row; align-items: center; margin: 10px 5px 5px 5px; width: 100%; font-size: medium; color: black; padding: 3px; border: none; border-radius: 20px;" class="function-btn"><i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen</button>
                                 </div>
                             </div>
-                        `;
-                        marker.bindPopup(popupContent, {"autoPan": true, "autoPanPadding": [10, 60], 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
+                        `;*/
+
+                        const popupContent = `
+                        <div>
+                            <div style="display: flex; align-items: center; flex-direction: row; margin-bottom: 10px;">
+                                <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;">
+                                    <i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i>
+                                </button>
+                                <p style="margin: 5px; color: white; width: 100%; text-align: center; font-weight: bold; font-size: large; height: 24px; margin-left: 10px;">${CALLSIGN}</p>
+                                <button class="function-btn" style="display: flex; justify-content: center; align-items: center; height: 35px !important; font-weight: bold;" title="Listen" onclick="togglePlayPause('${CALLSIGN}', '${streamDetails.url}', '${streamDetails.description}', '${FREQ}')">
+                                    <i style="margin-right: 5px;" class="fa-solid fa-volume-up"></i> Listen
+                                </button>
+                            </div>
+                        </div>`
+
+                        marker.bindPopup(popupContent, {"autoPan": true, "autoPanPadding": [10, 60], 'closeButton': false, 'maxheight': '400' , 'maxWidth': '380', 'className': 'popup'});
 
                         weatherRadioMarkers.push(marker);
 

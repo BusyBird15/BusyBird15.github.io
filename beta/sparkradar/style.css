@@ -51,7 +51,8 @@ body {
 }
 
 .overlay-object-dark {
-    background-color: rgba(255, 255, 255, 0.2) !important;
+    background-color: rgba(100, 100, 100, 0.5) !important;
+    border: 1px solid gray;
 }
 
 .show {
@@ -148,11 +149,13 @@ button {
     max-height: 500px;
     width: 350px;
     max-height: 400px !important;
+    border: 1px solid gray;
 }
 
 .popup .leaflet-popup-tip {
     backdrop-filter: blur(15px) !important;
     -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid gray;
 }
 
 .leaflet-popup-content p {
@@ -316,7 +319,7 @@ input:focus::-webkit-input-placeholder {
 }
 
 .resultitem:hover {
-    background: rgba(255, 255, 255, 0.4) !important;
+    background: rgba(180, 180, 180, 0.4) !important;
 }
 
 #results {

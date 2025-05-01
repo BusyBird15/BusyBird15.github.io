@@ -78,7 +78,7 @@ Programming of the Spark Radar project began in September 2024.
     <div id="attrib" class="overlay-object"></div>
 
     <!--Menu opener-->
-    <button id="menu-opener" onclick="hideCtxMenu(); menuToggle(true); fadeIn('menu-blur')" class="nav-btn overlay-object" style="justify-content: center; width: 40px; height: 40px; transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+    <button id="menu-opener" onclick="hideCtxMenu(); menuToggle(true); fadeIn('menu-blur')" class="nav-btn overlay-object" style="border: 1px solid gray; justify-content: center; width: 40px; height: 40px; transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
         <i class="fa-solid fa-bars" style="font-size: 20px;"></i>
     </button>
 
@@ -105,7 +105,7 @@ Programming of the Spark Radar project began in September 2024.
                 <i class="fa-solid fa-xmark" style="font-size: 16px; "></i>
             </button>
             <button id="sparkgenbtn" onclick="menuToggle(false); convertToSparkgen(true);" class="nav-btn" style="width: auto !important; border-radius: 20px; align-items: center; font-size: medium; font-weight: bold; color: black; display: flex; flex-direction: row; background: #ffcc00ff;">
-                SparkGen <p style="margin: 0px; margin-left: 5px; padding: 5px; color: white; background-color: red; border-radius: 20px;">NEW</p>
+                SparkGen
             </button>
             <p id="insg" style="margin: 5px; font-weight: bold; display: none; font-size: medium; color: #ffcc00ff;">You are in SparkGen</p>
         </div>
@@ -173,7 +173,7 @@ Programming of the Spark Radar project began in September 2024.
 
             <div id="dictionary" style="flex-direction: column; overflow-x: auto; width: 100%; scrollbar-width: none; height: calc(100% - 40px);">
                 <div style="margin: 10px 10px 0px 10px; display: flex; flex-direction: row;">
-                    <input type="text" placeholder="Search for a term" id="dictbox" style="width: calc(100% - 20px); transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; padding: 10px; border: none; width: 100%; border-radius: 20px;">
+                    <input type="text" placeholder="Search for a term" id="dictbox" style="width: calc(100% - 20px); transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(100, 100, 100, 0.5); padding: 5px; margin: 5px; padding: 10px; border: none; width: 100%; border-radius: 20px;">
                     <button id="searchbtn" class="searchbuttons" style="padding: 5px 5px 5px 0px;" onclick="doDictSearch(document.getElementById('dictbox').value);"><i class="fa-solid fa-search" style="font-size: 16px; margin: 5px;"></i></button>
                 </div>
                 <div id="dictres" style="display: flex; flex-direction: column;"></div>
@@ -223,6 +223,9 @@ Programming of the Spark Radar project began in September 2024.
                     </button>
                     <button id="settings-storm" onclick="settingsmode('settmenu-storm', 'settings-storm');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-solid fa-cloud-bolt" style="font-size: 16px"></i><br>Storms
+                    </button>
+                    <button id="settings-spotters" onclick="settingsmode('settmenu-spotters', 'settings-spotters');" class="set-btn" style="background: #89999f; border-radius: 20px;">
+                        <i class="fa-solid fa-binoculars" style="font-size: 16px"></i><br>Spotters
                     </button>
                     <button id="settings-radio" onclick="settingsmode('settmenu-radio', 'settings-radio');" class="set-btn" style="background: #89999f; border-radius: 20px;">
                         <i class="fa-solid fa-radio" style="font-size: 16px"></i><br>Radios
@@ -356,7 +359,7 @@ Programming of the Spark Radar project began in September 2024.
 
                         <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-cloud-bolt setticon" style="font-size: 16px; color: white;"></i><b>Storm Centers</b></p>
                         <div style="margin-left: 20px;">
-                            <p style="margin: 30px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="TVS.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>TVS (Tornado Vortex Signature)</b></p>
+                            <p style="margin: 20px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="TVS.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>TVS (Tornado Vortex Signature)</b></p>
                             <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show centers for cells with a detected tornado vortex signature.</p>
                             <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
                                 <input type="checkbox" checked="true" id="stormcentertoggle_tvs" onchange="stormCentersOn_tvs = document.getElementById('stormcentertoggle_tvs').checked; loadStormCenters();">
@@ -364,7 +367,7 @@ Programming of the Spark Radar project began in September 2024.
                                 TVS Centers
                             </label>
                             <p style="margin: 30px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="HAIL.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>HAIL</b></p>
-                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show centers for cells with the pssobility of hail.</p>
+                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show centers for cells with the possibility of hail.</p>
                             <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
                                 <input type="checkbox" checked="true" id="stormcentertoggle_hail" onchange="stormCentersOn_hail = document.getElementById('stormcentertoggle_hail').checked; loadStormCenters();">
                                 <span class="checkmark" style="margin-right: 10px;"></span>
@@ -377,6 +380,32 @@ Programming of the Spark Radar project began in September 2024.
                                 <span class="checkmark" style="margin-right: 10px;"></span>
                                 MESO Centers
                             </label>
+
+                            <br>
+                        </div>
+                    </div>
+
+                    <div id="settmenu-spotters" style="flex-direction: column; display: none;">
+                        <p style="margin: 30px 5px 5px 5px; font-size: large;"><i class="fa-solid fa-binoculars setticon" style="font-size: 16px; color: white;"></i><b>Spotter Network</b></p>
+                        <div style="margin-left: 20px;">
+                            <p style="margin: 20px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="https://i.ibb.co/Md3GvZm/IMG-1278.webp" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>Spotter Positions</b></p>
+                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show Spotter Network spotter positions.</p>
+                            <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                                <input type="checkbox" checked="true" id="spotterpostoggle" onchange="spotterPositionsOn = document.getElementById('spotterpostoggle').checked; loadSpotterNetwork();">
+                                <span class="checkmark" style="margin-right: 10px;"></span>
+                                Spotter Positions
+                            </label>
+                            <p style="margin: 10px 5px 5px 0px; font-size: medium; display: flex; align-items: flex-start; justify-content: top;"><b style="margin-right: 5px;">Disclaimer: </b>Do not abuse the contact info of the Spotter Network chasers. Do not solicit or spam them; please respect their privacy. Thank you!</p>
+
+                            <p style="margin: 30px 5px 5px 5px; font-size: large; display: flex; align-items: center;"><img src="TOR=report.png" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img><b>Spotter Reports</b></p>
+                            <p style="margin: 5px 5px 10px 15px; font-size: medium; color: lightgray;">Show Spotter Network storm reports.</p>
+                            <label style="margin-left: 20px; font-size: medium;" class="checkbox-container">
+                                <input type="checkbox" checked="true" id="spotterreptoggle" onchange="spotterReportsOn = document.getElementById('spotterreptoggle').checked; loadSpotterNetwork();">
+                                <span class="checkmark" style="margin-right: 10px;"></span>
+                                Spotter Reports
+                            </label>
+
+                            <br>
                         </div>
                     </div>
 
@@ -560,16 +589,16 @@ Programming of the Spark Radar project began in September 2024.
 
             <div id="editor" style="margin: 10px; justify-content: flex-start; flex-direction: column; display: none; overflow-y: auto; height: 100%;"><br>
                 <h3 style="margin: 0px; width: 100%; text-align: center;">Title text</h3>
-                <input type="text" value="Weather Alert Title" placeholder="Leave blank to hide" id="alerttitle" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;">
+                <input type="text" value="Weather Alert Title" placeholder="Leave blank to hide" id="alerttitle" style="transition-duration: 0.3s; font-size: 16px; color: white; border: 1px solid gray; background: rgba(100, 100, 100, 0.5); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;">
                 <br>
                 <h3 style="margin: 0px; width: 100%; text-align: center;">Subtitle line 1</h3>
-                <input type="text" value="Subtitle line 1" placeholder="Leave blank to hide" id="subtext1" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;">
+                <input type="text" value="Subtitle line 1" placeholder="Leave blank to hide" id="subtext1" style="transition-duration: 0.3s; font-size: 16px; color: white; border: 1px solid gray; background: rgba(100, 100, 100, 0.5); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;">
                 <br>
                 <h3 style="margin: 0px; width: 100%; text-align: center;">Subtitle line 2</h3>
-                <input type="text" value="Subtitle line 2" placeholder="Leave blank to hide" id="subtext2" style="transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;">
+                <input type="text" value="Subtitle line 2" placeholder="Leave blank to hide" id="subtext2" style="transition-duration: 0.3s; font-size: 16px; color: white; border: 1px solid gray; background: rgba(100, 100, 100, 0.5); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;">
                 <br>
                 <h3 style="margin: 0px; width: 100%; text-align: center;">Discussion text</h3>
-                <textarea placeholder="Leave blank to hide" id="discussiontext" style="resize: vertical; transition-duration: 0.1s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;"></textarea>
+                <textarea placeholder="Leave blank to hide" id="discussiontext" style="resize: vertical; transition-duration: 0.1s; font-size: 16px; color: white; border: 1px solid gray; background: rgba(100, 100, 100, 0.5); padding: 5px; margin: 5px; border: none; width: calc(100% - 20px); border-radius: 7px;"></textarea>
                 <br>
             </div>
 
@@ -596,7 +625,7 @@ Programming of the Spark Radar project began in September 2024.
     <div id="sgedit" style="transition: opacity 0.5s !important; opacity: 0; width: 100%; height: 100%; display: none; position: absolute; z-index: 14; justify-content: center; align-items: center; top: 0px; left: 0px; background: rgba(0, 0, 0, 0.2); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);">
         <div id="innersgedit" style="transition: scale 0.5s cubic-bezier(0.42, 0, 0.39, 0.98) !important; justify-content: space-between; scale: 70%; flex-direction: column; overflow-y: auto; scrollbar-width: none; padding: 10px; width: 100%; height: calc(100% - 40px); max-width: 300px; max-height: 200px; margin: 10px; border-radius: 20px; background: rgb(44, 44, 44); color: white; box-shadow: #0000008c 3px 3px 9px 0px;">
             <div style="display: flex; flex-direction: column; width: 100%; align-items: center;">
-                <input id="sg-name" type="text" placeholder="Preset name" id="dictbox" style="width: calc(100% - 20px) !important; transition-duration: 0.3s; font-size: 16px; color: white; background: rgba(255, 255, 255, 0.2); padding: 5px; margin: 5px; padding: 10px; border: none; width: 100%; border-radius: 20px;">
+                <input id="sg-name" type="text" placeholder="Preset name" id="dictbox" style="width: calc(100% - 20px) !important; transition-duration: 0.3s; font-size: 16px; color: white; border: 1px solid gray; background: rgba(100, 100, 100, 0.5); padding: 5px; margin: 5px; padding: 10px; border: none; width: 100%; border-radius: 20px;">
                 <input id="sg-color" type="color" value="#FF0000" style="margin: 10px; width: 20%; border: 80px; border-radius: 5px;">
                 <input id="sg-opacity" type="range" value="30" max="100" min="0" style="margin: 10px; width: 80%; border: 0px; border-radius: 5px;">
             </div>
@@ -681,6 +710,11 @@ Programming of the Spark Radar project began in September 2024.
         <p id="disc" class="easfont" style="width: 100%; margin: 0px; text-align: left;"></p>
     </div>
 
+    <!--Map attribution
+    <button id="attrib-opener" onclick="hideCtxMenu(); menuToggle(true); fadeIn('menu-blur')" class="nav-btn overlay-object" style="top: 95px; left: unset; right: 10px; opacity: 1; padding: none; display: flex; border: 1px solid gray; justify-content: center; width: 30px !important; height: 30px !important; transition-duration: 0.5s; background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);">
+        <i class="fa-solid fa-info" style="font-size: 8px; margin: none;"></i>
+    </button>-->
+
     <!--Radar animation controls-->
     <div id="anim" class="overlay-object" style="left: 10px; bottom: 10px; flex-direction: column; padding: 10px; display: flex; align-items: center; justify-content: center; width: calc(100% - 38px); max-width: 270px;">
         <div style="width: 100%; display: flex; flex-direction: row; justify-content: center; align-items: center;">
@@ -704,7 +738,7 @@ Programming of the Spark Radar project began in September 2024.
         <li style="display: none;" title="Change styles" id="styler" onclick="hideCtxMenu(); styles();"><i class="fa-solid fa-palette" style="font-size: 16px;"></i> Change styles</li>
         <li style="display: none;" title="Clear map" id="clearmap" onclick="hideCtxMenu(); clearmap()"><i class="fa-solid fa-trash" style="font-size: 16px;"></i> Clear map</li>
         <li style="display: none; margin-bottom: 10px; background-color: #ff2121ff; color: white;" title="Exit SparkGen" id="sparkgenexit" onclick="hideCtxMenu(); convertToSparkgen(false);"><i class="fa-solid fa-arrow-right-from-bracket" style="font-size: 16px; transform: rotate(180deg);"></i> Exit SparkGen</li>
-        <li style="display: flex;" title="[R] Refresh" onclick="mapEvents += 1; hideCtxMenu(); addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i> Refresh</li>
+        <li style="display: flex;" title="[R] Refresh" onclick="mapEvents += 1; hideCtxMenu(); addRadarToMap(radarStation); loadAlerts(); loadWatches(); loadOutlook(); loadSpotterNetwork(); loadStormCenters();"><i class="fa-solid fa-refresh" style="font-size: 16px;"></i> Refresh</li>
         <li style="display: flex;" title="Go to my location" onclick="if(outermarker) {hideCtxMenu(); map.flyTo([nowlat, nowlon], 10);}"><i class="fa-solid fa-location" style="font-size: 16px;"></i> Fly to my location</li>
         <li style="display: flex;" title="[D] Drawing tools" onclick="hideCtxMenu(); toggleDrawing(true);"><i class="fa-solid fa-pencil" style="font-size: 16px;"></i> Draw</li>
         <li style="display: flex;" class="selected_toolbtn" title="[SHIFT + A] Turn alerts on/off" id="alerttoggle" onclick="hideCtxMenu(); toggleAlerts();"><i class="fa-solid fa-circle-exclamation" style="color: black; font-size: 16px;"></i> Toggle alerts</li>
