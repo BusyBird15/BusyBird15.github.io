@@ -278,6 +278,11 @@ select {
     transition-duration: 0.2s;
 }
 
+.selectdui {
+    color: black !important;
+    background-color: #2a7fffff !important;
+}
+
 #textbox:focus {
     outline: none;
 }

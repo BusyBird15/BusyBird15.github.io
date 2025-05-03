@@ -39,6 +39,7 @@ map.createPane('lightning');
 map.createPane('sg');
 map.createPane('sc');
 map.createPane('markerlayer');
+map.createPane('measurelayer');
 
 map.getPane('radar').style.zIndex = 200;
 map.getPane('outlook').style.zIndex = 250;
@@ -52,6 +53,7 @@ map.getPane('radars').style.zIndex = 650;
 map.getPane('sc').style.zIndex = 650;
 map.getPane('radios').style.zIndex = 650;
 map.getPane('markerlayer').style.zIndex = 800;
+map.getPane('measurelayer').style.zIndex = 850;
 
 var outlook = L.layerGroup().addTo(map);
 var radar = L.layerGroup().addTo(map);
@@ -64,6 +66,7 @@ var lightningdata = L.layerGroup().addTo(map);
 var sg = L.layerGroup().addTo(map);
 var stormCenters = L.layerGroup().addTo(map);
 var markerlayer = L.layerGroup().addTo(map);
+var measurelayer = L.layerGroup().addTo(map);
 
 
 // Maps
@@ -122,6 +125,7 @@ var stormCentersOn_meso = false;
 var needFrameAdj = true;
 var spotterReportsOn = true;
 var spotterPositionsOn = false;
+var drawingMode = false;
 
 // Database of alert colors
 var alertcolors = {
@@ -153,6 +157,10 @@ function checkMobile() {
     let userIsOnMobile = false;
     (function(a){if(/(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|iris|kindle|lge |maemo|midp|mmp|mobile.+firefox|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows ce|xda|xiino/i.test(a)||/1207|6310|6590|3gso|4thp|50[1-6]i|770s|802s|a wa|abac|ac(er|oo|s\-)|ai(ko|rn)|al(av|ca|co)|amoi|an(ex|ny|yw)|aptu|ar(ch|go)|as(te|us)|attw|au(di|\-m|r |s )|avan|be(ck|ll|nq)|bi(lb|rd)|bl(ac|az)|br(e|v)w|bumb|bw\-(n|u)|c55\/|capi|ccwa|cdm\-|cell|chtm|cldc|cmd\-|co(mp|nd)|craw|da(it|ll|ng)|dbte|dc\-s|devi|dica|dmob|do(c|p)o|ds(12|\-d)|el(49|ai)|em(l2|ul)|er(ic|k0)|esl8|ez([4-7]0|os|wa|ze)|fetc|fly(\-|_)|g1 u|g560|gene|gf\-5|g\-mo|go(\.w|od)|gr(ad|un)|haie|hcit|hd\-(m|p|t)|hei\-|hi(pt|ta)|hp( i|ip)|hs\-c|ht(c(\-| |_|a|g|p|s|t)|tp)|hu(aw|tc)|i\-(20|go|ma)|i230|iac( |\-|\/)|ibro|idea|ig01|ikom|im1k|inno|ipaq|iris|ja(t|v)a|jbro|jemu|jigs|kddi|keji|kgt( |\/)|klon|kpt |kwc\-|kyo(c|k)|le(no|xi)|lg( g|\/(k|l|u)|50|54|\-[a-w])|libw|lynx|m1\-w|m3ga|m50\/|ma(te|ui|xo)|mc(01|21|ca)|m\-cr|me(rc|ri)|mi(o8|oa|ts)|mmef|mo(01|02|bi|de|do|t(\-| |o|v)|zz)|mt(50|p1|v )|mwbp|mywa|n10[0-2]|n20[2-3]|n30(0|2)|n50(0|2|5)|n7(0(0|1)|10)|ne((c|m)\-|on|tf|wf|wg|wt)|nok(6|i)|nzph|o2im|op(ti|wv)|oran|owg1|p800|pan(a|d|t)|pdxg|pg(13|\-([1-8]|c))|phil|pire|pl(ay|uc)|pn\-2|po(ck|rt|se)|prox|psio|pt\-g|qa\-a|qc(07|12|21|32|60|\-[2-7]|i\-)|qtek|r380|r600|raks|rim9|ro(ve|zo)|s55\/|sa(ge|ma|mm|ms|ny|va)|sc(01|h\-|oo|p\-)|sdk\/|se(c(\-|0|1)|47|mc|nd|ri)|sgh\-|shar|sie(\-|m)|sk\-0|sl(45|id)|sm(al|ar|b3|it|t5)|so(ft|ny)|sp(01|h\-|v\-|v )|sy(01|mb)|t2(18|50)|t6(00|10|18)|ta(gt|lk)|tcl\-|tdg\-|tel(i|m)|tim\-|t\-mo|to(pl|sh)|ts(70|m\-|m3|m5)|tx\-9|up(\.b|g1|si)|utst|v400|v750|veri|vi(rg|te)|vk(40|5[0-3]|\-v)|vm40|voda|vulc|vx(52|53|60|61|70|80|81|83|85|98)|w3c(\-| )|webc|whit|wi(g |nc|nw)|wmlb|wonu|x700|yas\-|your|zeto|zte\-/i.test(a.substr(0,4))) userIsOnMobile = true;})(navigator.userAgent||navigator.vendor||window.opera);
     return userIsOnMobile;
+}
+
+if (checkMobile()) {
+    document.getElementById("ruler").parentNode.removeChild(document.getElementById("ruler"));
 }
 
 function fixSizing () {
@@ -1290,12 +1298,21 @@ function putRadarStationsOnMap() {
         radars.clearLayers();
         stationsdata = [];
         data.features.forEach(feature => {
-            stationsdata.push({
-                "callsign": feature.properties.id,
-                "lat": feature.geometry.coordinates[1],
-                "lon": feature.geometry.coordinates[0],
-                "status": feature.properties.rda.properties.status,
-            })
+            try{
+                stationsdata.push({
+                    "callsign": feature.properties.id,
+                    "lat": feature.geometry.coordinates[1],
+                    "lon": feature.geometry.coordinates[0],
+                    "status": feature.properties.rda.properties.status,
+                })
+            } catch {
+                stationsdata.push({
+                    "callsign": feature.properties.id,
+                    "lat": feature.geometry.coordinates[1],
+                    "lon": feature.geometry.coordinates[0],
+                    "status": null,
+                })
+            } finally {}
             try {
                 const radarDate = new Date(feature.properties.latency.levelTwoLastReceivedTime);
                 const currentDate = new Date();
@@ -1536,7 +1553,7 @@ function constructStormReport(feature, img){
     var construct = '<div> <div style="display: flex; align-items: flex-start; flex-direction: row; margin-bottom: 10px; justify-content: space-between;"> <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
 
     construct += '<p style="font-size: large; font-weight: bolder; width: 100%; text-align: center;">' + reportType + ' Report</p>';    
-    construct += '<img src="' + img + '" style="width: 30px; height: 30px; margin-right: 15px;"></img>';
+    construct += '<img src="' + img + '" style="width: 30px; height: 30px;"></img>';
 
     
     construct += '</div></div></div></div>';
@@ -1553,7 +1570,7 @@ function constructSpotterPosition(feature){
     var construct = '<div> <div style="display: flex; align-items: flex-start; flex-direction: row; margin-bottom: 10px; justify-content: space-between;"> <button id="dialog-closer" onclick="alertpop = null; map.closePopup();" class="nav-btn" style="background: #ff2121ff; border-radius: 20px; height: 30px !important; width: 30px !important;"><i class="fa-solid fa-xmark" style="font-size: 12px; display: flex; justify-content: center; align-items: center;"></i> </button>';
 
     construct += '<p style="font-size: large; font-weight: bolder; width: 100%; text-align: center;">Spotter Position</p>';    
-    construct += '<img src="https://i.ibb.co/Md3GvZm/IMG-1278.webp" style="width: 30px; height: 30px; margin-right: 15px;"></img>';
+    construct += '<img src="https://i.ibb.co/Md3GvZm/IMG-1278.webp" style="width: 30px; height: 30px;"></img>';
     construct += '</div></div></div></div>';
 
     construct += '<p style="margin: 5px;">' + feature.sample.replace(/\n/g, '<br>') + '</p>';
@@ -1595,6 +1612,8 @@ Font: Arial,8,0,1,192,192,192
     return result;
 }
 
+var spotterData = [];
+
 // Icon URL: https://i.ibb.co/Md3GvZm/IMG-1278.webp
 function loadSpotterNetwork() {
     if (checkPopups(reports)){ return; }
@@ -1612,11 +1631,20 @@ function loadSpotterNetwork() {
             data = parseSpotterNetworkData(data);
             console.log(data);
             reports.clearLayers();
+            spotterData = [];
 
             data.forEach(feature => {
                 try {
 
                     if (feature.title == "Storm Spotter Network Position Report" && spotterPositionsOn) {
+                        try {
+                            spotterData.push({
+                                "lat": feature.lat,
+                                "lon": feature.lon,
+                                "name": feature.sample.split("\n")[0].replace("Name: ", ""),
+                            });
+                        } catch {}
+
                         const positionmarker = L.divIcon({
                             html: `<img style="width: 16px; height: 16px;" src="https://i.ibb.co/Md3GvZm/IMG-1278.webp.png">`,
                             iconSize: [16, 16],
@@ -2180,7 +2208,7 @@ var alts = [];
 
 // V2 - Dynamic alert popups
 map.on('click', function (e) {
-    if (sparkgen || document.getElementById('ctx-menu').style.display == 'flex') {document.getElementById('ctx-menu').style.display = 'none'; return;}
+    if (drawingMode || sparkgen || document.getElementById('ctx-menu').style.display == 'flex') {document.getElementById('ctx-menu').style.display = 'none'; return;}
     if (alertpop) {
         map.closePopup();
         alertpop = null;
@@ -2619,7 +2647,7 @@ function convertToIso(timestamp) {
     const utcDate = new Date(utcDateString);
 
     if (isNaN(utcDate)) {
-        throw new Error('Invalid date');
+        setTimeout(() => {frameIdx = maxFrames-1; addRadarToMap(radarStation.toUpperCase());}, 500);
     }
     return utcDate.toISOString();
 }
@@ -2794,6 +2822,12 @@ document.getElementById('textbox').addEventListener('keypress', function (e) {
 var searchedLocationMarker = undefined;
 
 function doLocSearch(query) {
+    if (query.length < 2) {
+        document.getElementById('results').innerHTML = '<div style="margin-bottom: 3px; padding: 4px;">Query must be longer than one character.</div>';
+        document.getElementById('results').style.display = "block";
+        setTimeout(() => document.getElementById('results').style.opacity = 1, 10);
+        return;
+    }
     console.info("Getting a location");
     var xhr = new XMLHttpRequest();
 
@@ -2811,20 +2845,32 @@ function doLocSearch(query) {
                 }
             });
 
+            var spotterResults = [];
+            spotterData.forEach(function(obj) {
+                if (obj.name.toLowerCase().includes(query.toLowerCase())) {
+                    spotterResults.push(obj);
+                }
+            });
+
             var reslist = document.getElementById('results');
             const rect = document.getElementById('searchbtn').getBoundingClientRect();
             reslist.style.display = "block";
             setTimeout(() => reslist.style.opacity = 1, 10);
             var construct = "";
-            if (results.length == 0 && stationresults.length == 0) {
+            if (results.length == 0 && stationresults.length == 0 && spotterResults.length == 0) {
                 construct = construct + '<div style="margin-bottom: 3px; padding: 4px;">No results found.</div>';
             }
+
             stationresults.forEach(function(result) {
-                construct = construct + '<div onclick="setTimeout(() => {frameIdx = maxFrames-1; addRadarToMap(\'' + result.callsign + '\'.toUpperCase());}, 200); addRadarToMap(\'' + result.callsign + '\'.toUpperCase()); showSearchedLocation(' + result.lat + ', ' + result.lon + ', 8)" class="resultitem" style="margin-bottom: 5px; background-color: rgba(100, 100, 100, 0.5); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.callsign + '"><i style="color: black; background: #27beff; padding: 5px; margin-right: 10px; font-weight: bold; border-radius: 15px;">' + result.callsign + '</i> Radar Station</div>';
+                construct = construct + '<div onclick="setTimeout(() => {frameIdx = maxFrames-1; addRadarToMap(\'' + result.callsign + '\'.toUpperCase());}, 500); addRadarToMap(\'' + result.callsign + '\'.toUpperCase()); showSearchedLocation(' + result.lat + ', ' + result.lon + ', 8)" class="resultitem" style="margin-bottom: 5px; background-color: rgba(100, 100, 100, 0.5); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.callsign + '"><i style="color: black; background: #27beff; padding: 5px; margin-right: 10px; font-weight: bold; border-radius: 15px;">' + result.callsign + '</i> Radar Station</div>';
+            })
+            spotterResults.forEach(function(result) {
+                construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ', 12)" class="resultitem" style="display: flex; align-items: center; margin-bottom: 5px; background-color: rgba(100, 100, 100, 0.5); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.name + '"><img src="https://i.ibb.co/Md3GvZm/IMG-1278.webp" style="width: 30px; height: 30px; display: inline; padding-right: 10px;"></img>Spotter ' + result.name + '</div>';
             })
             results.forEach(function(result) {
                 construct = construct + '<div onclick="showSearchedLocation(' + result.lat + ', ' + result.lon + ', 12)" class="resultitem" style="margin-bottom: 5px; background-color: rgba(100, 100, 100, 0.5); padding: 10px; border-radius: 20px; cursor: pointer;" title="Pan to ' + result.display_name + '">' + result.display_name.split(",").slice(0, 4).join(",") + '</div>';
             })
+
             reslist.innerHTML = construct;
         }
     };
@@ -3056,6 +3102,7 @@ function toggleDrawing(tof){
         fadeOut('anim');
         if(!sparkgen) { fadeOut('menu-opener'); } else { fadeOut('sginfo'); }
         fadeIn("drawingtoolbar");
+        fadeOut('ruler');
     } else {
         canvas.style.display = "none";
         fadeIn('info');
@@ -3063,6 +3110,7 @@ function toggleDrawing(tof){
         fadeOut("drawingtoolbar");
         sizing();
         fadeIn('anim');
+        fadeIn('ruler');
     }
 }
 
@@ -3497,6 +3545,7 @@ function convertToSparkgen(toconv) {
             document.getElementById('styles').style.display = 'none'
             fadeOut("menu-opener");
             fadeIn("sginfo");
+            fadeOut('ruler');
             if (!localStorage.getItem("sg_hasbeenused")) { sgdialog(true); localStorage.setItem("sg_hasbeenused", true) }
 
             // Fetch county dataset
@@ -3531,6 +3580,7 @@ function convertToSparkgen(toconv) {
             document.getElementById("sparkgenbtn").style.display = "flex";
             fadeIn("menu-opener");
             fadeOut("sginfo");
+            fadeIn('ruler');
         }
 
     }, 300);
@@ -4038,3 +4088,50 @@ map.on('contextmenu', function(e) {
 function hideCtxMenu() {
     document.getElementById('ctx-menu').style.display = 'none';
 }
+
+// Ruler contexts (credit: ChatGPT lol)
+let startPoint = null;
+let line = null;
+let circle = null;
+let distanceLabel = null;
+
+function getDistance(latlng1, latlng2) {
+    return latlng1.distanceTo(latlng2);
+}
+
+// Remove the layer group approach
+function updateDrawing(start, end) {
+    if (line) map.removeLayer(line);
+    if (circle) map.removeLayer(circle);
+    if (distanceLabel) map.removeLayer(distanceLabel);
+
+    if (start) {
+        line = L.polyline([start, end], { pane: 'measurelayer', color: 'white' }).addTo(map);
+        const radius = getDistance(start, end);
+        circle = L.circle(start, { pane: 'measurelayer', radius: radius, fillOpacity: 0, color: '#ff2121' }).addTo(map);
+        distanceLabel = L.marker(end, {
+            pane: 'measurelayer',
+            icon: L.divIcon({ className: 'distance-label', html: `<p style="text-shadow: 0px 0px 5px black; z-index: 7000 !important; font-size: large; font-weight: bold; color: white; margin: none;">${(radius / 1609.344).toFixed(1)}mi</p>`, iconSize: [150, 40] })
+        }).addTo(map); // Directly add to `map`
+    }
+}
+
+map.on('click', (event) => {
+    if (!drawingMode) {return}
+    if (!startPoint) {
+        startPoint = event.latlng;
+    } else {
+        startPoint = null;
+        drawingMode = false;
+        document.getElementById('ruler').classList.remove('selectdui')
+        if (line) map.removeLayer(line);
+        if (circle) map.removeLayer(circle);
+        if (distanceLabel) map.removeLayer(distanceLabel);
+    }
+});
+
+map.on('mousemove', (event) => {
+    if (startPoint) {
+        updateDrawing(startPoint, event.latlng);
+    }
+});
