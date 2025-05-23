@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<head>
+    <title>GoodToMow - Is today a good day to mow the lawn?</title>
+
+    <!--FontAwesome Icons-->
+    <script src="https://kit.fontawesome.com/3e2fc9ce5a.js" crossorigin="anonymous"></script>
+
+    <link rel="icon" type="image/png" href="logo_100px.png">
+
+    <!--Google font-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kodchasan:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&display=swap" rel="stylesheet">
+        
+    <style>
+        * {
+            font-family: 'Kodchasan', sans-serif;
+            margin: 0px;
+        }
+
+        body {
+            background: #51a65f;
+            background: linear-gradient(160deg, rgba(81, 166, 95, 1) 0%, rgba(0, 92, 12, 1) 100%);
+            background-attachment: fixed;
+            color: black;
+            height: calc(100vh - 20px);
+            width: calc(100vw - px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            margin: 10px;
+            scrollbar-width: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 10px;
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: calc(100% - 40px);
+            z-index: 1
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: row;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 10px;
+            backdrop-filter: blur(10px);
+            width: calc(100% - 20px);
+        }
+
+        .item-column {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 10px;
+            backdrop-filter: blur(10px);
+            width: calc(100% - 20px);
+        }
+
+        p {
+            font-size: 1em;
+        }
+
+        input[type="text"] {
+            background-color: rgba(0, 0, 0, 0);
+            border: none;
+            border-radius: 20px;
+            padding: 5px;
+            width: calc(100% - 20px);
+            color: black;
+            font-weight: bolder;
+            margin-left: 5px;
+            flex: 1 1 0;
+            min-width: 0;
+            font-size: 1em;
+        }
+
+        .circular {
+            display: flex;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(rgb(0, 168, 229) var(--progress), rgba(203, 203, 203, 0.417) 0deg);
+            font-weight: bolder;
+        }
+
+        .circular::after {
+            content: attr(data-progress);
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            margin: 10px;
+            border-radius: 50%;
+            background: #51a65f;
+            font-size: 1.3rem;
+            text-align: center;
+        }
+
+        .minicircular {
+            display: flex;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: conic-gradient(rgb(0, 168, 229) var(--progress), rgba(203, 203, 203, 0.417) 0deg);
+            font-weight: bolder;
+        }
+
+        .minicircular::after {
+            content: attr(data-progress);
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+            width: 100%;
+            margin: 7px;
+            border-radius: 50%;
+            background: #51a65f;
+            font-size: 1rem;
+            text-align: center;
+        }
+    </style>
+
+    <script>
+    // Some coding was provided by Github Copilot via VScode's autofill.
+
+    document.addEventListener('DOMContentLoaded', function() {
+
+        const locationInput = document.getElementById('location');
+
+        // Check if the location is already stored in local storage
+        // If it is, set the input field value to the stored location
+        if (localStorage.getItem('mowlocation')) {
+
+            const loc = localStorage.getItem('mowlocation');
+
+            console.log('Location found in local storage:', loc);
+            locationInput.value = loc;
+            //get_mowing_forecast(loc); // Comment to save API calls during development
+        }
+
+        // Function to calculate the rotary value from the score
+        function calc_score(score) {
+            var deg = 0;
+
+            if (score >= 1 && score <= 100) {
+                return Math.round((score / 100) * 359) + 1;
+            }
+
+            return 0;
+        }
+
+        // Function to set the score dial
+        function set_score_dial(score) {
+            var circular = document.querySelector('.circular');
+            circular.setAttribute('data-progress', score);
+            circular.style.setProperty('--progress', calc_score(score) + 'deg');
+        }
+
+        // Set the default score dial to 59, for development purposes
+        set_score_dial(59);
+
+        function get_score_algorithm(temperature, humidity, uv_index, wind_gusts) {
+
+            var deterrantfactors = '';
+
+            // I know this is not the best way to do this but I am not a data scientist.
+            // If you are able to improve this algorithm, DM me on X @busybird150
+            // or open a pull request or issue on GitHub. Credit to you will be given.
+            
+            const temperaturegraph = {
+                50: 0,   51: 0,   52: 0,   53: 0,   54: 0,   55: 0,   56: 0,   57: 0,   58: 2,   59: 9,
+                60: 20,  61: 32,  62: 41,  63: 54,  64: 65,  65: 75,  66: 85,  67: 88,  68: 90,  69: 94,
+                70: 95,  71: 100, 72: 100, 73: 98,  74: 97,  75: 94,  76: 89,  77: 84,  78: 80,  79: 76,
+                80: 74,  81: 71,  82: 67,  83: 63,  84: 59,  85: 55,  86: 50,  87: 45,  88: 38,  89: 26,
+                90: 14,  91: 5,   92: 3,   93: 3,   94: 2,   95: 2,   96: 1,   97: 1,   98: 1,   99: 1,
+                100: 0,  101: 0,  102: 0,  103: 0,  104: 0,  105: 0,  106: 0,  107: 0,  108: 0,  109: 0,
+                110: 0,  111: 0,  112: 0,  113: 0,  114: 0,  115: 0,  116: 0,  117: 0,  118: 0,  119: 0
+            }
+
+            var tempscore = 0;
+            if (temperature < 60) {
+                tempscore = 0;
+                deterrantfactors += 'cold temperature, ';
+            } else if (temperature < 85) {
+                tempscore = temperaturegraph[Math.ceil(temperature)];
+            } else if (temperature < 120){
+                deterrantfactors += 'high temperature, ';
+                tempscore = temperaturegraph[Math.ceil(temperature)];
+            } else {
+                tempscore = 0;
+                deterrantfactors += 'high temperature, ';
+            }
+
+            const humiditygraph = {
+                0: 50,  1: 51,   2: 52,   3: 54,   4: 56,   5: 58,   6: 59,   7: 60,   8: 60,   9: 60,
+                10: 60,  11: 60,   12: 60,   13: 60,   14: 60,   15: 60,   16: 60,   17: 60,   18: 60,   19: 60,
+                20: 60,  21: 61,   22: 63,   23: 64,   24: 66,   25: 67,   26: 69,   27: 71,   28: 73,   29: 75,
+                30: 77,  31: 79,   32: 83,   33: 86,   34: 89,   35: 92,   36: 97,   37: 99,   38: 100,  39: 100,
+                40: 100, 41: 100,  42: 100,  43: 100,  44: 100,  45: 100,  46: 100,  47: 100,  48: 100,  49: 100,
+                50: 100, 51: 100,  52: 100,  53: 100,  54: 100,  55: 100,  56: 100,  57: 100,  58: 100,  59: 100,
+                60: 99,  61: 99,   62: 98,   63: 97,   64: 96,   65: 95,   66: 94,   67: 92,   68: 91,   69: 90,
+                70: 89,  71: 87,   72: 86,   73: 84,   74: 83,   75: 81,   76: 79,   77: 77,   78: 74,   79: 71,
+                80: 66,  81: 61,   82: 55,   83: 49,   84: 41,   85: 34,   86: 27,   87: 19,   88: 11,   89: 5,
+                90: 2,   91: 1,    92: 0,    93: 0,    94: 0,    95: 0,    96: 0,    97: 0,    98: 0,    99: 0,
+                100: 0
+            }
+
+            var humidityscore = 0;
+            humidityscore = humiditygraph[Math.ceil(humidity)];
+
+            if (humidityscore < 75) {
+                deterrantfactors += 'poor humidity, ';
+            }
+
+            const uvgraph = {
+                0: 100, 1: 100, 2: 100, 3: 100, 4: 100, 5: 100, 6: 95, 7: 84, 8: 74, 9: 62,
+                10: 51, 11: 42, 12: 31, 13: 20, 14: 11, 15: 7
+            }
+
+            var uvscore = 50;
+            uvscore = uvgraph[Math.ceil(uv_index)];
+            if (uv_index > 8) {
+                deterrantfactors += 'high UV index, ';
+            }
+
+            var windscore = 50;
+
+            // Temperature gets three placements since it has a larger impact on mowing conditions
+            datarray = [tempscore, tempscore, tempscore, humidityscore, uvscore]// windscore];
+
+            return {
+                // Average the scores to get a final score
+                score: Math.ceil(datarray.reduce((acc, curr) => acc + curr, 0) / datarray.length),
+                // Get the deterring factors, replace the last comma with a period
+                deterringFactors: deterrantfactors.replace(/, (?=[^,]*$)/, ".")
+            };
+        }
+
+        function get_mowing_forecast(location) {
+            const url = `https://api.weatherapi.com/v1/forecast.json?key=b2e5fc3757534bd2aa1200512223011&q=${location}&days=3&aqi=yes&alerts=no`;
+
+            fetch(url)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json()
+                    } else if (response.status === 400) {
+                        alert("No grass was found at this location. Maybe check your spelling?");
+                        throw new Error('Invalid location');
+                    } else {
+                        alert("The grass isn't green here. Something went wrong. Check the console for more details.");
+                        throw new Error('Network response was not ok, status: ' + response.status);
+                    }
+                })
+                .then(data => {
+
+                    // Get API data
+                    const location = data.location.name + ', ' + data.location.region;
+                    const current = data.current;
+                    const forecast = data.forecast.forecastday[0].day;
+                    const condition = forecast.condition.text;
+                    const icon = forecast.condition.icon;
+
+                    // Update the location input field with the location
+                    locationInput.value = location;
+
+                    // Set the conditions
+                    document.getElementById('temperature').innerText = `Temperature: ${Math.ceil(current.temp_f)} F`;
+                    document.getElementById('humidity').innerText = `Humidity: ${Math.ceil(current.humidity)}%`;
+                    document.getElementById('uvindex').innerText = `UV Index: ${Math.ceil(current.uv)}`;
+                    document.getElementById('windgusts').innerText = `Wind gusts: ${Math.ceil(current.gust_mph)} mph`;
+
+                    // Runt the algorithm and set the score dial
+                    const algorithm = get_score_algorithm(current.temp_f, current.humidity, forecast.uv, forecast.gust_mph);
+                    set_score_dial(algorithm.score);
+
+                    // Set the deterring factors
+                    if (algorithm.deterringFactors == ""){
+                        document.getElementById('deterringfactors').innerText = `Current conditions are great for mowing.`;
+                    } else {
+                        document.getElementById('deterringfactors').innerText = `Deterring factors: ${algorithm.deterringFactors}`;
+                    }
+
+                    // Get every hourly forecast item
+                    hourlyelements = document.querySelectorAll('[id$="_score"]');
+
+                    // Set the daily forecast
+                    var run = 0;
+                    const forecastelements = ['d1', 'd2', 'd3'];
+                    const forecastdetailelements = ['d1_details', 'd2_details', 'd3_details'];
+                    data.forecast.forecastday.forEach(day => {
+                        const dayName = new Date(day.date).toLocaleDateString('en-US', { weekday: 'long' });
+                        const dayScore = get_score_algorithm(day.day.maxtemp_f, day.day.avghumidity, day.day.uv, day.day.maxwind_mph);
+                        document.getElementById(forecastelements[run]).setAttribute('data-progress', dayScore.score);
+                        document.getElementById(forecastelements[run]).style.setProperty('--progress', `${calc_score(dayScore.score)}deg`);
+                        document.getElementById(forecastdetailelements[run]).innerText = `${dayName} / ${Math.ceil(day.day.maxtemp_f)} F`;
+                        run += 1;
+                    });
+
+                    // Set the hourly forecast
+                    const hourelements = ['12am', '1am', '2am', '3am', '4am', '5am', '6am', '7am', '8am', '9am', '10am', '11am',
+                        '12pm', '1pm', '2pm', '3pm', '4pm', '5pm', '6pm', '7pm', '8pm', '9pm', '10pm', '11pm'];
+                    var run = 0;
+                    hourelements.forEach(hour => {
+                        const hourScore = get_score_algorithm(data.forecast.forecastday[0].hour[run].temp_f, data.forecast.forecastday[0].hour[run].humidity, data.forecast.forecastday[0].hour[run].uv, data.forecast.forecastday[0].hour[run].gust_mph);
+                        document.getElementById(hourelements[run] + '_score').setAttribute('data-progress', hourScore.score);
+                        document.getElementById(hourelements[run] + '_score').style.setProperty('--progress', `${calc_score(hourScore.score)}deg`);
+                        document.getElementById(hourelements[run]).innerText = `${hourelements[run]}: ${data.forecast.forecastday[0].hour[run].condition.text} / ${Math.ceil(data.forecast.forecastday[0].hour[run].temp_f)} F`;
+                        console.log(run, data.forecast.forecastday[0].hour[run]);
+                        run += 1;
+                    });
+
+
+                })
+                .catch(error => {   
+                    console.error('Error fetching the weather data:', error);
+                });
+        }
+        
+        // Load the data when the input field's enter key is pressed
+        locationInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                get_mowing_forecast(locationInput.value);
+                localStorage.setItem('mowlocation', locationInput.value);
+                console.log('Location saved:', locationInput.value);
+            }
+        });
+        
+    });
+</script>
+
+</head>
+<body>
+    <div class="header">
+        <img src="logo_500px_shadow.png" style="height: 40px; width: 40px; margin-right: 10px;">
+        <div style="flex-direction: row; display: flex; align-items: flex-end;">
+            <h1 style="text-shadow: rgba(0, 0, 0, 0.35) 2px 2px 5px;">GoodToMow</h1>
+            <p style="font-size: 0.8rem; font-weight: bold;">v1.0</p>
+        </div>
+    </div>
+
+    <br><br><br><br>
+
+    <div class="item-row">
+        <p><b>Mowing forecast for:</b></p>
+        <input type="text" id="location" placeholder="London">
+    </div>
+
+    <br>
+
+    <div class="item-row">
+        <div class="circular" data-progress="100" style="width: 100px; height: 100px; --progress: 350deg;"></div>
+        <div style="flex: 1 1 0; min-width: 0; margin-left: 20px;">
+            <p style="font-size: 1.5em; margin-bottom: 5px; font-weight: bolder;">Current Mowing Score</p>
+            <p id="deterringfactors" style="font-size: 1em; font-weight: bold;">Deterring factors: high humidity, light winds.</p>
+        </div>
+    </div>
+
+    <div class="item-column" style="justify-content: left; margin-top: 20px;">
+        <h2 style="width: 100%;">Conditions</h2>
+        <div style="margin-top: 10px; width: 100%; display: flex; justify-content: left; align-items: center; flex-direction: row;">
+            <i class="fa-solid fa-temperature-half" style="margin-right: 10px; font-size: 1.5em; color: rgb(99, 0, 0);"></i>
+            <p id="temperature" style="font-size: 1em; font-weight: bold;">Temperature: 79 F</p>
+        </div>
+        <div style="margin-top: 10px; width: 100%; display: flex; justify-content: left; align-items: center; flex-direction: row;">
+            <i class="fa-solid fa-droplet" style="margin-right: 10px; font-size: 1.5em; color: rgb(0, 72, 99);"></i>
+            <p id="humidity" style="font-size: 1em; font-weight: bold;">Humidity: 95%</p>
+        </div>
+        <div style="margin-top: 10px; width: 100%; display: flex; justify-content: left; align-items: center; flex-direction: row;">
+            <i class="fa-solid fa-sun" style="margin-right: 10px; font-size: 1.5em; color: rgb(99, 91, 0);"></i>
+            <p id="uvindex" style="font-size: 1em; font-weight: bold;">UV Index: 4</p>
+        </div>
+        <div style="margin-top: 10px; width: 100%; display: flex; justify-content: left; align-items: center; flex-direction: row;">
+            <i class="fa-solid fa-wind" style="margin-right: 10px; font-size: 1.5em; color: rgb(0, 99, 58);"></i>
+            <p id="windgusts" style="font-size: 1em; font-weight: bold;">Wind gusts: 5 mph</p>
+        </div>
+    </div>
+
+    <div class="item-row" style="justify-content: space-around; margin-top: 20px;">
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div id="d1" class="circular" data-progress="30" style="width: 100px; height: 100px; --progress: 70deg;"></div>
+            <p id="d1_details" style="margin-top: 10px; font-size: 1em; font-weight: bold;">Today</p>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div id="d2" class="circular" data-progress="30" style="width: 100px; height: 100px; --progress: 70deg;"></div>
+            <p id="d2_details" style="margin-top: 10px; font-size: 1em; font-weight: bold;">Saturday</p>
+        </div>
+        <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <div id="d3" class="circular" data-progress="30" style="width: 100px; height: 100px; --progress: 70deg;"></div>
+            <p id="d3_details" style="margin-top: 10px; font-size: 1em; font-weight: bold;">Sunday</p>
+        </div>
+    </div>
+
+    <div class="item-column" style="justify-content: left; align-items: flex-start; margin-top: 20px;">
+        <h2 style="width: 100%;">Hour by Hour</h2>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="12am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="12am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="1am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="1am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="2am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="2am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="3am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="3am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="4am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="4am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="5am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="5am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="6am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="6am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="7am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="7am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="8am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="8am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="9am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="9am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="10am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="10am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="11am_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="11am" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="12pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="12pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="1pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="1pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="2pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="2pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="3pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="3pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="4pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="4pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="5pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="5pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="6pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="6pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="7pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="7pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="8pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="8pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="9pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="9pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="10pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="10pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+        <div style="margin-top: 10px; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div id="11pm_score" class="minicircular" data-progress="30" style="width: 50px; height: 50px; --progress: 70deg; font-size: 1rem;"></div>
+            <p id="11pm" style="flex: 1 1 0; min-width: 0; margin-left: 10px; font-size: 1.2em; font-weight: bold;">12 am: Cloudy / 54 F</p>
+        </div>
+    </div>
+
+    <div class="item-column" style="margin-top: 20px;">
+        <p style="font-weight: bold;">Powered by <a href="https://www.weatherapi.com/" target="_blank" style="color: black;">WeatherAPI</a></p>
+        <div style="margin-top: 10px; display: flex; justify-content: center; align-items: center; flex-direction: row;">
+            <a href="https://github.com/BusyBird15/busybird15.github.io" style="color: black; text-decoration: none;" target="_blank">
+                <i class="fa-brands fa-github" style="margin-right: 10px; font-size: 1.5em;"></i>
+            </a>
+            <a href="https://x.com/busybird150" style="color: black; text-decoration: none;" target="_blank">
+                <i class="fa-brands fa-twitter" style="font-size: 1.5em;"></i>
+            </a>
+        </div>
+    </div>
+
+    <br><br>
+</body>
+</head>
